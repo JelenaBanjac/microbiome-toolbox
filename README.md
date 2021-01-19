@@ -1,6 +1,6 @@
 <div align="center">
   <p>
-  <img src="https://media.giphy.com/media/ZutFV1eVDiXUlbBT5B/giphy.gif" width="270" />
+  <img src="https://media.giphy.com/media/ZutFV1eVDiXUlbBT5B/giphy.gif" alt="Baby animation from https://dribbble.com/niguangzhushi" width="270" />
   </p>
   <p>
     <a href="">
