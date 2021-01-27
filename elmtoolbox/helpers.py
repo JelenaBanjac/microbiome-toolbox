@@ -1,7 +1,7 @@
 
 
 
-def df2vectors(_df, feature_cols=None, time_col="age_at_collection"):
+def df2vectors(_df, feature_cols=None):
     """Function that converts data frame to corresponding feature vector X and the label vector y
     
     This function is mostly used to convert pandas dataframe objects to lists, and then propagated to
@@ -14,9 +14,7 @@ def df2vectors(_df, feature_cols=None, time_col="age_at_collection"):
     feature_cols: list
         Column names that represent the features that will be used in a feature vector X (e.g. bacteria names, and/or meta data). There
         should not be any column that is ID (e.g. sample id, etc.)
-    time_col: str
-        Time column (label) is explicitly specified in case we want to handle it in months or years, and not in days (as in age_at_collection).
-
+    
     Returns
     -------
     X: list of lists
@@ -26,7 +24,7 @@ def df2vectors(_df, feature_cols=None, time_col="age_at_collection"):
     """
     
     # labels, what we want to predict -> age of the infant
-    y = _df[time_col]
+    y = _df["age_at_collection"]
     
     _df = _df[feature_cols]
     

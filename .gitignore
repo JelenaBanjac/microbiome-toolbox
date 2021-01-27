@@ -1,8 +1,12 @@
+later.py
+notebooks/
+notebooks_to_delete_when_merged/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-notebooks/
+
 
 # C extensions
 *.so

@@ -3,8 +3,56 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from elmtoolbox.variables import *
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
+### PLOTLY ###
+def dataset_bacteria_abundances(df, bacteria_names, time, num_cols, nice_name=lambda x: x, file_name=None):
+    """ Plot dataset's bacteria abundances
+    
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Dataframe containing at least all bacteria names and the time axis
+    bacteria_names: list
+        List of bacteria names for which we want to see abundances
+    time: str
+        The name of the column that is our time axis
+    num_cols: int
+        The number of columns in the figure
+    nice_name: callable
+        Function that converts ugly string bacteria name to a readable one
+    file_name: str
+        The HTML file to store the interactive plot
+    """
+    num_rows = len(bacteria_names)//num_cols+1
+
+    fig = make_subplots(rows=num_rows, cols=num_cols)
+
+    for idx, bacteria_name in enumerate(bacteria_names):
+        fig.add_trace(go.Scatter(
+                x=df.groupby(by=time).agg(np.mean)[bacteria_name].index,
+                y=df.groupby(by=time).agg(np.mean)[bacteria_name],
+                error_y=dict(
+                    type='data', # value of error bar given in data coordinates
+                    array=df.groupby(by=time).agg(np.std)[bacteria_name],
+                    visible=True), name=nice_name(bacteria_name)
+            ), row=idx//num_cols+1, col=idx%num_cols+1)
+        fig.update_xaxes(title="Time", row=idx//num_cols+1, col=idx%num_cols+1)  # gridcolor='lightgrey'
+        fig.update_yaxes(title=nice_name(bacteria_name), row=idx//num_cols+1, col=idx%num_cols+1)  # gridcolor='lightgrey'
+
+    fig.update_layout(height=1900, width=1500, 
+                      paper_bgcolor="white",#'rgba(0,0,0,0)', 
+                      #plot_bgcolor='rgba(0,0,0,0)', 
+                       margin=dict(l=0, r=0, b=0, pad=0),
+                      title_text="Bacteria Abundances in the Dataset")
+    if file_name:
+        fig.write_html(file_name)
+    fig.show()
+
+
+### MATPLOTLIB ###
 def plot_train_val_test_sampling(df, train_subjectIDs, val_subjectIDs, test_subjectIDs, vertical=True, file_name=None):
     """ Plot data split to train-validation-test sets
 

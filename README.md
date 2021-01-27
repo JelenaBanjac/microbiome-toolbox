@@ -30,8 +30,18 @@ python setup.py develop
 ```
 
 ## Songbird
-#songbird==0.8.2
+
 ```
+source activate microbiome
+
+# These instructions are identical to the Linux (64-bit) instructions (or download manually from the link)
+wget https://data.qiime2.org/distro/core/qiime2-2020.11-py36-linux-conda.yml
+conda env create -n qiime2-2020.11 --file qiime2-2020.11-py36-linux-conda.yml
+# OPTIONAL CLEANUP
+rm qiime2-2020.11-py36-linux-conda.yml
+
+pip install songbird==0.8.2
+
 songbird multinomial \
 	--input-biom ../../temp2/data/oral-collapsed-table.biom \
 	--metadata-file ../../temp2/data/oral_trimmed_metadata.txt \
