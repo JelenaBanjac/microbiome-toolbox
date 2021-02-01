@@ -6,7 +6,7 @@ from elmtoolbox.variables import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-
+from plotly.subplots import make_subplots
 
 ### PLOTLY ###
 def dataset_bacteria_abundances(df, bacteria_names, time, num_cols, nice_name=lambda x: x, file_name=None):
@@ -54,67 +54,64 @@ def dataset_bacteria_abundances(df, bacteria_names, time, num_cols, nice_name=la
 
 
 
-def sampling_statistics(df, train_subjectIDs, val_subjectIDs, test_subjectIDs, group, start_age=0, limit_age=1200, time_unit_size=1, time_unit_name="days", file_name=None):
-    
-    def fill_in_data_type(row):
-        if row["subjectID"] in train_subjectIDs: 
-            row["data_type"] = "train"  #"blue" #1 
-            row["order"] =  0
-        elif row["subjectID"] in val_subjectIDs: 
-            row["data_type"] = "validation"  #"green" #2 
-            row["order"] =  1
-        elif row["subjectID"] in test_subjectIDs: 
-            row["data_type"] = "test"  #"red" #3 
-            row["order"] =  2
-        else:
-            raise Exception(f"Please assign the type to all the subjectID! Here, {row['subjectID']} is not assigned to any of train, test, val datasets")
-        return row
+def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_size=1, time_unit_name="days", file_name=None, height=1000, width=2100):
+    df = df_all.copy()
 
     colors = ["0,0,255", "255,0,0", "0,255,0"]
+    df["order"] = df.apply(lambda x: 0 if x.dataset_type=="Train" else 1 if x.dataset_type=="Validation" else 2, axis=1)
 
     if group is not None:
-
         num_cols = len(df[group].unique())
         fig = make_subplots(rows=1, cols=num_cols, subplot_titles=[f"{group}={s}" for s in df[group].unique()])
-
+        
+        legend_vals = []
+        
         for col, g in enumerate(df[group].unique(), 1):
             df1 = df[df[group]==g]
-            df1 = df1[[ "subjectID", "age_at_collection", "sampleID"]].sort_values(by=["subjectID", "age_at_collection"])
-            df1 = df1.apply(lambda row: fill_in_data_type(row), axis=1)
-            df1 = df1.sort_values(by=["order"])
-
+            df1 = df1[[ "subjectID", "age_at_collection", "sampleID", "order", "dataset_type"]].sort_values(by=["order", "subjectID", "age_at_collection"])
+            
             # longitudinal - line per subject
             for sid in df1["subjectID"].unique():
                 idx = np.where(df1["subjectID"]==sid)[0]
+                dataset_type = df1.iloc[idx].dataset_type.values[0]
+                dataset_type_order = df1.iloc[idx].order.values[0]
+                
+                traj_color = colors[dataset_type_order]
+                
+                legendgroup = dataset_type
+                if legendgroup not in legend_vals:
+                    legend_vals.append(legendgroup)
+                    showlegend = True
+                else:
+                    showlegend = False
 
-                for i, dt in enumerate(df1["data_type"].unique()):
 
-                    idx2 = np.where(df1.iloc[idx]["data_type"]==dt)[0]
-                    traj_color = colors[i]
-                    fig.add_trace(go.Scatter(
-                        x=df1.age_at_collection.values[idx][idx2],
-                        y=[sid]*len(idx2),
-                        mode="markers+lines",
-                        line = dict(width=3, dash='solid', color=f'rgba({traj_color},0.35)'),
-                        marker=dict(size=10, color=f'rgba({traj_color},0.35)'),
-                        showlegend=True,
-                        name=sid,
-                        text=list(df1["sampleID"].values[idx]), 
-                        hovertemplate = f'<b>{dt.title()} sample</b><br><br>'+
-                                        '<b>SampleID</b>: %{text}<br>'+
-                                        '<b>SubjectID</b>: %{y}<br>'+
-                                        '<b>Age</b>: %{x:.2f}<br>'
-                                        ,
-                        hoveron="points"
-                    ), row=1, col=col)
+                fig.add_trace(go.Scatter(
+                    x=df1.age_at_collection.values[idx]/time_unit_size,
+                    y=[sid]*len(idx),
+                    mode="markers+lines",
+                    line = dict(width=3, dash='solid', color=f'rgba({traj_color},0.35)'),
+                    marker=dict(size=10, color=f'rgba({traj_color},0.35)'),
+                    legendgroup=legendgroup,
+                    showlegend=showlegend,
+                    name=dataset_type,
+                    text=list(df1["sampleID"].values[idx]), 
+                    hovertemplate = f'<b>{dataset_type.title()} sample</b><br><br>'+
+                                    '<b>SampleID</b>: %{text}<br>'+
+                                    '<b>SubjectID</b>: %{y}<br>'+
+                                    '<b>Age</b>: %{x:.2f}<br>'
+                                    ,
+                    hoveron="points"
+                ), row=1, col=col)
 
             fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size-1, limit_age/time_unit_size+1), 
-                            tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), gridcolor='lightgrey', showspikes=True, spikecolor='gray', row=1, col=col) 
-            fig.update_yaxes(title=f"Subject ID ", gridcolor='lightgrey', showspikes=True, spikecolor='gray', row=1, col=col)  
+                            #tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), 
+                            showline=True, linecolor='lightgrey', gridcolor='lightgrey', showspikes=True, spikecolor='gray', zeroline=True, zerolinecolor='lightgrey', row=1, col=col) 
+            fig.update_yaxes(title=f"Subject ID ", showline=True, linecolor='lightgrey', gridcolor='lightgrey', showspikes=True, spikecolor='gray', zeroline=True, zerolinecolor='lightgrey', row=1, col=col)  
 
 
-        fig.update_layout(height=500, width=600*num_cols, 
-                          #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+        fig.update_layout(height=height, width=width, 
+                          paper_bgcolor="white",#'rgba(0,0,0,0)', 
                           plot_bgcolor='rgba(0,0,0,0)', 
                           margin=dict(l=0, r=0, b=0, pad=0),
                           title_text="Sampling statistics")
@@ -123,41 +120,51 @@ def sampling_statistics(df, train_subjectIDs, val_subjectIDs, test_subjectIDs, g
 
         fig = go.Figure()
 
-        df1 = df[[ "subjectID", "age_at_collection", "sampleID"]].sort_values(by=["subjectID", "age_at_collection"])
-        df1 = df1.apply(lambda row: fill_in_data_type(row), axis=1)
-        df1 = df1.sort_values(by=["order"])
-
+        df1 = df[[ "subjectID", "age_at_collection", "sampleID", "order", "dataset_type"]].sort_values(by=["order", "subjectID", "age_at_collection"])
+            
+        legend_vals = []
+            
         # longitudinal - line per subject
         for sid in df1["subjectID"].unique():
             idx = np.where(df1["subjectID"]==sid)[0]
+            dataset_type = df1.iloc[idx].dataset_type.values[0]
+            dataset_type_order = df1.iloc[idx].order.values[0]
 
-            for i, dt in enumerate(df1["data_type"].unique()):
-                idx2 = np.where(df1.iloc[idx]["data_type"]==dt)[0]
-                traj_color = colors[i]
-                fig.add_trace(go.Scatter(
-                    x=df1.age_at_collection.values[idx][idx2],
-                    y=[sid]*len(idx2),
-                    mode="markers+lines",
-                    line = dict(width=3, dash='solid', color=f'rgba({traj_color},0.35)'),
-                    marker=dict(size=10, color=f'rgba({traj_color},0.35)'),
-                    showlegend=True,
-                    name=sid,
-                    text=list(df1["sampleID"].values[idx]), 
-                    hovertemplate = f'<b>{dt.title()} sample</b><br><br>'+
-                                    '<b>SampleID</b>: %{text}<br>'+
-                                    '<b>SubjectID</b>: %{y}<br>'+
-                                    '<b>Age</b>: %{x:.2f}<br>'
-                                    ,
-                    hoveron="points"
-                ))
+            traj_color = colors[dataset_type_order]
+
+            legendgroup = dataset_type
+            if legendgroup not in legend_vals:
+                legend_vals.append(legendgroup)
+                showlegend = True
+            else:
+                showlegend = False
+
+            fig.add_trace(go.Scatter(
+                x=df1.age_at_collection.values[idx]/time_unit_size,
+                y=[sid]*len(idx),
+                mode="markers+lines",
+                line = dict(width=3, dash='solid', color=f'rgba({traj_color},0.35)'),
+                marker=dict(size=10, color=f'rgba({traj_color},0.35)'),
+                legendgroup=legendgroup,
+                showlegend=showlegend,
+                name=dataset_type,
+                text=list(df1["sampleID"].values[idx]), 
+                hovertemplate = f'<b>{dataset_type.title()} sample</b><br><br>'+
+                                '<b>SampleID</b>: %{text}<br>'+
+                                '<b>SubjectID</b>: %{y}<br>'+
+                                '<b>Age</b>: %{x:.2f}<br>'
+                                ,
+                hoveron="points"
+            ))
 
         fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size-1, limit_age/time_unit_size+1), 
-                        tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), gridcolor='lightgrey', showspikes=True, spikecolor='gray') 
-        fig.update_yaxes(title=f"Subject ID ", gridcolor='lightgrey', showspikes=True, spikecolor='gray')  
+                        #tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), 
+                         gridcolor='lightgrey', showspikes=True, spikecolor='gray', zeroline=True, zerolinecolor='lightgrey') 
+        fig.update_yaxes(title=f"Subject ID ", gridcolor='lightgrey', showspikes=True, spikecolor='gray', zeroline=True, zerolinecolor='lightgrey')  
 
 
-        fig.update_layout(height=500, width=650, 
-                          #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+        fig.update_layout(height=height, width=width, 
+                          paper_bgcolor="white",#'rgba(0,0,0,0)', 
                           plot_bgcolor='rgba(0,0,0,0)', 
                           margin=dict(l=0, r=0, b=0, pad=0),
                           title_text="Sampling statistics")
@@ -406,3 +413,129 @@ def sampling_statistics_matplotlib(df, train_subjectIDs, val_subjectIDs, test_su
         plt.savefig(file_name)
         plt.show()
 
+
+def plot_ultradense_longitudinal_data_matplotlib(df, infants_to_plot, cols_num, min_days, max_days, bacteria_names, nice_name=lambda x: x, legend_kw=dict(bbox_to_anchor=(2., 1.05), ncol=2, loc='upper center', fancybox=True, shadow=True)):
+    rows_num = len(infants_to_plot)//cols_num+1
+    fig, ax = plt.subplots(rows_num, cols_num, figsize=(2*cols_num,7*rows_num))
+
+    # limit to plot 40 bacteria
+    bacteria_names = bacteria_names[:40]
+
+    cmap = plt.cm.get_cmap('gist_rainbow', len(bacteria_names))
+    colors_dict = dict([(b, cmap(i)) for i, b in enumerate(bacteria_names)])
+
+    ax_coordinate = None
+    for idx, infant in enumerate(infants_to_plot):
+        ax_coordinate = idx//cols_num, idx%cols_num
+
+        if rows_num==1:
+            ax_coordinate = ax_coordinate[1]
+
+        df1 = df.reset_index()
+        df1 = df1[df1.subjectID==infant].sort_values("age_at_collection")
+
+        if len(df1)==1:
+            ax[ax_coordinate].stackplot(df1.age_at_collection.values, *[list(df1[b].values)*2 for b in bacteria_names], colors=[colors_dict[b] for b in bacteria_names]);
+            ax[ax_coordinate].set_xlim(min_days, max_days)
+            ax[ax_coordinate].set_title(f"SubjectID:\n{infant}")
+            ax[ax_coordinate].set_yticks([])
+        else:
+            ax[ax_coordinate].stackplot(list(df1.age_at_collection.values), *list([df1[b].values for b in bacteria_names]), colors=[colors_dict[b] for b in bacteria_names]);
+            ax[ax_coordinate].set_xlim(min_days, max_days)
+            ax[ax_coordinate].set_title(f"SubjectID:\n{infant}")
+            ax[ax_coordinate].set_yticks([])
+
+        #removing top and right borders
+        ax[ax_coordinate].spines['top'].set_visible(False)
+        ax[ax_coordinate].spines['right'].set_visible(False)
+        ax[ax_coordinate].spines['left'].set_visible(False)
+        ax[ax_coordinate].xaxis.set_tick_params(rotation=45)
+
+
+    if rows_num==1:
+        ax_coordinate = (0, ax_coordinate)
+
+    # delete empty axes
+    for k in range(ax_coordinate[-1], cols_num):
+        if rows_num==1:
+            fig.delaxes(ax[k])
+        else:
+            fig.delaxes(ax[ax_coordinate[0], k])
+
+    plt.subplots_adjust(wspace = .05)
+    if len(legend_kw)!=0:
+        _colors_dict = {}
+        for k, v in colors_dict.items():
+            _colors_dict[nice_name(k)] = v
+
+        plt.legend(_colors_dict, **legend_kw)
+
+
+def plot_ultradense_longitudinal_data(df, infants_to_plot, cols_num, min_days, max_days, bacteria_names, nice_name=lambda x: x, file_name = "tst.html", h=300, w=100):
+    rows_num = len(infants_to_plot)//cols_num+1
+    
+    # limit to plot 20 bacteria
+    bacteria_names = bacteria_names[:20]
+
+    cmap = plt.cm.get_cmap('tab20', len(bacteria_names))
+    colors_dict = dict([(b, cmap(i)) for i, b in enumerate(bacteria_names)])
+
+    fig = make_subplots(rows=rows_num, cols=cols_num,
+                        shared_xaxes=True, shared_yaxes=True, 
+                        vertical_spacing=0.01, 
+                        horizontal_spacing=0.01
+                       )
+
+    for idx, infant in enumerate(infants_to_plot):
+        i, j = idx//cols_num, idx%cols_num
+
+        df1 = df.reset_index()
+        df1 = df1[df1.subjectID==infant].sort_values("age_at_collection")
+
+        if len(df1)==1:
+
+            for b in bacteria_names:
+                
+                fig.add_trace(go.Scatter(
+                    x=list(df1.age_at_collection.values), 
+                    y=list(df1[b].values)*2,
+                    text=list(map(lambda x: nice_name(x), bacteria_names)), 
+                    hoverinfo='text',
+                    mode='lines',
+                    marker_color=f"rgba{colors_dict[b]}",
+                    name=nice_name(b),
+                    legendgroup=nice_name(b),
+                    showlegend=True if idx==0 else False,
+                    stackgroup='one' # define stack group
+                ), row=i+1, col=j+1)
+                
+                fig.update_xaxes(title=infant, row=i+1, col=j+1)
+
+        else:
+            for b in bacteria_names:
+                fig.add_trace(go.Scatter(
+                    x=list(df1.age_at_collection.values), 
+                    y=list(df1[b].values),
+                    text=list(map(lambda x: nice_name(x), bacteria_names)), 
+                    hoverinfo='text',
+                    mode='lines',
+                    marker_color=f"rgba{colors_dict[b]}",
+                    name=nice_name(b),
+                    legendgroup=nice_name(b),
+                    showlegend=True if idx==0 else False,
+                    stackgroup='one'
+                ), row=i+1, col=j+1)
+                
+                fig.update_xaxes(title=infant, row=i+1, col=j+1)
+
+    fig.update_layout(height=h*rows_num, width=w*cols_num, 
+                      plot_bgcolor='rgba(0,0,0,0)', 
+                      title_text="Ultradense Longitudinal Data")
+    for i in fig['layout']['annotations']:
+        i['font'] = dict(size=8,color='#000000')
+    
+    if file_name:
+        fig.write_html(file_name)
+
+
+    fig.show()

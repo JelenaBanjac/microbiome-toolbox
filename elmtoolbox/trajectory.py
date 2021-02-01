@@ -1,3 +1,4 @@
+from pickle import FALSE
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -107,8 +108,8 @@ def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_
                 showlegend=False,
                 hovertemplate =None),
                 row=1, col=1)
-        fig.update_xaxes(title="Number of important features", row=1, col=1)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="MAEs", row=1, col=1)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="Number of important features", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
+        fig.update_yaxes(title="MAEs", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1)
                 
         j = np.argmax(accuracy_means)
         fig.add_trace(go.Scatter(
@@ -117,7 +118,7 @@ def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_
                 name="Accuracy",
                 hovertemplate = None,
                 error_y=dict(
-                        type='data', # value of error bar given in data coordinates
+                        type='data', 
                         array=accuracy_stds,
                         visible=True)),
                 row=1, col=2)
@@ -132,8 +133,8 @@ def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_
                 showlegend=False,
                 hovertemplate =None),
                 row=1, col=2)
-        fig.update_xaxes(title="Number of important features", row=1, col=2)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="Accuracy", row=1, col=2)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="Number of important features", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
+        fig.update_yaxes(title="Accuracy", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2)
         
         fig.add_trace(go.Scatter(
                 x=features_num,
@@ -152,15 +153,15 @@ def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_
                 showlegend=True,
                 hovertemplate =None),
                 row=1, col=3)
-        fig.update_xaxes(title="Number of important features", row=1, col=3)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="R-squared", row=1, col=3)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="Number of important features", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3)  
+        fig.update_yaxes(title="R-squared", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3)  
 
         fig.update_layout(height=500, width=1200, 
-                      paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                      #plot_bgcolor='rgba(0,0,0,0)', 
-                       margin=dict(l=0, r=0, b=0, pad=0),
-                      title_text="Top Important Features",
-                         hovermode="x")
+                        #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        margin=dict(l=0, r=0, b=0, pad=0),
+                        title_text="Top Important Features",
+                        hovermode="x")
         fig.show()
         
         # excract only top important features
@@ -229,8 +230,8 @@ def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_threshol
                 showlegend=False,
                 hovertemplate =None),
                 row=1, col=1)
-        fig.update_xaxes(title="NZV thresholds", row=1, col=1)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="MAEs", row=1, col=1)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
+        fig.update_yaxes(title="MAEs", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
                 
         j = np.argmax(accuracy_means)
         fig.add_trace(go.Scatter(
@@ -239,7 +240,7 @@ def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_threshol
                 name="Accuracy",
                 hovertemplate = None,
                 error_y=dict(
-                        type='data', # value of error bar given in data coordinates
+                        type='data', 
                         array=accuracy_stds,
                         visible=True)),
                 row=1, col=2)
@@ -254,8 +255,8 @@ def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_threshol
                 showlegend=False,
                 hovertemplate =None),
                 row=1, col=2)
-        fig.update_xaxes(title="NZV thresholds", row=1, col=2)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="Accuracy", row=1, col=2)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
+        fig.update_yaxes(title="Accuracy", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2)  
         
         fig.add_trace(go.Scatter(
                 x=nzv_thresholds,
@@ -274,15 +275,15 @@ def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_threshol
                 showlegend=True,
                 hovertemplate =None),
                 row=1, col=3)
-        fig.update_xaxes(title="NZV thresholds", row=1, col=3)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="R-squared", row=1, col=3)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3) 
+        fig.update_yaxes(title="R-squared", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3) 
 
         fig.update_layout(height=500, width=1200, 
-                      paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                      #plot_bgcolor='rgba(0,0,0,0)', 
-                       margin=dict(l=0, r=0, b=0, pad=0),
-                      title_text="Near Zero Variance",
-                         hovermode="x")
+                        #paper_bgcolor="white",
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        margin=dict(l=0, r=0, b=0, pad=0),
+                        title_text="Near Zero Variance",
+                        hovermode="x")
         fig.show()
 
         nzv_threshold = nzv_thresholds[j]
@@ -352,8 +353,8 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
                 showlegend=False,
                 hovertemplate =None),
                 row=1, col=1)
-        fig.update_xaxes(title="NZV thresholds", row=1, col=1)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="MAEs", row=1, col=1)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
+        fig.update_yaxes(title="MAEs", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1)  
                 
         j = np.argmax(accuracy_means)
         fig.add_trace(go.Scatter(
@@ -362,7 +363,7 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
                 name="Accuracy",
                 hovertemplate = None,
                 error_y=dict(
-                        type='data', # value of error bar given in data coordinates
+                        type='data',
                         array=accuracy_stds,
                         visible=True)),
                 row=1, col=2)
@@ -377,8 +378,8 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
                 showlegend=False,
                 hovertemplate =None),
                 row=1, col=2)
-        fig.update_xaxes(title="NZV thresholds", row=1, col=2)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="Accuracy", row=1, col=2)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
+        fig.update_yaxes(title="Accuracy", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
         
         fig.add_trace(go.Scatter(
                 x=correlation_thresholds,
@@ -397,15 +398,15 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
                 showlegend=True,
                 hovertemplate =None),
                 row=1, col=3)
-        fig.update_xaxes(title="NZV thresholds", row=1, col=3)  # gridcolor='lightgrey'
-        fig.update_yaxes(title="R-squared", row=1, col=3)  # gridcolor='lightgrey'
+        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3) 
+        fig.update_yaxes(title="R-squared", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3)  
 
         fig.update_layout(height=500, width=1200, 
-                      paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                      #plot_bgcolor='rgba(0,0,0,0)', 
-                       margin=dict(l=0, r=0, b=0, pad=0),
-                      title_text="Correlation",
-                         hovermode="x")
+                        #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        margin=dict(l=0, r=0, b=0, pad=0),
+                        title_text="Correlation",
+                        hovermode="x")
         fig.show()
 
         correlation_threshold = correlation_thresholds[j]
@@ -460,8 +461,8 @@ def get_pvalue_permuspliner(df, group, degree=2):
 def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, linear_difference=None, nonlinear_difference=None, 
                     plateau_area_start=None, limit_age=1200, start_age=0, 
                     time_unit_size=1, time_unit_name="days", img_file_name=None, 
-                    degree=2, nboot=None,
-                    patent=False):
+                    degree=2, nboot=None, longitudinal_mode="lines+markers", longitudinal_showlegend=True,
+                    patent=False, layout_height=900, layout_width=1000):
     """Trajectory line with performance stats and many other settings
 
     estimator: sklearn models, CatBoostRegressor, etc.
@@ -518,6 +519,17 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
     limit_age_max = int(max(df["age_at_collection"]))+1
 
+    if patent:
+        traj_color = "0,0,0"
+        colors = px.colors.sequential.Greys
+        outlier_color = 'rgba(0,0,0,0.75)'
+        outlier_size = 15
+    else:
+        traj_color = "26,150,65"
+        colors = px.colors.qualitative.Plotly
+        outlier_color = 'rgba(255,0,0,0.75)'
+        outlier_size = 15      
+        
     if plateau_area_start is not None:
         # shaded area where plateau is expected
         if plateau_area_start/time_unit_size < limit_age/time_unit_size:
@@ -532,7 +544,10 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                 name=f"sample at time > {plateau_area_start} days",
             ))
     
-    fig, ret_val, outliers, mae, r2, pi_median = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="26,150,65", traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal=group is None)
+    if group is not None:
+        longitudinal_showlegend = False
+
+    fig, ret_val, outliers, mae, r2, pi_median, _, _ = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=longitudinal_showlegend, outlier_color=outlier_color)
     
     X, y = df2vectors(df, feature_cols)
     y_pred = estimator.predict(X)
@@ -547,8 +562,6 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
         
     # Data
     if group is not None:
-        
-        colors = px.colors.qualitative.Plotly
         colors_rgb = [tuple(int(h.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) for h in colors]
         
         # linear difference between the groups
@@ -638,7 +651,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     y=list(y2-pi)+list(y2+pi)[::-1],
                     fill='toself',
                     fillcolor=f'rgba{tuple(list(colors_rgb[i])+[0.15])}',
-                    line_color=f'rgba{tuple(list(colors_rgb[i])+[0.25])}', #f'rgba({traj_color},0.25)',
+                    line_color=f'rgba{tuple(list(colors_rgb[i])+[0.25])}', 
                     showlegend=False,
                     name="95% Prediction Interval"
                 ))
@@ -684,7 +697,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                 idx = np.where(df[group]==group_trace)[0]
                 _df = df[df[group]==group_trace]
                 color = colors[i]
-                for trace in _df["subjectID"].unique():
+                for j, trace in enumerate(_df["subjectID"].unique()):
                     idx2 = np.where(_df["subjectID"]==trace)[0]
                     fig.add_trace(go.Scatter(
                         x=y[idx][idx2],
@@ -692,8 +705,9 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                         mode="lines+markers",
                         line = dict(width=3, dash='dash', color=color),
                         marker=dict(size=10, color=color),
-                        showlegend=True,
-                        name=trace,
+                        showlegend=True if j == 0 else False,
+                        legendgroup=group_trace,
+                        name=group_trace,
                         text=list(_df["sampleID"].values[idx2]), 
                         hovertemplate = '<b>Healthy reference sample</b><br><br>'+
                                         f'<b>Group ({group}): {group_trace}</b><br>'+
@@ -706,6 +720,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
     X_other, y_other, y_other_pred = None, None, None
     if df_other is not None:
+        
         df_other = df_other.sort_values(by="age_at_collection")
 
         X_other, y_other = df2vectors(df_other, feature_cols)
@@ -716,10 +731,10 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
             fig.add_trace(go.Scatter(
                 x=y_other.values[idx],
                 y=y_other_pred[idx],
-                mode="lines+markers",
-                line = dict(width=3, dash='dash'),
-                marker=dict(size=10, color='rgba(255,0,0,0.75)'),
-                showlegend=True,
+                mode=longitudinal_mode,
+                line=dict(width=3, dash='dash'),
+                marker=dict(size=outlier_size, color=outlier_color),
+                showlegend=longitudinal_showlegend,
                 name=trace,
                 text=list(df["sampleID"].values[idx]), 
                 hovertemplate = '<b>Other sample</b><br><br>'+
@@ -731,11 +746,13 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
 
     fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age//time_unit_size, limit_age//time_unit_size), 
-                    tick0=start_age//time_unit_size, dtick=round(2/time_unit_size, 1), gridcolor='lightgrey', showspikes=True, spikecolor='gray') 
+                    tick0=start_age//time_unit_size, dtick=2, 
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
     fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]", range=(start_age//time_unit_size, limit_age//time_unit_size), 
-                    tick0=start_age//time_unit_size, dtick=round(2/time_unit_size, 1), gridcolor='lightgrey', showspikes=True, spikecolor='gray')  
+                    tick0=start_age//time_unit_size, dtick=2, 
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
     
-    fig.update_layout(height=1000, width=1100, 
+    fig.update_layout(height=layout_height, width=layout_width,
                       #paper_bgcolor="white",#'rgba(0,0,0,0)', 
                       plot_bgcolor='rgba(0,0,0,0)', 
                       margin=dict(l=0, r=0, b=0, pad=0),
@@ -768,15 +785,26 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
 
 
-def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, degree=2, nboot=50, longitudinal=True): 
+def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, df_new=None, degree=2, nboot=50, longitudinal_mode=None, longitudinal_showlegend=True, fillcolor_alpha=0.3, highlight_outliers=None, outlier_color="255,0,0" ): 
+    """
+    longitudinal_mode: str
+        How a longitudinal data is plotted: markers+lines, lines, markers, etc.
+    """
+    if df_new is None:
+        df_new = df.copy()
+    
     df = df.sort_values(by="age_at_collection")
-
     X, y = df2vectors(df, bacteria_names)
     y_pred = estimator.predict(X)
-    
     y = np.array(y)/time_unit_size
     y_pred = np.array(y_pred)/time_unit_size
     
+    df_new = df_new.sort_values(by="age_at_collection")
+    X_new, y_new = df2vectors(df_new, bacteria_names)
+    y_pred_new = estimator.predict(X_new)
+    y_new = np.array(y_new)/time_unit_size
+    y_pred_new = np.array(y_pred_new)/time_unit_size
+
     mae   = round(np.mean(abs(y_pred - y)), 2)
     r2    = r2_score(y, y_pred)
     coeff = stats.pearsonr(y_pred, y)
@@ -885,34 +913,53 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
         x=list(x2)+list(x2[::-1]),
         y=list(y2-pi)+list(y2+pi)[::-1],
         fill='toself',
-        fillcolor=f'rgba({traj_color},0.15)',
-        line_color=f'rgba({traj_color},0.25)',
+        fillcolor=f'rgba({traj_color},{fillcolor_alpha})',
+        line_color=f'rgba({traj_color},{fillcolor_alpha+0.2})',
         showlegend=False,
         name="95% Prediction Interval",
     ))
     
-    
+    # highlight_outliers - list of outliers to highlight, or True or False to plot all
+    p_lower, _ = np.polyfit(x2, y2-pi, degree, cov=True)
+    p_upper, _ = np.polyfit(x2, y2+pi, degree, cov=True)  
     outliers = set()
-    for i in range(len(y)):
-        idx = int(x2[int(y[i])])
-        lowlim = (y2-pi)[idx]
-        uplim  = (y2+pi)[idx]
-        if y_pred[i] > uplim or y_pred[i] < lowlim:
-            outliers.add(df.iloc[i]["subjectID"])
+    for i in range(len(y_new)):
+        if y_pred_new[i] > equation(p_upper, y_new[i]) or y_pred_new[i] < equation(p_lower, y_new[i]):
+            outliers.add(str(df_new.iloc[i]["sampleID"]))
+            
+    if (isinstance(highlight_outliers, bool) and highlight_outliers==True) or (isinstance(highlight_outliers, list) and len(highlight_outliers)>0):
+        if isinstance(highlight_outliers, list) and len(highlight_outliers)>0:
+            outliers = highlight_outliers
+            
+        idx = np.where(df_new["sampleID"].astype(str).isin(outliers))[0]
+        fig.add_trace(go.Scatter(
+            x=y_new[idx],
+            y=y_pred_new[idx],
+            mode="markers",
+            marker=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="circle-open", line_width=4),
+            showlegend=True,
+            name="Outliers",
+            text=list(df_new["sampleID"].values[idx]), 
+            hovertemplate = '<b>Healthy reference sample outside the healthy region</b><br><br>'+
+                            '<b>SampleID</b>: %{text}<br>'+
+                            '<b>Age</b>: %{x:.2f}'+
+                            '<br><b>MMI</b>: %{y}<br>',
+            hoveron="points"
+        ))
     
-    if longitudinal:
+    if longitudinal_mode is not None:
         # longitudinal - line per subject
-        for trace in df["subjectID"].unique():
-            idx = np.where(df["subjectID"]==trace)[0]
+        for trace in df_new["subjectID"].unique():
+            idx = np.where(df_new["subjectID"]==trace)[0]
             fig.add_trace(go.Scatter(
-                x=y[idx],
-                y=y_pred[idx],
-                mode="markers+lines",
-                line = dict(width=3, dash='dash', color=f'rgba({traj_color},0.35)'),
-                marker=dict(size=10, color=f'rgba({traj_color},0.35)'),
-                showlegend=True,
+                x=y_new[idx],
+                y=y_pred_new[idx],
+                mode=longitudinal_mode,
+                line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
+                marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
+                showlegend=longitudinal_showlegend,
                 name=trace,
-                text=list(df["sampleID"].values[idx]), 
+                text=list(df_new["sampleID"].values[idx]), 
                 hovertemplate = '<b>Healthy reference sample</b><br><br>'+
                                 '<b>SampleID</b>: %{text}<br>'+
                                 '<b>Age</b>: %{x:.2f}'+
@@ -921,16 +968,15 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
             ))
     
     
-    return fig, ret_val, outliers, mae, r2, pi_median
+    return fig, ret_val, outliers, mae, r2, pi_median, pi, y2
 
-def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", title=None, everytick=False, linear_pval=False, nonlinear_pval=False, img_file_name=None, nboot=None):
+def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", title=None, everytick=False, linear_pval=False, nonlinear_pval=False, img_file_name=None, nboot=None, longitudinal_mode="markers+lines", layout_height=900, layout_weight=1000):
     val1 = val1.sort_values(by="age_at_collection")
-    val2 = val2.sort_values(by="age_at_collection")
-
     X1, y1 = df2vectors(val1, feature_cols)
     y_pred1 = estimator_ref.predict(X1)
     sid1 = val1["sampleID"].values
-
+    
+    val2 = val2.sort_values(by="age_at_collection")
     X2, y2 = df2vectors(val2, feature_cols)
     y_pred2 = estimator_ref.predict(X2)
     sid2 = val2["sampleID"].values
@@ -958,8 +1004,8 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
             ))
     
     
-    fig, ret_val1, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val1, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="0,0,255", traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot)
-    fig, ret_val2, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val2, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="255,0,0", traj_label="other", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot)
+    fig, ret_val1, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val1, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="0,0,255", traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False)
+    fig, ret_val2, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val2, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="255,0,0", traj_label="other", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False)
 
               
     # dataframe will be used for linear and nonlinear p-value calculation
@@ -1008,12 +1054,12 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
         ret_val += f"<b>Splines difference:</b><br>p = {pval:.3f}"
         
     fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
-                     tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), gridcolor='lightgrey', showspikes=True, spikecolor='gray') 
+                     tick0=start_age/time_unit_size, dtick=2, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
     fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
-                     tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), gridcolor='lightgrey', showspikes=True, spikecolor='gray')  
+                     tick0=start_age/time_unit_size, dtick=2, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
     
 
-    fig.update_layout(height=1000, width=1100, 
+    fig.update_layout(height=layout_height, width=layout_weight, 
                       #paper_bgcolor="white",#'rgba(0,0,0,0)', 
                       plot_bgcolor='rgba(0,0,0,0)', 
                       margin=dict(l=0, r=0, b=0, pad=0),

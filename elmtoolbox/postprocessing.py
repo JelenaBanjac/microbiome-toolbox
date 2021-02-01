@@ -4,14 +4,16 @@ import shap
 import numpy as np 
 import pandas as pd 
 import itertools
-import math 
 import seaborn as sns
 import scipy.stats as stats
+import math 
 import pathlib
 from matplotlib.patches import Patch
 import scipy as sp
 from elmtoolbox.helpers import df2vectors
 from matplotlib.ticker import MaxNLocator
+from elmtoolbox.trajectory import plot_1_trajectory
+import plotly.graph_objects as go
 
 
 def get_top_bacteria_in_time(estimator, df_all, top_bacteria, days_start, days_number_1unit, num_top_bacteria, average=np.median, std=np.std, time_unit_size=1, time_unit_name="days"):  # scipy.stats.hmean
@@ -64,12 +66,12 @@ def get_top_bacteria_in_time(estimator, df_all, top_bacteria, days_start, days_n
         
     return xpos, bottom, bacteria_name, ratios, avgs, stds, feature_importance, len(df_time_block)
 
-def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name, units, forpatent=False, plot_outliers=None, plot_sample=None, df_new=None, time_unit_size=1, time_unit_name="days", box_height=10, file_name=None, plateau_area_start=None):
+def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name, units, start_age=0, limit_age=None, patent=False, highlight_outliers=None, df_new=None, time_unit_size=1, time_unit_name="days", box_height=10, file_name=None, plateau_area_start=None, longitudinal_mode="markers+lines", longitudinal_showlegend=True, fillcolor_alpha=0.3, layout_height=900, layout_width=1000):
     
     df = df_all.copy()
     
     # if there are samples after units, add the last box at the end that would fill in 
-    limit_age_max = max(df.age_at_collection.astype(int))+1
+    limit_age_max = limit_age or max(df.age_at_collection.astype(int))+1
     if sum(units) < limit_age_max:
         units.append(limit_age_max-sum(units))
     if not plateau_area_start:
@@ -89,29 +91,32 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
         df_new["y_pred"] = y_pred
 
 
-    if forpatent:
-        palette = itertools.cycle(sns.color_palette("light:gray", 19))
-        traj_color = "k"
+    if patent:
+        palette = itertools.cycle(sns.color_palette("Greys", n_colors=11).as_hex())
         boxplot_alpha = 1.0
         num_top_bacteria = 5
-        outlier_color = "gray"
+        outlier_color = "0,0,0"
+        traj_color = "0,0,0"
     else:
         palette = itertools.cycle(sns.color_palette("Paired").as_hex())
-        traj_color = "g"
         boxplot_alpha = 0.8
         num_top_bacteria = 5
-        outlier_color = "red"
+        outlier_color = "255,0,0"
+        traj_color = "26,150,65" 
+        
     colors = {}
     ypos_text_margin = 1.5
     text_fontsize_samples = 15
     str_fmt = ".5f"
-    latest_day = 0
+    latest_day = start_age
     legend_vals = []
 
-    fig = go.Figure()    
-    group = None
-    fig, ret_val, outliers, mae, r2, pi_median = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="26,150,65", traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=None, longitudinal=group is None)
-    
+    fig = go.Figure()  
+    fig, ret_val, outliers, mae, r2, pi_median, traj_pi, traj_mean = plot_1_trajectory(fig, estimator, df, top_bacteria, limit_age_max, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", 
+                                                                   plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=None, longitudinal_mode=longitudinal_mode, 
+                                                                   longitudinal_showlegend=longitudinal_showlegend, fillcolor_alpha=fillcolor_alpha, highlight_outliers=highlight_outliers,
+                                                                  outlier_color=outlier_color, df_new=df_new)
+
 
     for days_number_1unit in units:
 
@@ -155,16 +160,19 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
                 bottom += height
 
         latest_day += days_number_1unit
- 
+
+    
     fig.update_xaxes( 
         title=f"Age [{time_unit_name}]",
         range=(0, latest_day/time_unit_size),
-        gridcolor='lightgrey'
+        tick0=start_age/time_unit_size, dtick=2,
+        showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey'
     )
     fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]",
-                     range=(0, latest_day/time_unit_size),
-                    gridcolor='lightgrey') 
-    fig.update_layout(height=900, width=1000,
+                     tick0=start_age/time_unit_size, dtick=2,
+                     range=(0, latest_day/time_unit_size), 
+                     showline=True, linecolor='lightgrey', gridcolor='lightgrey') 
+    fig.update_layout(height=layout_height, width=layout_width,
                       barmode='stack', uniformtext=dict(mode="hide", minsize=10),
                       plot_bgcolor='rgba(0,0,0,0)', 
                       margin=dict(l=0, r=0, b=0, pad=0),
@@ -172,3 +180,5 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
     if file_name:
         fig.write_html(file_name)
     fig.show()
+    
+    return traj_pi, traj_mean
