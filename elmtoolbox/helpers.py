@@ -32,3 +32,7 @@ def df2vectors(_df, feature_cols=None):
     X = _df.values
 
     return X, y
+
+
+def get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("k__")):
+    return df.columns[df.columns.map(bacteria_fun)]

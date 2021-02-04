@@ -1,3 +1,4 @@
+from typing import Container
 import dash
 import dash_bootstrap_components as dbc
 from dash_bootstrap_components._components.Col import Col
@@ -16,6 +17,7 @@ import time
 import os
 
 from app import app, filecache_dir, cache
+from pages import page1, page2
 
 # this example that adds a logo to the navbar brand
 navbar = dbc.Navbar(
@@ -44,7 +46,7 @@ navbar = dbc.Navbar(
 card1 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="static/img/download.svg", top=True),
+            dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
                     html.H4("Data Analysis & Exploration", className="card-title"),
@@ -53,11 +55,13 @@ card1 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    html.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/page-1"),
+                    #html.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/methods/page-1"),
+                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card1-btn"), href='/methods/page-1'),
                 ]
             ),
         ],
         #style={"width": "18rem"},
+        style={"backgroundColor": "rgb(240, 240, 240)"},
         className="mb-4 box-shadow"
     ),
     className="md-4"
@@ -66,7 +70,7 @@ card1 = dbc.Col(
 card2 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="static/img/download.svg", top=True),
+            dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
                     html.H4("Healthy Reference", className="card-title"),
@@ -75,11 +79,12 @@ card2 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("Go somewhere", outline=True, color="dark"),
+                    dbc.Button("See more", outline=True, color="dark"),
                 ]
             ),
         ],
         #style={"width": "18rem"},
+        style={"backgroundColor": "rgb(240, 240, 240)"},
         className="mb-4 box-shadow"
     ),
     className="md-4"
@@ -88,7 +93,7 @@ card2 = dbc.Col(
 card3 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="static/img/download.svg", top=True),
+            dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
                     html.H4("Differential Ranking", className="card-title"),
@@ -97,11 +102,12 @@ card3 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("Go somewhere", outline=True, color="dark"),
+                    dbc.Button("See more", outline=True, color="dark"),
                 ]
             ),
         ],
         #style={"width": "18rem"},
+        style={"backgroundColor": "rgb(240, 240, 240)"},
         className="mb-4 box-shadow"
     ),
     className="md-4"
@@ -110,7 +116,7 @@ card3 = dbc.Col(
 card4 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="static/img/download.svg", top=True),
+            dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
                     html.H4("Microbiome Trajectory", className="card-title"),
@@ -119,11 +125,12 @@ card4 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("Go somewhere", outline=True, color="dark"),
+                    dbc.Button("See more", outline=True, color="dark"),
                 ]
             ),
         ],
         #style={"width": "18rem"},
+        style={"backgroundColor": "rgb(240, 240, 240)"},
         className="mb-4 box-shadow"
     ),
     className="md-4"
@@ -132,7 +139,7 @@ card4 = dbc.Col(
 card5 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="static/img/download.svg", top=True),
+            dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
                     html.H4("Bacteria Importance with Time", className="card-title"),
@@ -141,11 +148,12 @@ card5 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("Go somewhere", outline=True, color="dark"),
+                    dbc.Button("See more", outline=True, color="dark"),
                 ]
             ),
         ],
         #style={"width": "18rem"},
+        style={"backgroundColor": "rgb(240, 240, 240)"},
         className="mb-4 box-shadow"
     ),
     className="md-4"
@@ -154,7 +162,7 @@ card5 = dbc.Col(
 card6 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="static/img/download.svg", top=True),
+            dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
                     html.H4("Longitudinal Anomaly Detection", className="card-title"),
@@ -163,11 +171,11 @@ card6 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("Go somewhere", outline=True, color="dark"),
+                    dbc.Button("See more", outline=True, color="dark"),
                 ]
             ),
         ],
-        style={"backgroundColor": "rgb(255, 255, 255)"},
+        style={"backgroundColor": "rgb(240, 240, 240)"},
         className="mb-4 box-shadow"
     ),
     className="md-4"
@@ -176,37 +184,45 @@ card6 = dbc.Col(
 
 
 
-index_page = html.Div([
-    dbc.Row([
-        dbc.Col(className="md-4"),
-        dbc.Col(
-            dcc.Upload(
-                id='upload-data',
-                children=html.Div([
-                    'Drag and Drop or ',
-                    html.A('Select Files')
-                ]),
-                style={
-                    'width': '30%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'dashed',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '10px'
-                },
-            ), className="md-4"
+main_upload_layout = html.Div([
+    dbc.Container([
+        dbc.Row([
+            #dbc.Col( className="md-4"),
+            dbc.Col([
+                html.H3("Upload Dataset"),
+                html.Br(),
+                #html.P("Uploac"),
+                dcc.Upload(
+                    id='upload-data',
+                    children=html.Div([
+                        'Drag and Drop or ',
+                        html.A('Select File')
+                    ]),
+                    style={
+                        'width': '30%',
+                        'height': '60px',
+                        'lineHeight': '60px',
+                        'borderWidth': '1px',
+                        'borderStyle': 'dashed',
+                        'borderRadius': '5px',
+                        'textAlign': 'center',
+                        'margin': '10px'
+                    },
+                )]),
+            ]
         ),
-        dbc.Col(className="md-4"),
-        ]
-    ),
-    
-    html.Br(),
-    dcc.Link('Go to Page 1', href='/page-1'),
-    html.Br(),
-    dcc.Link('Go to Page 2', href='/page-2'),
+    ], className="md-12")
 ])
+
+
+
+
+main_layout =  html.Div(id="main",
+                 children=[
+                    html.Div(id='main-upload', children=main_upload_layout),
+                    html.Br(),
+                    html.Div(id='main-methods')
+        ])
 
 
 
@@ -265,7 +281,7 @@ def methods_container(session_id):
     df = read_dataframe(session_id, None)
 
     return html.Div([
-                #dcc.Location(href="/methods", id='url', refresh=False),
+                #dcc.Location(id='url', refresh=False),
                
                 dbc.Container([
                     dbc.Row(
@@ -306,7 +322,7 @@ def methods_container(session_id):
             style={
                 'verticalAlign':'middle',
                 'textAlign': 'center',
-                'backgroundColor': 'rgb(245, 245, 245)',
+                'backgroundColor': 'rgb(255, 255, 255)', #'rgb(245, 245, 245)',
                 'position':'relative',
                 'width':'100%',
                 #'height':'100vh',
@@ -316,7 +332,14 @@ def methods_container(session_id):
             }
     )
 
-
+def main_layout_(session_id):
+    print("mew =======")
+    return html.Div(id="main",
+                 children=[
+                    html.Div(id='main-upload', children=main_upload_layout),
+                    html.Br(),
+                    methods_container(session_id) # if session_id is not None else html.Div()
+        ])
 
 
 def serve_layout():
@@ -324,13 +347,12 @@ def serve_layout():
 
     return html.Div([
         navbar,
-        #dcc.Location(id='url', refresh=False),
+        dcc.Location(id='url', refresh=False),
         html.Div(session_id, id='session-id', style={'display': 'none'}),
         #html.Div(id='filecache_marker', style={'display': 'none'}),
         #index_page,
-        html.Div(index_page, id='output-data-upload'),
-        html.Br(),
-        html.Div(id='page-content')
+       
+        main_layout
     ])
 
 app.layout = serve_layout
@@ -338,21 +360,26 @@ app.layout = serve_layout
 
 
 # Update the index
-# @app.callback(Output('page-content', 'children'),
-#               [Input('url', 'pathname')])
-# def display_page(pathname):
-#     if pathname == '/page-1':
-#         return page1.layout
-#     elif pathname == '/page-2':
-#         return page2.layout
-#     else:
-#         return index_page
+@app.callback(Output('main', 'children'),
+              [Input('url', 'pathname')],
+              [State('session-id', 'children')])
+def display_page(pathname, session_id):
+    print("pathname", pathname, "session_id", session_id)
+    if pathname == '/methods/page-1':
+        return page1.layout
+    elif pathname == '/methods/page-2':
+        return page2.layout
+    elif pathname == '/methods':
+        return main_layout_(session_id)
+    else: 
+        print("Ohter path....")
+        return serve_layout  #main_layout_(None)
 
 
 
 ### RETURNS METHODS ###
 @app.callback(
-    Output('output-data-upload', 'children'),
+    Output('main-methods', 'children'),
     [Input('upload-data', 'contents'),
     Input('upload-data', 'filename'),
     Input('upload-data', 'last_modified')],
@@ -360,7 +387,7 @@ app.layout = serve_layout
 def return_methods(contents, filename, last_modified, session_id):
 
     if not contents:
-        return index_page
+        return html.Div()
 
     # write contents to file
     print('Calling save_file')

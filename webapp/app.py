@@ -18,7 +18,7 @@ import os
 app_dir = os.getcwd()
 filecache_dir = os.path.join(app_dir, 'cached_files')
 
-app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.COSMO, "static/css/album.css"])
+app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.COSMO])
 #app.config.suppress_callback_exceptions = True
 
 

@@ -9,7 +9,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 
 ### PLOTLY ###
-def dataset_bacteria_abundances(df, bacteria_names, time, num_cols, nice_name=lambda x: x, file_name=None):
+def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size=1, time_unit_name="days", nice_name=lambda x: x, file_name=None, height=1900, width=1500, website=False):
     """ Plot dataset's bacteria abundances
     
     Parameters
@@ -27,34 +27,43 @@ def dataset_bacteria_abundances(df, bacteria_names, time, num_cols, nice_name=la
     file_name: str
         The HTML file to store the interactive plot
     """
+    df = df_all.copy()
+
+    df["time"] = df.age_at_collection//time_unit_size
+
     num_rows = len(bacteria_names)//num_cols+1
 
-    fig = make_subplots(rows=num_rows, cols=num_cols)
+    fig = make_subplots(rows=num_rows, cols=num_cols, horizontal_spacing=0.1)
 
     for idx, bacteria_name in enumerate(bacteria_names):
         fig.add_trace(go.Scatter(
-                x=df.groupby(by=time).agg(np.mean)[bacteria_name].index,
-                y=df.groupby(by=time).agg(np.mean)[bacteria_name],
+                x=df.groupby(by="time").agg(np.mean)[bacteria_name].index,
+                y=df.groupby(by="time").agg(np.mean)[bacteria_name],
                 error_y=dict(
                     type='data', # value of error bar given in data coordinates
-                    array=df.groupby(by=time).agg(np.std)[bacteria_name],
+                    array=df.groupby(by="time").agg(np.std)[bacteria_name],
                     visible=True), name=nice_name(bacteria_name)
             ), row=idx//num_cols+1, col=idx%num_cols+1)
-        fig.update_xaxes(title="Time", row=idx//num_cols+1, col=idx%num_cols+1)  # gridcolor='lightgrey'
-        fig.update_yaxes(title=nice_name(bacteria_name), row=idx//num_cols+1, col=idx%num_cols+1)  # gridcolor='lightgrey'
+        fig.update_xaxes(title=f"Age at collection [{time_unit_name}]", row=idx//num_cols+1, col=idx%num_cols+1)  # gridcolor='lightgrey'
+        fig.update_yaxes(title=nice_name(bacteria_name).replace(" ", "<br>"), row=idx//num_cols+1, col=idx%num_cols+1)  # gridcolor='lightgrey'
 
-    fig.update_layout(height=1900, width=1500, 
+    fig.update_layout(height=height, width=width, 
                       paper_bgcolor="white",#'rgba(0,0,0,0)', 
                       #plot_bgcolor='rgba(0,0,0,0)', 
-                       margin=dict(l=0, r=0, b=0, pad=0),
-                      title_text="Bacteria Abundances in the Dataset")
+                      margin=dict(l=0, r=0, b=0, pad=0),
+                      title_text="Bacteria Abundances in the Dataset",
+                      font=dict(size=10),
+                      yaxis=dict(position=0.0))
     if file_name:
         fig.write_html(file_name)
-    fig.show()
+
+    if not website:
+        fig.show()
+
+    return fig
 
 
-
-def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_size=1, time_unit_name="days", file_name=None, height=1000, width=2100):
+def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_size=1, time_unit_name="days", file_name=None, height=1000, width=2100, website=False):
     df = df_all.copy()
 
     colors = ["0,0,255", "255,0,0", "0,255,0"]
@@ -62,7 +71,7 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
 
     if group is not None:
         num_cols = len(df[group].unique())
-        fig = make_subplots(rows=1, cols=num_cols, subplot_titles=[f"{group}={s}" for s in df[group].unique()])
+        fig = make_subplots(rows=1, cols=num_cols, subplot_titles=[f"{group}={s}" for s in df[group].unique()], horizontal_spacing=0.1)
         
         legend_vals = []
         
@@ -104,8 +113,8 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
                     hoveron="points"
                 ), row=1, col=col)
 
-            fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size-1, limit_age/time_unit_size+1), 
-                            #tick0=start_age/time_unit_size, dtick=round(2/time_unit_size, 1), 
+            fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
+                            tick0=start_age/time_unit_size, dtick=2, 
                             showline=True, linecolor='lightgrey', gridcolor='lightgrey', showspikes=True, spikecolor='gray', zeroline=True, zerolinecolor='lightgrey', row=1, col=col) 
             fig.update_yaxes(title=f"Subject ID ", showline=True, linecolor='lightgrey', gridcolor='lightgrey', showspikes=True, spikecolor='gray', zeroline=True, zerolinecolor='lightgrey', row=1, col=col)  
 
@@ -115,7 +124,6 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
                           plot_bgcolor='rgba(0,0,0,0)', 
                           margin=dict(l=0, r=0, b=0, pad=0),
                           title_text="Sampling statistics")
-        fig.show()
     else:
 
         fig = go.Figure()
@@ -168,14 +176,17 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
                           plot_bgcolor='rgba(0,0,0,0)', 
                           margin=dict(l=0, r=0, b=0, pad=0),
                           title_text="Sampling statistics")
+    if not website:
         fig.show()
 
     if file_name:
         fig.write_html(file_name)
 
+    return fig
 
 
-def plot_bacteria_abundance_heatmaps(df, bacteria_names, short_bacteria_name=lambda x: x, time_unit_name="days", time_unit_size=1, avg_fn=np.median, fillna=False):
+
+def plot_bacteria_abundance_heatmaps(df, bacteria_names, short_bacteria_name=lambda x: x, time_unit_name="days", time_unit_size=1, avg_fn=np.median, fillna=False, website=False, width=None, height=None):
     """ Plot bacteria abundances over time 
     
     Plot 2 plots:
@@ -252,10 +263,10 @@ def plot_bacteria_abundance_heatmaps(df, bacteria_names, short_bacteria_name=lam
                     x=df_heatmap_pivot.columns,
                     y=df_heatmap_pivot.index,
                     title="Absolute abundances",
-                    height=20*len(bacteria_names), width=20*len(max(df_heatmap_pivot.index, key=len))+20*max(df_heatmap_pivot.columns)
+                    height=20*len(bacteria_names)  if height is None else height, 
+                    width=20*len(max(df_heatmap_pivot.index, key=len))+20*max(df_heatmap_pivot.columns) if width is None else width
                    )
     fig.update_xaxes(side="bottom")
-    fig.show()
 
     #######
     X = df_heatmap.bacteria_value.values 
@@ -270,16 +281,93 @@ def plot_bacteria_abundance_heatmaps(df, bacteria_names, short_bacteria_name=lam
     if fillna:
         df_heatmap_relative_pivot = df_heatmap_relative_pivot.fillna(0)
 
-    fig = px.imshow(df_heatmap_relative_pivot.values,
+    fig2 = px.imshow(df_heatmap_relative_pivot.values,
                     labels=dict(x=f"Age [{time_unit_name}]", y="Bacteria Name", color="Abundance"),
                     x=df_heatmap_relative_pivot.columns,
                     y=df_heatmap_relative_pivot.index,
                     title="Relative abundances",
-                    height=20*len(bacteria_names), width=20*len(max(df_heatmap_pivot.index, key=len))+20*max(df_heatmap_pivot.columns)
+                    height=20*len(bacteria_names)  if height is None else height, 
+                    width=20*len(max(df_heatmap_pivot.index, key=len))+20*max(df_heatmap_pivot.columns) if width is None else width
                    )
-    fig.update_xaxes(side="bottom")
-    fig.show()
+    fig2.update_xaxes(side="bottom")
+    
+    if not website:
+        fig.show()
+        fig2.show()
+    
+    return fig, fig2
 
+
+def plot_ultradense_longitudinal_data(df, infants_to_plot, cols_num, min_days, max_days, bacteria_names, nice_name=lambda x: x, file_name = "tst.html", h=300, w=100, website=False):
+    rows_num = len(infants_to_plot)//cols_num+1
+    
+    # limit to plot 20 bacteria
+    bacteria_names = bacteria_names[:20]
+
+    cmap = plt.cm.get_cmap('tab20', len(bacteria_names))
+    colors_dict = dict([(b, cmap(i)) for i, b in enumerate(bacteria_names)])
+
+    fig = make_subplots(rows=rows_num, cols=cols_num,
+                        shared_xaxes=True, shared_yaxes=True, 
+                        vertical_spacing=0.01, 
+                        horizontal_spacing=0.01
+                       )
+
+    for idx, infant in enumerate(infants_to_plot):
+        i, j = idx//cols_num, idx%cols_num
+
+        df1 = df.reset_index()
+        df1 = df1[df1.subjectID==infant].sort_values("age_at_collection")
+
+        if len(df1)==1:
+
+            for b in bacteria_names:
+                
+                fig.add_trace(go.Scatter(
+                    x=list(df1.age_at_collection.values), 
+                    y=list(df1[b].values)*2,
+                    text=list(map(lambda x: nice_name(x), bacteria_names)), 
+                    hoverinfo='text',
+                    mode='lines',
+                    marker_color=f"rgba{colors_dict[b]}",
+                    name=nice_name(b),
+                    legendgroup=nice_name(b),
+                    showlegend=True if idx==0 else False,
+                    stackgroup='one' # define stack group
+                ), row=i+1, col=j+1)
+                
+                fig.update_xaxes(title=infant, row=i+1, col=j+1)
+
+        else:
+            for b in bacteria_names:
+                fig.add_trace(go.Scatter(
+                    x=list(df1.age_at_collection.values), 
+                    y=list(df1[b].values),
+                    text=list(map(lambda x: nice_name(x), bacteria_names)), 
+                    hoverinfo='text',
+                    mode='lines',
+                    marker_color=f"rgba{colors_dict[b]}",
+                    name=nice_name(b),
+                    legendgroup=nice_name(b),
+                    showlegend=True if idx==0 else False,
+                    stackgroup='one'
+                ), row=i+1, col=j+1)
+                
+                fig.update_xaxes(title=infant, row=i+1, col=j+1)
+
+    fig.update_layout(height=h*rows_num, width=w*cols_num, 
+                      plot_bgcolor='rgba(0,0,0,0)', 
+                      title_text="Ultradense Longitudinal Data")
+    for i in fig['layout']['annotations']:
+        i['font'] = dict(size=8,color='#000000')
+    
+    if file_name:
+        fig.write_html(file_name)
+
+    if not website:
+        fig.show()
+        
+    return fig
 
 
 ### MATPLOTLIB ###
@@ -470,72 +558,3 @@ def plot_ultradense_longitudinal_data_matplotlib(df, infants_to_plot, cols_num, 
 
         plt.legend(_colors_dict, **legend_kw)
 
-
-def plot_ultradense_longitudinal_data(df, infants_to_plot, cols_num, min_days, max_days, bacteria_names, nice_name=lambda x: x, file_name = "tst.html", h=300, w=100):
-    rows_num = len(infants_to_plot)//cols_num+1
-    
-    # limit to plot 20 bacteria
-    bacteria_names = bacteria_names[:20]
-
-    cmap = plt.cm.get_cmap('tab20', len(bacteria_names))
-    colors_dict = dict([(b, cmap(i)) for i, b in enumerate(bacteria_names)])
-
-    fig = make_subplots(rows=rows_num, cols=cols_num,
-                        shared_xaxes=True, shared_yaxes=True, 
-                        vertical_spacing=0.01, 
-                        horizontal_spacing=0.01
-                       )
-
-    for idx, infant in enumerate(infants_to_plot):
-        i, j = idx//cols_num, idx%cols_num
-
-        df1 = df.reset_index()
-        df1 = df1[df1.subjectID==infant].sort_values("age_at_collection")
-
-        if len(df1)==1:
-
-            for b in bacteria_names:
-                
-                fig.add_trace(go.Scatter(
-                    x=list(df1.age_at_collection.values), 
-                    y=list(df1[b].values)*2,
-                    text=list(map(lambda x: nice_name(x), bacteria_names)), 
-                    hoverinfo='text',
-                    mode='lines',
-                    marker_color=f"rgba{colors_dict[b]}",
-                    name=nice_name(b),
-                    legendgroup=nice_name(b),
-                    showlegend=True if idx==0 else False,
-                    stackgroup='one' # define stack group
-                ), row=i+1, col=j+1)
-                
-                fig.update_xaxes(title=infant, row=i+1, col=j+1)
-
-        else:
-            for b in bacteria_names:
-                fig.add_trace(go.Scatter(
-                    x=list(df1.age_at_collection.values), 
-                    y=list(df1[b].values),
-                    text=list(map(lambda x: nice_name(x), bacteria_names)), 
-                    hoverinfo='text',
-                    mode='lines',
-                    marker_color=f"rgba{colors_dict[b]}",
-                    name=nice_name(b),
-                    legendgroup=nice_name(b),
-                    showlegend=True if idx==0 else False,
-                    stackgroup='one'
-                ), row=i+1, col=j+1)
-                
-                fig.update_xaxes(title=infant, row=i+1, col=j+1)
-
-    fig.update_layout(height=h*rows_num, width=w*cols_num, 
-                      plot_bgcolor='rgba(0,0,0,0)', 
-                      title_text="Ultradense Longitudinal Data")
-    for i in fig['layout']['annotations']:
-        i['font'] = dict(size=8,color='#000000')
-    
-    if file_name:
-        fig.write_html(file_name)
-
-
-    fig.show()
