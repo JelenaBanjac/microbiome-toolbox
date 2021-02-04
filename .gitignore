@@ -1,6 +1,7 @@
 later.py
 notebooks/
 notebooks_to_delete_when_merged/
+cached_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
