@@ -6,7 +6,7 @@ from dash_bootstrap_components._components.Row import Row
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
-import dash_table
+
 import base64
 import datetime
 import io
@@ -15,8 +15,10 @@ import pandas as pd
 import uuid
 import time
 import os
+import dash_uploader as du
+from pathlib import Path
 
-from app import app, filecache_dir, cache
+from app import app, UPLOAD_FOLDER_ROOT, cache
 from pages import page1, page2
 
 # this example that adds a logo to the navbar brand
@@ -182,69 +184,26 @@ card6 = dbc.Col(
 )
 
 
+def parse_dataset(filename):
+    #content_type, content_string = content.split(',')
 
-
-main_upload_layout = html.Div([
-    dbc.Container([
-        dbc.Row([
-            #dbc.Col( className="md-4"),
-            dbc.Col([
-                html.H3("Upload Dataset"),
-                html.Br(),
-                #html.P("Uploac"),
-                dcc.Upload(
-                    id='upload-data',
-                    children=html.Div([
-                        'Drag and Drop or ',
-                        html.A('Select File')
-                    ]),
-                    style={
-                        'width': '30%',
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '5px',
-                        'textAlign': 'center',
-                        'margin': '10px'
-                    },
-                )]),
-            ]
-        ),
-    ], className="md-12")
-])
-
-
-
-
-main_layout =  html.Div(id="main",
-                 children=[
-                    html.Div(id='main-upload', children=main_upload_layout),
-                    html.Br(),
-                    html.Div(id='main-methods')
-        ])
-
-
-
-def parse_dataset(content, filename):
-    content_type, content_string = content.split(',')
-
-    decoded = base64.b64decode(content_string)
+    #decoded = base64.b64decode(content_string)
     df = None
     try:
         if 'csv' in filename:
             # Assume that the user uploaded a CSV file
-            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+            #df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+            df = pd.read_csv(filename)
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             #df = pd.read_excel(io.BytesIO(decoded))
-            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep="\t")
+            #df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep="\t")
+            df = pd.read_csv(filename, sep="\t")
     except Exception as e:
         print(e)
         return None
-    print('Read dataframe:')
-    print(df.columns)
-    print(df)
+    print('\nFinished parsing df parse_dataset')
+
     return df
 
 
@@ -254,8 +213,8 @@ def write_dataframe(session_id, df):
     For now do not preserve or distinguish filename;
     user has one file at once.
     '''
-    print('Calling write_dataframe')
-    filename = os.path.join(filecache_dir, session_id)
+    print('\nCalling write_dataframe')
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
     df.to_pickle(filename)
 
 # cache memoize this and add timestamp as input!
@@ -264,96 +223,98 @@ def read_dataframe(session_id, timestamp):
     '''
     Read dataframe from disk, for now just as CSV
     '''
-    print('Calling read_dataframe')
-    print('filecache_dir', filecache_dir)
-    print(type(filecache_dir))
-    print('session_id', session_id)
-    filename = os.path.join(filecache_dir, session_id)
-    print('filename', filename)
-    df = pd.read_pickle(filename)
-    # simulate reading in big data with a delay
-    print('** Reading data from disk **')
+    print('\nCalling read_dataframe')
+    print('\tsession_id', session_id)
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
+    if os.path.exists(filename):
+        print('\tfilename', filename)
+        df = pd.read_pickle(filename)
+        print('** Reading data from disk **')
+    else:
+        print('\tfilename not yet exists', filename)
+        df = None
+        print('** No data, df empty **')
+
     return df
 
 
-def methods_container(session_id):
+def main_layout_(session_id, upload_filename):
+    if not upload_filename:
+        upload_filename_alert = html.Div([])
+    else:
+        upload_filename_alert = html.Div(dbc.Alert(f"Currently loaded file: {upload_filename}", color="info"))
 
-    df = read_dataframe(session_id, None)
-
-    return html.Div([
-                #dcc.Location(id='url', refresh=False),
-               
-                dbc.Container([
-                    dbc.Row(
-                        dbc.Col([
-                            html.Div(html.H3("Data Loaded")),
-                            html.Br(),
-                            dash_table.DataTable(
-                                id='upload-datatable',
-                                columns=[{"name": i, "id": i} for i in df.columns],
-                                data=df.to_dict('records'),
-                                style_data={
-                                    'width': '{}%'.format(max(df.columns, key=len)),
-                                    'minWidth': '50px',
-                                    'maxWidth': '500px',
-                                },
-                                style_table={
-                                    'height': 300, 
-                                    'overflowX': 'auto'
-                                }  
-                            )
-                            ], 
-                        className="md-12"),
-                    ),
-                    dbc.Row(
-                        dbc.Col([
-                            html.Br(),
-                            html.Div(html.H3("Methods")),
-                            html.Br(),
-                            ], 
-                        className="md-12"),
-                    ),
-                    dbc.Row([card1, card2, card3]),
-                    dbc.Row([card4, card5, card6])
-                ],
-                className="md-4",
-                )
-            ],
-            style={
-                'verticalAlign':'middle',
-                'textAlign': 'center',
-                'backgroundColor': 'rgb(255, 255, 255)', #'rgb(245, 245, 245)',
-                'position':'relative',
-                'width':'100%',
-                #'height':'100vh',
-                'bottom':'0px',
-                'left':'0px',
-                'zIndex':'1000',
-            }
-    )
-
-def main_layout_(session_id):
-    print("mew =======")
+    print("\nMain layout function called only with /methods")
     return html.Div(id="main",
                  children=[
-                    html.Div(id='main-upload', children=main_upload_layout),
+                   html.Div(id='main-upload', children=[
+                        dbc.Container([
+                            dbc.Row([
+                                dbc.Col([
+                                    html.H3("Upload Dataset", style={'textAlign': 'center',}),
+                                    html.Br(),
+                                    du.Upload(
+                                        id='upload-data',
+                                        filetypes=['csv', 'xls'],
+                                        upload_id=session_id,
+                                    ),
+                                    html.Div(id="upload-infobox", children=upload_filename_alert),
+                                    ]),
+                                ]
+                            ),
+                        ], className="md-12")
+                    ]),
                     html.Br(),
-                    methods_container(session_id) # if session_id is not None else html.Div()
+                   
+
+                    html.Div(id="main-methods", children=[
+                            #dcc.Location(id='url', refresh=False),
+                        
+                            dbc.Container([
+                                dbc.Row(
+                                    dbc.Col([
+                                        html.Br(),
+                                        html.Div(html.H3("Methods")),
+                                        html.Br(),
+                                        ], 
+                                    className="md-12"),
+                                ),
+                                dbc.Row([card1, card2, card3]),
+                                dbc.Row([card4, card5, card6])
+                            ],
+                            className="md-4",
+                            )
+                        ],
+                        style={
+                            'verticalAlign':'middle',
+                            'textAlign': 'center',
+                            'backgroundColor': 'rgb(255, 255, 255)', #'rgb(245, 245, 245)',
+                            'position':'relative',
+                            'width':'100%',
+                            #'height':'100vh',
+                            'bottom':'0px',
+                            'left':'0px',
+                            'zIndex':'1000',
+                        }
+                )
         ])
 
-
-def serve_layout():
-    session_id = str(uuid.uuid4())
-
+def layout_(session_id, upload_info):
+    print("\nLayout function called from server_layout init or can be separately called")
     return html.Div([
         navbar,
         dcc.Location(id='url', refresh=False),
         html.Div(session_id, id='session-id', style={'display': 'none'}),
-        #html.Div(id='filecache_marker', style={'display': 'none'}),
-        #index_page,
-       
-        main_layout
+        html.Div(upload_info, id='upload-filename', style={'display': 'none'}),
+
+        main_layout_(session_id, upload_info)
     ])
+
+def serve_layout():
+    session_id = str(uuid.uuid4())
+    print("\nServe layout", session_id)
+
+    return layout_(session_id, '')
 
 app.layout = serve_layout
 
@@ -362,45 +323,67 @@ app.layout = serve_layout
 # Update the index
 @app.callback(Output('main', 'children'),
               [Input('url', 'pathname')],
-              [State('session-id', 'children')])
-def display_page(pathname, session_id):
-    print("pathname", pathname, "session_id", session_id)
+              [State('session-id', 'children'),
+              State('upload-filename', 'children')])
+def display_page(pathname, session_id, upload_filename):
+    print("\nPathname", pathname, "session_id", session_id)
     if pathname == '/methods/page-1':
         return page1.layout
     elif pathname == '/methods/page-2':
         return page2.layout
-    elif pathname == '/methods':
-        return main_layout_(session_id)
     else: 
-        print("Ohter path....")
-        return serve_layout  #main_layout_(None)
+        print("\tohter path....")
+        return main_layout_(session_id, upload_filename)  #app.layout  #main_layout_(None)
 
 
-
-### RETURNS METHODS ###
 @app.callback(
-    Output('main-methods', 'children'),
-    [Input('upload-data', 'contents'),
-    Input('upload-data', 'filename'),
-    Input('upload-data', 'last_modified')],
-    [State('session-id', 'children')])
-def return_methods(contents, filename, last_modified, session_id):
-
-    if not contents:
-        return html.Div()
-
-    # write contents to file
-    print('Calling save_file')
-    print('New last_modified would be',last_modified)
-    df = None
-    if contents is not None:
-        print('contents is not None')
-        df = parse_dataset(contents, filename)
-        write_dataframe(session_id, df)
-    if df is None:
-        return html.Div(dbc.Alert("There was an error processing this file!", color="danger"))
+    [Output('upload-filename', 'children'),
+    Output('upload-infobox', 'children')],
+    [Input('upload-data', 'isCompleted')],
+    [State('upload-data', 'fileNames'),
+     State('upload-data', 'upload_id'),
+     State('upload-filename', 'children')])
+def return_methods(iscompleted, filenames, upload_id, filename_latest):
+    print("Upload callback called")
     
-    return methods_container(session_id)
+    upload_infobox = html.Div([])
+
+    if filenames is not None:
+        filename = filenames[0]
+    elif filename_latest != '':
+        filename = filename_latest
+        upload_infobox = html.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+    else:
+        filename = ''
+    
+    
+
+    if not iscompleted:
+        return filename, upload_infobox
+
+    df = None
+    
+    if filenames is not None:
+        if upload_id:
+            root_folder = os.path.join(UPLOAD_FOLDER_ROOT, upload_id)
+        else:
+            root_folder = UPLOAD_FOLDER_ROOT
+
+        filename = filenames[0]
+        file = os.path.join(root_folder, filename)
+
+        df = parse_dataset(file)
+        print(df)
+        write_dataframe(upload_id, df)
+        upload_infobox = html.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+
+    if df is None:
+        upload_infobox = html.Div(dbc.Alert("There was an error processing this file!", color="danger"))
+
+    print("filename", filename)
+    print("upload_infobox", upload_infobox)
+    return filename, upload_infobox
+
 
 
 if __name__ == '__main__':

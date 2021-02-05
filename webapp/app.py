@@ -13,13 +13,15 @@ import pandas as pd
 import uuid
 import time
 import os
+import dash_uploader as du
 
 
 app_dir = os.getcwd()
-filecache_dir = os.path.join(app_dir, 'cached_files')
+UPLOAD_FOLDER_ROOT = os.path.join(app_dir, 'cached_files')
 
 app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.COSMO])
 #app.config.suppress_callback_exceptions = True
+du.configure_upload(app, UPLOAD_FOLDER_ROOT)
 
 
 cache = Cache(app.server, config={

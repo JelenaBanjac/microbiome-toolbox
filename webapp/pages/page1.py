@@ -6,11 +6,12 @@ import pandas as pd
 import os
 import numpy as np
 import sys
+import dash_table
 sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
 from elmtoolbox.preprocessing import dataset_bacteria_abundances, sampling_statistics, plot_bacteria_abundance_heatmaps, plot_ultradense_longitudinal_data
 from elmtoolbox.helpers import get_bacteria_names
 
-from app import app, filecache_dir, cache
+from app import app, cache, UPLOAD_FOLDER_ROOT
 
 # layout = html.Div([
 #     html.H3('Page 1'),
@@ -70,10 +71,17 @@ layout = html.Div([
             dbc.Container([
                 dbc.Row(
                     dbc.Col([
-                        dcc.Link('Back', href='/methods'),
+                        dcc.Link('Back', href='/'),
 
                         html.H3("Data Analysis & Exploration"),
                         html.Br(),
+
+                        # Abundance plot in general
+                        html.H4("Loaded data table"),
+                        html.Div(id='page-1-display-value-0'),
+                        html.Br(),
+
+                        html.Hr(),
 
                         # Abundance plot in general
                         html.H4("Taxa Abundances"),
@@ -127,16 +135,41 @@ def read_dataframe(session_id, timestamp):
     '''
     Read dataframe from disk, for now just as CSV
     '''
-    print('Calling read_dataframe')
-    print('filecache_dir', filecache_dir)
-    print(type(filecache_dir))
-    print('session_id', session_id)
-    filename = os.path.join(filecache_dir, session_id)
-    print('filename', filename)
-    df = pd.read_pickle(filename)
-    # simulate reading in big data with a delay
-    print('** Reading data from disk **')
+    print('\nCalling read_dataframe')
+    print('\tsession_id', session_id)
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
+    if os.path.exists(filename):
+        print('\tfilename', filename)
+        df = pd.read_pickle(filename)
+        print('** Reading data from disk **')
+    else:
+        print('\tfilename not yet exists', filename)
+        df = None
+        print('** No data, df empty **')
+
     return df
+
+
+@app.callback(
+    Output('page-1-display-value-0', 'children'),
+    Input('session-id', 'children'))
+def display_value(session_id):
+    df = read_dataframe(session_id, None)
+    data_table =  dash_table.DataTable(
+                                id='upload-datatable',
+                                columns=[{"name": i, "id": i} for i in df.columns],
+                                data=df.to_dict('records'),
+                                style_data={
+                                    'width': '{}%'.format(max(df.columns, key=len)),
+                                    'minWidth': '50px',
+                                    'maxWidth': '500px',
+                                },
+                                style_table={
+                                    'height': 300, 
+                                    'overflowX': 'auto'
+                                }  
+                            )
+    return data_table
 
 
 @app.callback(
