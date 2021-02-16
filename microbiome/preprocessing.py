@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from elmtoolbox.variables import *
+from microbiome.variables import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 from skbio.diversity.alpha import shannon, simpson
 from itertools import combinations 
-from elmtoolbox.statistical_analysis import regliner
+from microbiome.statistical_analysis import regliner
 
 ### PLOTLY ###
 def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size=1, time_unit_name="days", nice_name=lambda x: x, file_name=None, height=1900, width=1500, website=False):

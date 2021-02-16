@@ -1,6 +1,6 @@
 <div align="center">
   <p>
-  <img src="images/microorganisms.jpg" alt="https://www.freepik.com/pch-vector" width="270" />
+  <img src="https://image.freepik.com/free-vector/pathogen-microorganisms-set_74855-5909.jpg" alt="https://www.freepik.com/pch-vector" width="270" />
   </p>
   <p>
     <a href="">
@@ -21,6 +21,10 @@
 
 
 # Microbiome Toolbox
+
+
+
+Install your package from the real PyPI using python3 -m pip install [your-package].
 
 **Note:**
 ```bash
