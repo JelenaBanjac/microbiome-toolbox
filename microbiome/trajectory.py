@@ -15,13 +15,14 @@ import scipy.stats as stats
 import scipy as sp
 import pathlib
 import shap
-from elmtoolbox.variables import *
-from elmtoolbox.helpers import df2vectors
-from elmtoolbox.statistical_analysis import *
+from microbiome.variables import *
+from microbiome.helpers import df2vectors
+from microbiome.statistical_analysis import *
 import plotly.graph_objects as go
 import plotly.express as px
 from itertools import combinations 
 from plotly.subplots import make_subplots
+from sklearn.model_selection import GridSearchCV
 
 
 def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_for_fit, save=False, file_name=None):
@@ -427,7 +428,23 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
 
     return feature_cols_new
 
+def train(df, feature_cols, Regressor, parameters, param_grid, n_splits, file_name=None):
+    """f"{PIPELINE_DIRECTORY}/model_NoTopImportant"""
+    train1 = df[(df.healthy_reference==True)&(df.dataset_type=="Train")]
 
+    X_train1, y_train1 = df2vectors(train1, feature_cols)
+
+    rfr = Regressor(**parameters)
+    gkf = list(GroupKFold(n_splits=n_splits).split(X_train1, y_train1, groups=train1["subjectID"].values))
+
+    search = GridSearchCV(rfr, param_grid, cv=gkf)
+    search.fit(X_train1, y_train1)
+
+    estimator = search.best_estimator_
+    if file_name:
+        estimator.save_model(file_name)
+
+    return estimator
 
 def get_pvalue_regliner(df, group):
     _df = df.copy(deep=False)
@@ -461,8 +478,9 @@ def get_pvalue_permuspliner(df, group, degree=2):
 def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, linear_difference=None, nonlinear_difference=None, 
                     plateau_area_start=None, limit_age=1200, start_age=0, 
                     time_unit_size=1, time_unit_name="days", img_file_name=None, 
-                    degree=2, nboot=None, longitudinal_mode="lines+markers", longitudinal_showlegend=True,
-                    patent=False, layout_height=900, layout_width=1000):
+                    degree=2, longitudinal_mode="lines+markers", longitudinal_showlegend=True,
+                    patent=False, layout_settings=None, website=False, highlight_outliers=None, df_new=None,
+                    plot_CI=False, plot_PI=True):
     """Trajectory line with performance stats and many other settings
 
     estimator: sklearn models, CatBoostRegressor, etc.
@@ -519,17 +537,39 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
     limit_age_max = int(max(df["age_at_collection"]))+1
 
+    layout_settings_default = dict(
+        height=900, 
+        width=1100,
+        barmode='stack', 
+        uniformtext=dict(mode="hide", minsize=10),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',  
+        margin=dict(l=0, r=0, b=0, pad=0),
+        title_text="Microbiome Trajectory"
+    )
+
     if patent:
         traj_color = "0,0,0"
         colors = px.colors.sequential.Greys
-        outlier_color = 'rgba(0,0,0,0.75)'
+        outlier_color = '0,0,0'
         outlier_size = 15
+        marker_outlier=dict(size=25, color=f'rgba({outlier_color},0.95)', symbol="star-open", line_width=4)
+        layout_settings_default["font"] = dict(
+                #family="Courier New, monospace",
+                size=20,
+                #color="RebeccaPurple"
+            )
     else:
         traj_color = "26,150,65"
         colors = px.colors.qualitative.Plotly
-        outlier_color = 'rgba(255,0,0,0.75)'
-        outlier_size = 15      
+        outlier_color = '255,0,0'
+        outlier_size = 15  
+        marker_outlier=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="circle-open", line_width=4)  
         
+    if layout_settings is None:
+        layout_settings = {}
+    layout_settings_final = {**layout_settings_default, **layout_settings}
+    
     if plateau_area_start is not None:
         # shaded area where plateau is expected
         if plateau_area_start/time_unit_size < limit_age/time_unit_size:
@@ -547,7 +587,10 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
     if group is not None:
         longitudinal_showlegend = False
 
-    fig, ret_val, outliers, mae, r2, pi_median, _, _ = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=longitudinal_showlegend, outlier_color=outlier_color)
+    fig, ret_val, mae, r2, pi_median, _, _, _ = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", 
+                                                                            plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, 
+                                                                            longitudinal_showlegend=longitudinal_showlegend, highlight_outliers=highlight_outliers, marker_outlier=marker_outlier, df_new=df_new,
+                                                                            plot_CI=plot_CI, plot_PI=plot_PI)
     
     X, y = df2vectors(df, feature_cols)
     y_pred = estimator.predict(X)
@@ -717,7 +760,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                         hoveron="points"
                     ))
       
-
+    ###########################################################################
     X_other, y_other, y_other_pred = None, None, None
     if df_other is not None:
         
@@ -726,17 +769,21 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
         X_other, y_other = df2vectors(df_other, feature_cols)
         y_other_pred = estimator.predict(X_other)
         
+        y_other = np.array(y_other)/time_unit_size
+        y_other_pred = np.array(y_other_pred)/time_unit_size
+        
         for trace in df_other["subjectID"].unique():
-            idx = np.where(df_other["subjectID"]==trace)[0]
+            idx = np.where(df_other["subjectID"].values==trace)[0]
+
             fig.add_trace(go.Scatter(
-                x=y_other.values[idx],
+                x=y_other[idx],
                 y=y_other_pred[idx],
                 mode=longitudinal_mode,
                 line=dict(width=3, dash='dash'),
-                marker=dict(size=outlier_size, color=outlier_color),
+                marker=dict(size=outlier_size, color=f'rgba({outlier_color},0.95)'),
                 showlegend=longitudinal_showlegend,
                 name=trace,
-                text=list(df["sampleID"].values[idx]), 
+                text=list(df_other["sampleID"].values[idx]), 
                 hovertemplate = '<b>Other sample</b><br><br>'+
                                 '<b>SampleID</b>: %{text}<br>'+
                                 '<b>Age</b>: %{x:.2f}<br>'+
@@ -752,43 +799,55 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     tick0=start_age//time_unit_size, dtick=2, 
                     showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
     
-    fig.update_layout(height=layout_height, width=layout_width,
-                      #paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                      plot_bgcolor='rgba(0,0,0,0)', 
-                      margin=dict(l=0, r=0, b=0, pad=0),
-                      title_text="Microbiome Trajectory")
+    fig.update_layout(**layout_settings_final)
     
-    fig.update_layout(go.Layout(
-        annotations=[
-            go.layout.Annotation(
-                text=ret_val,
-                align='left',
-                showarrow=False,
-                xref='paper',
-                yref='paper',
-                x=.99,
-                y=.01,
-                bordercolor='black',
-                bgcolor='white',
-                borderwidth=0.5,
-                borderpad=8
-            )
-        ]
-    ))
+    if not patent:
+        fig.update_layout(go.Layout(
+            annotations=[
+                go.layout.Annotation(
+                    text=ret_val,
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=.99,
+                    y=.01,
+                    bordercolor='black',
+                    bgcolor='white',
+                    borderwidth=0.5,
+                    borderpad=8
+                )
+            ]
+        ))
+    else:
+        print(ret_val)
     
     if img_file_name:
-        fig.write_html(img_file_name)
-    fig.show()
+        pathlib.Path('/'.join(img_file_name.split('/')[:-1])).mkdir(parents=True, exist_ok=True)
     
-    return fig, outliers, mae, r2, pi_median
+        if "html" in img_file_name.lower(): 
+            fig.write_html(img_file_name)
+        elif any(extension in img_file_name for extension in ["png", "jpeg", "webp", "svg", "pdf", "eps" ]):
+            fig.write_image(img_file_name)
+        else:
+            raise Exception(f"Extension {img_file_name.split('.')[-1]} is not implemented")
+    
+
+    
+    if not website:
+        fig.show()
+    
+    return fig, mae, r2, pi_median
 
 
 
 
-def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, df_new=None, degree=2, nboot=50, longitudinal_mode=None, longitudinal_showlegend=True, fillcolor_alpha=0.3, highlight_outliers=None, outlier_color="255,0,0" ): 
+def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, df_new=None, degree=2, longitudinal_mode=None, longitudinal_showlegend=True, fillcolor_alpha=0.3, highlight_outliers=None, marker_outlier=None, plot_CI=False, plot_PI=True): 
     """
     longitudinal_mode: str
         How a longitudinal data is plotted: markers+lines, lines, markers, etc.
+    Reference:
+    - https://nbviewer.jupyter.org/github/demotu/BMC/blob/master/notebooks/CurveFitting.ipynb
     """
     if df_new is None:
         df_new = df.copy()
@@ -847,7 +906,8 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
     s_err = np.sqrt(np.sum(resid**2) / dof)                    # standard deviation of the error
 
     # Confidence Interval (select one)
-    if nboot:
+    if plot_CI:
+        nboot = 500
         bootindex = sp.random.randint
         
         for b in range(nboot):
@@ -879,7 +939,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                     fillcolor=f'rgba({traj_color},{0.1:.2f})',
                     line_color=f'rgba({traj_color},{0.1:.2f})',
                     showlegend=True,
-                    name="95% Confidence Limit",
+                    name="95% Confidence Interval",
                 ))
 
     x2 = np.linspace(0, limit_age_max/time_unit_size, limit_age_max+1) #np.linspace(np.min(x), np.max(x), 100)
@@ -909,34 +969,25 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
         name=f"{traj_label.title()} trajectory",
     ))
     # prediction interval
-    fig.add_trace(go.Scatter(
-        x=list(x2)+list(x2[::-1]),
-        y=list(y2-pi)+list(y2+pi)[::-1],
-        fill='toself',
-        fillcolor=f'rgba({traj_color},{fillcolor_alpha})',
-        line_color=f'rgba({traj_color},{fillcolor_alpha+0.2})',
-        showlegend=False,
-        name="95% Prediction Interval",
-    ))
-    
-    # highlight_outliers - list of outliers to highlight, or True or False to plot all
-    p_lower, _ = np.polyfit(x2, y2-pi, degree, cov=True)
-    p_upper, _ = np.polyfit(x2, y2+pi, degree, cov=True)  
-    outliers = set()
-    for i in range(len(y_new)):
-        if y_pred_new[i] > equation(p_upper, y_new[i]) or y_pred_new[i] < equation(p_lower, y_new[i]):
-            outliers.add(str(df_new.iloc[i]["sampleID"]))
-            
-    if (isinstance(highlight_outliers, bool) and highlight_outliers==True) or (isinstance(highlight_outliers, list) and len(highlight_outliers)>0):
-        if isinstance(highlight_outliers, list) and len(highlight_outliers)>0:
-            outliers = highlight_outliers
-            
-        idx = np.where(df_new["sampleID"].astype(str).isin(outliers))[0]
+    if plot_PI:
+        fig.add_trace(go.Scatter(
+            x=list(x2)+list(x2[::-1]),
+            y=list(y2-pi)+list(y2+pi)[::-1],
+            fill='toself',
+            fillcolor=f'rgba({traj_color},{fillcolor_alpha})',
+            line_color=f'rgba({traj_color},{fillcolor_alpha+0.2})',
+            showlegend=True,
+            name="95% Prediction Interval",
+        ))
+        
+
+    if highlight_outliers is not None:
+        idx = np.where(df_new["sampleID"].astype(str).isin(highlight_outliers))[0]
         fig.add_trace(go.Scatter(
             x=y_new[idx],
             y=y_pred_new[idx],
             mode="markers",
-            marker=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="circle-open", line_width=4),
+            marker=marker_outlier,
             showlegend=True,
             name="Outliers",
             text=list(df_new["sampleID"].values[idx]), 
@@ -948,29 +999,48 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
         ))
     
     if longitudinal_mode is not None:
-        # longitudinal - line per subject
-        for trace in df_new["subjectID"].unique():
-            idx = np.where(df_new["subjectID"]==trace)[0]
+        if longitudinal_mode == "markers":
             fig.add_trace(go.Scatter(
-                x=y_new[idx],
-                y=y_pred_new[idx],
-                mode=longitudinal_mode,
-                line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
-                marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
-                showlegend=longitudinal_showlegend,
-                name=trace,
-                text=list(df_new["sampleID"].values[idx]), 
-                hovertemplate = '<b>Healthy reference sample</b><br><br>'+
-                                '<b>SampleID</b>: %{text}<br>'+
-                                '<b>Age</b>: %{x:.2f}'+
-                                '<br><b>MMI</b>: %{y}<br>',
-                hoveron="points"
-            ))
+                    x=y_new,
+                    y=y_pred_new,
+                    mode=longitudinal_mode,
+                    line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
+                    marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
+                    showlegend=True,
+                    name="Healthy samples",
+                    text=list(df_new["sampleID"].values), 
+                    hovertemplate = '<b>Healthy reference sample</b><br><br>'+
+                                    '<b>SampleID</b>: %{text}<br>'+
+                                    '<b>Age</b>: %{x:.2f}'+
+                                    '<br><b>MMI</b>: %{y}<br>',
+                    hoveron="points"
+                ))
+        else:
+            # longitudinal - line per subject
+            for trace in df_new["subjectID"].unique():
+                idx = np.where(df_new["subjectID"]==trace)[0]
+                fig.add_trace(go.Scatter(
+                    x=y_new[idx],
+                    y=y_pred_new[idx],
+                    mode=longitudinal_mode,
+                    line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
+                    marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
+                    showlegend=longitudinal_showlegend,
+                    name=trace,
+                    text=list(df_new["sampleID"].values[idx]), 
+                    hovertemplate = '<b>Healthy reference sample</b><br><br>'+
+                                    '<b>SampleID</b>: %{text}<br>'+
+                                    '<b>Age</b>: %{x:.2f}'+
+                                    '<br><b>MMI</b>: %{y}<br>',
+                    hoveron="points"
+                ))
     
     
-    return fig, ret_val, outliers, mae, r2, pi_median, pi, y2
+    return fig, ret_val, mae, r2, pi_median, x2, pi, y2
 
-def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", title=None, everytick=False, linear_pval=False, nonlinear_pval=False, img_file_name=None, nboot=None, longitudinal_mode="markers+lines", layout_height=900, layout_weight=1000):
+def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", 
+                        linear_pval=False, nonlinear_pval=False, img_file_name=None, longitudinal_mode="markers+lines", 
+                        website=False, plot_CI=False, plot_PI=True, layout_settings=None):
     val1 = val1.sort_values(by="age_at_collection")
     X1, y1 = df2vectors(val1, feature_cols)
     y_pred1 = estimator_ref.predict(X1)
@@ -1002,10 +1072,16 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
                 showlegend=True,
                 name=f"sample at time > {plateau_area_start} days",
             ))
+    else:
+        plateau_area_start = limit_age
     
     
-    fig, ret_val1, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val1, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="0,0,255", traj_label="reference", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False)
-    fig, ret_val2, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val2, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="255,0,0", traj_label="other", plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, nboot=nboot, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False)
+    fig, ret_val1, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val1, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="0,0,255", traj_label="reference", 
+                                                            plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False,
+                                                            plot_CI=plot_CI, plot_PI=plot_PI)
+    fig, ret_val2, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val2, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="255,0,0", traj_label="other", 
+                                                            plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False,
+                                                            plot_CI=plot_CI, plot_PI=plot_PI)
 
               
     # dataframe will be used for linear and nonlinear p-value calculation
@@ -1059,16 +1135,26 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
                      tick0=start_age/time_unit_size, dtick=2, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
     
 
-    fig.update_layout(height=layout_height, width=layout_weight, 
-                      #paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                      plot_bgcolor='rgba(0,0,0,0)', 
-                      margin=dict(l=0, r=0, b=0, pad=0),
-                      title_text="Microbiome Trajectory")
+    layout_settings_default = dict(
+        height=900, 
+        width=1000,
+        plot_bgcolor='rgba(0,0,0,0)', 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        margin=dict(l=0, r=0, b=0, pad=0),
+        title_text="Microbiome Trajectory"
+    )
+
+    if layout_settings is None:
+        layout_settings = {}
+    layout_settings_final = {**layout_settings_default, **layout_settings}
+    
+    fig.update_layout(**layout_settings_final)
     
     fig.update_layout(go.Layout(
         annotations=[
             go.layout.Annotation(
                 text=ret_val1,
+                font = dict(size = 10),
                 align='left',
                 showarrow=False,
                 xref='paper',
@@ -1082,6 +1168,7 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
             ),
             go.layout.Annotation(
                 text=ret_val2,
+                font = dict(size = 10),
                 align='left',
                 showarrow=False,
                 xref='paper',
@@ -1112,6 +1199,10 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
     
     if img_file_name:
         fig.write_html(img_file_name)
-    fig.show()
+
+    if not website:
+        fig.show()
+    
+    return fig
 
 

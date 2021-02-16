@@ -1,6 +1,6 @@
 <div align="center">
   <p>
-  <img src="https://media.giphy.com/media/ZutFV1eVDiXUlbBT5B/giphy.gif" alt="Baby animation from https://dribbble.com/niguangzhushi" width="270" />
+  <img src="images/microorganisms.jpg" alt="https://www.freepik.com/pch-vector" width="270" />
   </p>
   <p>
     <a href="">
@@ -9,18 +9,18 @@
   </p>
 
   <p>
-    <strong>Early Life Microbiome Toolbox</strong>
+    <strong>Microbiome Toolbox</strong>
   </p>
   
   <p>
-    <a href="https://TODO.github.io">
+    <a href="https://microbiome-toolbox.herokuapp.com">
       Website
     </a>
   </p>
 </div>
 
 
-# Early Life Microbiome Toolbox
+# Microbiome Toolbox
 
 **Note:**
 ```bash

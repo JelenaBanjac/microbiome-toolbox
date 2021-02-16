@@ -10,8 +10,9 @@ import dash_table
 #sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
 from microbiome.preprocessing import dataset_bacteria_abundances, sampling_statistics, plot_bacteria_abundance_heatmaps, plot_ultradense_longitudinal_data
 from microbiome.helpers import get_bacteria_names
-from microbiome.reference_analysis import reference_analysis
-
+from microbiome.variables import *
+from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
+from microbiome.postprocessing import plot_importance_boxplots_over_age
 
 from app import app, cache, UPLOAD_FOLDER_ROOT
 
@@ -22,12 +23,12 @@ layout = html.Div([
                     dbc.Col([
                         dcc.Link('Back', href='/'),
 
-                        html.H3("Healthy Reference"),
+                        html.H3("Bacteria Importance with Time"),
                         html.Br(),
-                        html.Div(id="page-2-reloaded"),
+                        html.Div(id="page-5-reloaded"),
                         
                         # Abundance plot in general
-                        html.Div(id='page-2-display-value-0'),
+                        html.Div(id='page-5-display-value-0'),
 
                     ], className="md-4")
                 )
@@ -68,7 +69,7 @@ def read_dataframe(session_id, timestamp):
 
 
 @app.callback(
-    Output('page-2-reloaded', 'children'),
+    Output('page-5-reloaded', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -81,33 +82,44 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-2-display-value-0', 'children'),
+    Output('page-5-display-value-0', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
+    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    nice_name = lambda x: x[9:].replace("_", " ")
+    if max(df.age_at_collection.values) < 100:
+        plateau_area_start=None #45
+        time_unit_size=1
+        time_unit_name="days"
+        box_height = None
+        units = [20, 20, 20] 
+    else:
+        plateau_area_start=None  #700
+        time_unit_size=30
+        time_unit_name="months"
+        box_height = None
+        units = [90, 90, 90, 90, 90, 90]
 
-    df = df.convert_dtypes() 
-    id_cols = list(df.columns[df.columns.str.contains("id", case=False)&(df.columns.str.len()<20)].values)
-    cols_to_ignore = [ 'healthy_reference', 'dataset_type', 'dataset_type_classification', 'classification_dataset_type', 'classification_label' ]
-    str_cols = list(set(df.columns[df.dtypes=="string"]) - set(id_cols + cols_to_ignore))
-    df = pd.get_dummies(df, columns=str_cols)
-    print(df.columns.values)
+    estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
+
+    # healthy unseen data - Test-1
+    val1 = df[df.classification_dataset_type=="Test-1"]
+    # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+    other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+    # unhealthy unseen data - Test2
+    val2 =  df[df.classification_dataset_type=="Test-2"]
+
+    #fig, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, units=units, start_age=0, patent=False, highlight_outliers=False, df_new=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, box_height=box_height, file_name=None, plateau_area_start=None, longitudinal_mode=None, longitudinal_showlegend=False, fillcolor_alpha=0.2, website=True);
     
-    #bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    fig, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, units=units, patent=False, highlight_outliers=True, df_new=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, box_height=box_height, file_name=None, plateau_area_start=plateau_area_start, longitudinal_mode="markers", longitudinal_showlegend=False, fillcolor_alpha=0.2, website=True);
     
-    feature_columns = set(df.columns) - set(id_cols + cols_to_ignore)
-    fig1 = reference_analysis(df, feature_columns, nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, style="dot", show=False, website=True, layout_height=800, layout_width=1000)
-    fig2 = reference_analysis(df, feature_columns, nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, style="hist", show=False, website=True, layout_height=800, layout_width=1000)
-
-
     ret_val = html.Div([])
     if df is not None:
         ret_val =  [html.Hr(),
-                    html.H4("Important Features for each of the Class"),
-                    dcc.Graph(figure=fig1),
+                    html.H4("Important Bacteria w.r.t. Time"),
+                    dcc.Graph(figure=fig),
                     html.Br(),
-                    dcc.Graph(figure=fig2),
-                    html.Br()
                     ]
 
     return ret_val

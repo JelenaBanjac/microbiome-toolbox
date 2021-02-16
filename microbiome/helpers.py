@@ -1,4 +1,8 @@
-
+import io
+import base64
+import html
+from shap.plots._force_matplotlib import draw_additive_plot
+import shap
 
 
 def df2vectors(_df, feature_cols=None):
@@ -35,4 +39,5 @@ def df2vectors(_df, feature_cols=None):
 
 
 def get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("k__")):
-    return df.columns[df.columns.map(bacteria_fun)]
+    return list(df.columns[df.columns.map(bacteria_fun)])
+

@@ -6,7 +6,9 @@ from elmtoolbox.variables import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-from plotly.subplots import make_subplots
+from skbio.diversity.alpha import shannon, simpson
+from itertools import combinations 
+from elmtoolbox.statistical_analysis import regliner
 
 ### PLOTLY ###
 def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size=1, time_unit_name="days", nice_name=lambda x: x, file_name=None, height=1900, width=1500, website=False):
@@ -369,6 +371,115 @@ def plot_ultradense_longitudinal_data(df, infants_to_plot, cols_num, min_days, m
         
     return fig
 
+
+
+
+def plot_diversity(df_all, bacteria_names, group, diversity, start_age=0, limit_age=None, time_unit_name="days", time_unit_size=1, layout_height=1000, layout_width=1200, patent=False, website=False):
+    
+    if diversity == "shannon":
+        diversity_fn = shannon
+    elif diversity == "simpson":
+        diversity_fn = simpson
+    else:
+        raise Exception("Please specify implemented diversity type: shannon or simpson as string parameters")
+
+    def get_pvalue_regliner(df, group):
+        _df = df.copy(deep=False)
+
+        group_values = _df[group].unique()
+
+        assert len(group_values) == 2, "the dataframe in statistical analysis needs to have only 2 unique groups to compare"
+
+        df_stats = pd.DataFrame(data={"Input": list(_df.age_at_collection.values),
+                                      "Output": list(_df[diversity].values),
+                                      "Condition": list(_df[group].values)})
+
+        return regliner(df_stats, {group_values[0]: 0, group_values[1]: 1})
+    
+    df = df_all.copy()
+    
+    if patent:
+        colors = px.colors.sequential.Greys
+    else:
+        colors = px.colors.qualitative.Plotly
+    
+    limit_age = limit_age or max(df.age_at_collection.values)
+    
+   
+        
+    deg = 1
+    ret_val = ""
+    
+    equation = lambda a, b: np.polyval(a, b) 
+    
+    df[diversity] = df[bacteria_names].apply(lambda row: diversity_fn(row), axis=1)
+    
+    fig = px.scatter(df, x="age_at_collection", y=diversity, color=group, marginal_x="box", marginal_y="box")
+
+    for i, g in enumerate(df[group].unique()):
+        xdata = df[df[group]==g]["age_at_collection"].values/time_unit_size
+        ydata = df[df[group]==g][diversity].values
+        p, cov = np.polyfit(xdata, ydata, deg, cov=True)           # parameters and covariance from of the fit of 1-D polynom.
+        y_model = equation(p, xdata) 
+        
+        
+        # lines   
+        fig.add_trace(go.Scatter(
+            x=xdata,
+            y=y_model,
+            mode="lines",
+            line = dict(width=3, dash='dash', color=colors[i]),
+            #marker=dict(size=10),
+            showlegend=True,
+            name=f"regression line for {group}={g}",
+            text=list(df["sampleID"].values), 
+            hovertemplate = f'<b>Group ({group}): {g}</b><br>',
+            hoveron="points"
+        ))
+        
+    group_vals = df[group].unique()
+    comb = combinations(group_vals, 2)
+    ret_val += "<b>Linear p-value (k, n)</b>:<br>"
+    for c in list(comb):
+        _df = df[df[group].isin(c)]
+        pval_k, pval_n = get_pvalue_regliner(_df, group=group)
+        ret_val += f"<b>{c[0]} vs. {c[1]}:</b><br>p = {pval_k:.3f}, {pval_n:.3f}"
+        
+    title = f"Shannon's diversity index" if diversity=="shannon" else "Simpson's dominance index"
+    fig.update_xaxes(title=f"Age [{time_unit_name}]", #range=(start_age//time_unit_size-1, limit_age//time_unit_size+1), 
+                    tick0=start_age//time_unit_size, dtick=2, 
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
+    fig.update_yaxes(title=title,
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
+    
+    fig.update_layout(height=layout_height, width=layout_width,
+                      #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+                      plot_bgcolor='rgba(0,0,0,0)', 
+                      margin=dict(l=0, r=0, b=0, pad=0),
+                      title_text=title.title())
+
+    fig.update_layout(go.Layout(
+        annotations=[
+            go.layout.Annotation(
+                text=ret_val,
+                align='left',
+                showarrow=False,
+                xref='paper',
+                yref='paper',
+                x=.93,
+                y=.93,
+                bordercolor='black',
+                bgcolor='white',
+                borderwidth=0.5,
+                borderpad=8
+            )
+        ]
+    ))
+    
+    if not website:
+        fig.show()
+        
+    return fig
 
 ### MATPLOTLIB ###
 def sampling_statistics_matplotlib(df, train_subjectIDs, val_subjectIDs, test_subjectIDs, vertical=True, file_name=None):

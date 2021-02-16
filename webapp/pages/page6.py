@@ -10,8 +10,6 @@ import dash_table
 #sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
 from microbiome.preprocessing import dataset_bacteria_abundances, sampling_statistics, plot_bacteria_abundance_heatmaps, plot_ultradense_longitudinal_data
 from microbiome.helpers import get_bacteria_names
-from microbiome.reference_analysis import reference_analysis
-
 
 from app import app, cache, UPLOAD_FOLDER_ROOT
 
@@ -22,12 +20,12 @@ layout = html.Div([
                     dbc.Col([
                         dcc.Link('Back', href='/'),
 
-                        html.H3("Healthy Reference"),
+                        html.H3("Longitudinal Anomaly Detection"),
                         html.Br(),
-                        html.Div(id="page-2-reloaded"),
+                        html.Div(id="page-6-reloaded"),
                         
                         # Abundance plot in general
-                        html.Div(id='page-2-display-value-0'),
+                        html.Div(id='page-6-display-value-0'),
 
                     ], className="md-4")
                 )
@@ -68,7 +66,7 @@ def read_dataframe(session_id, timestamp):
 
 
 @app.callback(
-    Output('page-2-reloaded', 'children'),
+    Output('page-6-reloaded', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -81,33 +79,30 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-2-display-value-0', 'children'),
+    Output('page-6-display-value-0', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
 
-    df = df.convert_dtypes() 
-    id_cols = list(df.columns[df.columns.str.contains("id", case=False)&(df.columns.str.len()<20)].values)
-    cols_to_ignore = [ 'healthy_reference', 'dataset_type', 'dataset_type_classification', 'classification_dataset_type', 'classification_label' ]
-    str_cols = list(set(df.columns[df.dtypes=="string"]) - set(id_cols + cols_to_ignore))
-    df = pd.get_dummies(df, columns=str_cols)
-    print(df.columns.values)
-    
-    #bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-    
-    feature_columns = set(df.columns) - set(id_cols + cols_to_ignore)
-    fig1 = reference_analysis(df, feature_columns, nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, style="dot", show=False, website=True, layout_height=800, layout_width=1000)
-    fig2 = reference_analysis(df, feature_columns, nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, style="hist", show=False, website=True, layout_height=800, layout_width=1000)
-
-
     ret_val = html.Div([])
     if df is not None:
         ret_val =  [html.Hr(),
-                    html.H4("Important Features for each of the Class"),
-                    dcc.Graph(figure=fig1),
+                    html.H4("Loaded data table"),
+                    dash_table.DataTable(
+                            id='upload-datatable',
+                            columns=[{"name": i, "id": i} for i in df.columns],
+                            data=df.to_dict('records'),
+                            style_data={
+                                'width': '{}%'.format(max(df.columns, key=len)),
+                                'minWidth': '50px',
+                                'maxWidth': '500px',
+                            },
+                            style_table={
+                                'height': 300, 
+                                'overflowX': 'auto'
+                            }  
+                        ),
                     html.Br(),
-                    dcc.Graph(figure=fig2),
-                    html.Br()
                     ]
 
     return ret_val

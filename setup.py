@@ -5,15 +5,15 @@ with open("README.md", "r") as fh:
 
 # TODO: authors and emails, and url
 setuptools.setup(
-    name="elmtoolbox", 
+    name="microbiome-toolbox", 
     version="0.0.1",
-    author="authors",
-    author_email="emails",
-    description="Early Life Microbiome (ELM) Toolbox",
+    author="Jelena Banjac",
+    author_email="msjelenabanjac@gmail.com",
+    description="Microbiome Toolbox",
     long_description=long_description,
     long_description_content_type="text/markdown",
     #url="https://github.com/pypa/sampleproject",
-    packages=setuptools.find_packages(include=['elmtoolbox', 'elmtoolbox.*']),
+    packages=setuptools.find_packages(include=['microbiome', 'microbiome.*']),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

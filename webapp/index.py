@@ -19,7 +19,7 @@ import dash_uploader as du
 from pathlib import Path
 
 from app import app, UPLOAD_FOLDER_ROOT, cache
-from pages import page1, page2
+from pages import page1, page2, page3, page4, page5, page6
 
 # this example that adds a logo to the navbar brand
 navbar = dbc.Navbar(
@@ -30,7 +30,7 @@ navbar = dbc.Navbar(
                         dbc.Row(
                             [
                                 #dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
-                                dbc.Col(dbc.NavbarBrand("ELMToolbox", className="ml-2")),
+                                dbc.Col(dbc.NavbarBrand("Microbiome Toolbox", className="ml-2")),
                             ],
                             align="center",
                             no_gutters=True,
@@ -81,7 +81,7 @@ card2 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("See more", outline=True, color="dark"),
+                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card2-btn"), href='/methods/page-2'),
                 ]
             ),
         ],
@@ -104,7 +104,7 @@ card3 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("See more", outline=True, color="dark"),
+                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card3-btn"), href='/methods/page-3'),
                 ]
             ),
         ],
@@ -127,7 +127,7 @@ card4 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("See more", outline=True, color="dark"),
+                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card4-btn"), href='/methods/page-4'),
                 ]
             ),
         ],
@@ -150,7 +150,7 @@ card5 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("See more", outline=True, color="dark"),
+                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card5-btn"), href='/methods/page-5'),
                 ]
             ),
         ],
@@ -173,7 +173,7 @@ card6 = dbc.Col(
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dbc.Button("See more", outline=True, color="dark"),
+                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card6-btn"), href='/methods/page-6'),
                 ]
             ),
         ],
@@ -331,6 +331,14 @@ def display_page(pathname, session_id, upload_filename):
         return page1.layout
     elif pathname == '/methods/page-2':
         return page2.layout
+    elif pathname == '/methods/page-3':
+        return page3.layout
+    elif pathname == '/methods/page-4':
+        return page4.layout
+    elif pathname == '/methods/page-5':
+        return page5.layout
+    elif pathname == '/methods/page-6':
+        return page6.layout
     else: 
         print("\tohter path....")
         return main_layout_(session_id, upload_filename)  #app.layout  #main_layout_(None)
@@ -338,7 +346,13 @@ def display_page(pathname, session_id, upload_filename):
 
 @app.callback(
     [Output('upload-filename', 'children'),
-    Output('upload-infobox', 'children')],
+    Output('upload-infobox', 'children'),
+    Output('card1-btn', 'disabled'),
+    Output('card2-btn', 'disabled'),
+    Output('card3-btn', 'disabled'),
+    Output('card4-btn', 'disabled'),
+    Output('card5-btn', 'disabled'),
+    Output('card6-btn', 'disabled')],
     [Input('upload-data', 'isCompleted')],
     [State('upload-data', 'fileNames'),
      State('upload-data', 'upload_id'),
@@ -347,42 +361,45 @@ def return_methods(iscompleted, filenames, upload_id, filename_latest):
     print("Upload callback called")
     
     upload_infobox = html.Div([])
+    methods_disabled = True
 
     if filenames is not None:
         filename = filenames[0]
     elif filename_latest != '':
         filename = filename_latest
         upload_infobox = html.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+        methods_disabled = False
     else:
         filename = ''
     
     
-
+    # at the initialization of the page or when back
     if not iscompleted:
-        return filename, upload_infobox
+        return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled
 
     df = None
-    
     if filenames is not None:
         if upload_id:
             root_folder = os.path.join(UPLOAD_FOLDER_ROOT, upload_id)
         else:
             root_folder = UPLOAD_FOLDER_ROOT
 
-        filename = filenames[0]
         file = os.path.join(root_folder, filename)
 
         df = parse_dataset(file)
-        print(df)
+
         write_dataframe(upload_id, df)
         upload_infobox = html.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
 
+        methods_disabled = False
+
     if df is None:
         upload_infobox = html.Div(dbc.Alert("There was an error processing this file!", color="danger"))
+        methods_disabled = True
 
     print("filename", filename)
     print("upload_infobox", upload_infobox)
-    return filename, upload_infobox
+    return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled
 
 
 
