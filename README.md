@@ -22,7 +22,7 @@
 
 # Microbiome Toolbox
 
-
+!pip install microbiome-toolbox==0.0.4 --user
 
 Install your package from the real PyPI using python3 -m pip install [your-package].
 

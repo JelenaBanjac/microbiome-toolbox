@@ -67,10 +67,12 @@ def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size
 
 def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_size=1, time_unit_name="days", file_name=None, height=1000, width=2100, website=False):
     df = df_all.copy()
+    # df["subjectID"] = df["subjectID"].astype(str)
+    #print(df["subjectID"].dtype)
 
     colors = ["0,0,255", "255,0,0", "0,255,0"]
     df["order"] = df.apply(lambda x: 0 if x.dataset_type=="Train" else 1 if x.dataset_type=="Validation" else 2, axis=1)
-
+    
     if group is not None:
         num_cols = len(df[group].unique())
         fig = make_subplots(rows=1, cols=num_cols, subplot_titles=[f"{group}={s}" for s in df[group].unique()], horizontal_spacing=0.1)
@@ -96,7 +98,8 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
                 else:
                     showlegend = False
 
-
+                print("-----s-ds-s-s")
+                print(type(sid))
                 fig.add_trace(go.Scatter(
                     x=df1.age_at_collection.values[idx]/time_unit_size,
                     y=[sid]*len(idx),
@@ -174,6 +177,7 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
 
 
         fig.update_layout(height=height, width=width, 
+                          yaxis=dict(type='category'),
                           paper_bgcolor="white",#'rgba(0,0,0,0)', 
                           plot_bgcolor='rgba(0,0,0,0)', 
                           margin=dict(l=0, r=0, b=0, pad=0),
@@ -413,11 +417,11 @@ def plot_diversity(df_all, bacteria_names, group, diversity, start_age=0, limit_
     equation = lambda a, b: np.polyval(a, b) 
     
     df[diversity] = df[bacteria_names].apply(lambda row: diversity_fn(row), axis=1)
-    
+    df["age_at_collection"] = df["age_at_collection"].apply(lambda x: x/time_unit_size)
     fig = px.scatter(df, x="age_at_collection", y=diversity, color=group, marginal_x="box", marginal_y="box")
 
     for i, g in enumerate(df[group].unique()):
-        xdata = df[df[group]==g]["age_at_collection"].values/time_unit_size
+        xdata = df[df[group]==g]["age_at_collection"].values
         ydata = df[df[group]==g][diversity].values
         p, cov = np.polyfit(xdata, ydata, deg, cov=True)           # parameters and covariance from of the fit of 1-D polynom.
         y_model = equation(p, xdata) 
@@ -443,7 +447,7 @@ def plot_diversity(df_all, bacteria_names, group, diversity, start_age=0, limit_
     for c in list(comb):
         _df = df[df[group].isin(c)]
         pval_k, pval_n = get_pvalue_regliner(_df, group=group)
-        ret_val += f"<b>{c[0]} vs. {c[1]}:</b><br>p = {pval_k:.3f}, {pval_n:.3f}"
+        ret_val += f"<b>{c[0]} vs. {c[1]}:</b><br>p = {pval_k:.3f}, {pval_n:.3f}<br>"
         
     title = f"Shannon's diversity index" if diversity=="shannon" else "Simpson's dominance index"
     fig.update_xaxes(title=f"Age [{time_unit_name}]", #range=(start_age//time_unit_size-1, limit_age//time_unit_size+1), 
@@ -466,7 +470,7 @@ def plot_diversity(df_all, bacteria_names, group, diversity, start_age=0, limit_
                 showarrow=False,
                 xref='paper',
                 yref='paper',
-                x=.93,
+                x=.95,
                 y=.93,
                 bordercolor='black',
                 bgcolor='white',

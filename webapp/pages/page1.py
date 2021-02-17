@@ -7,7 +7,7 @@ import os
 import numpy as np
 import sys
 import dash_table
-#sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
+sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
 from microbiome.preprocessing import dataset_bacteria_abundances, sampling_statistics, plot_bacteria_abundance_heatmaps, plot_ultradense_longitudinal_data, plot_diversity
 from microbiome.helpers import get_bacteria_names
 
@@ -222,9 +222,16 @@ def display_value(session_id):
     if df is not None:
 
         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+
+        if max(df.age_at_collection.values) < 100:
+            time_unit_name="days"
+            time_unit_size=1
+        else:
+            time_unit_name="months"
+            time_unit_size=30
         
-        fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", layout_height=800, layout_width=1000, website=True)
-        fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", layout_height=800, layout_width=1000, website=True)
+        fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
+        fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
 
         ret_val = [
             html.Hr(),

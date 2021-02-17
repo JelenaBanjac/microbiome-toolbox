@@ -9,7 +9,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-def pi_anomaly_detection(estimator, df, feature_columns, degree, df_new=None):
+def pi_anomaly_detection(estimator, df_all, feature_columns, degree, df_new=None):
     """
     Prediction Interval anomaly detection. We consider samples outside prediction interval to be outliers.
     
@@ -29,6 +29,7 @@ def pi_anomaly_detection(estimator, df, feature_columns, degree, df_new=None):
     outliers :list
         List of sampleIDs that are anomalous.
     """
+    df = df_all.copy()
     def _inner_pi_anomaly_detection(df_model, df_model_new, degree):
         """ Brain of this anomaly detection
         Parameters
@@ -102,7 +103,7 @@ def pi_anomaly_detection(estimator, df, feature_columns, degree, df_new=None):
 
 
 
-def lpf_anomaly_detection(estimator, df, feature_columns, num_of_stds, window):
+def lpf_anomaly_detection(estimator, df_all, feature_columns, num_of_stds, window):
     """
     Low-pass filter (LPF) to detect anomalies in a time series. We unite all longitudinal data into one signal. 
     If we had more smaples per subjects, we could do this lpf anomaly detection for every subject separately.
@@ -120,7 +121,8 @@ def lpf_anomaly_detection(estimator, df, feature_columns, num_of_stds, window):
     outliers :list
         List of sampleIDs that are anomalous.
     """
-    def _inner_lpf_anomaly_detection(df, num_of_stds, window):
+    df = df_all.copy()
+    def _inner_lpf_anomaly_detection(df_model, num_of_stds, window):
         """ Brain of this anomaly detection
         Parameters
         ----------
@@ -136,11 +138,11 @@ def lpf_anomaly_detection(estimator, df, feature_columns, num_of_stds, window):
         outliers :list
             List of sampleIDs that are anomalous.
         """
-        df = df.sort_values(by="y")
-        df["y_pred_rolling_avg"]=df["y_pred"].rolling(window=window, min_periods=1, center=True).mean()
-        df["y_pred_rolling_std"]=df["y_pred"].rolling(window=window, min_periods=1, center=True).std(skipna=True)
-        df["lpf_anomaly"]= abs(df["y_pred"]-df["y_pred_rolling_avg"])>(num_of_stds*df["y_pred_rolling_std"])
-        return df[df["lpf_anomaly"]==True].sampleID.values.tolist()
+        df_model = df_model.sort_values(by="y")
+        df_model["y_pred_rolling_avg"]=df_model["y_pred"].rolling(window=window, min_periods=1, center=True).mean()
+        df_model["y_pred_rolling_std"]=df_model["y_pred"].rolling(window=window, min_periods=1, center=True).std(skipna=True)
+        df_model["lpf_anomaly"]= abs(df_model["y_pred"]-df_model["y_pred_rolling_avg"])>(num_of_stds*df_model["y_pred_rolling_std"])
+        return df_model[df_model["lpf_anomaly"]==True].sampleID.values.tolist()
     
     X, y = df2vectors(df, feature_columns)
     y_pred = estimator.predict(X)
@@ -151,7 +153,7 @@ def lpf_anomaly_detection(estimator, df, feature_columns, num_of_stds, window):
     return outliers    
 
 
-def if_anomaly_detection(estimator, df, feature_columns, outliers_fraction, window, anomaly_columns):
+def if_anomaly_detection(estimator, df_all, feature_columns, outliers_fraction, window, anomaly_columns):
     """
     Isolation Forest (IF) to detect anomalies in a time series. We unite all longitudinal data into one signal. 
     If we had more smaples per subjects, we could do this lpf anomaly detection for every subject separately.
@@ -171,7 +173,8 @@ def if_anomaly_detection(estimator, df, feature_columns, outliers_fraction, wind
     outliers :list
         List of sampleIDs that are anomalous.
     """
-    def _inner_if_anomaly_detection(df, outliers_fraction, anomaly_columns):
+    df = df_all.copy()
+    def _inner_if_anomaly_detection(df_model, outliers_fraction, anomaly_columns):
         """ Brain of this anomaly detection
         Parameters
         ----------
@@ -179,7 +182,7 @@ def if_anomaly_detection(estimator, df, feature_columns, outliers_fraction, wind
             Dataframe containing x-axis (age_at_collection, which we call y), y-axis (MMI, which we call y_pred), and unique sample IDs (sampleID)
         """
         # Subset the dataframe by desired columns
-        dataframe_filtered_columns = df[anomaly_columns]
+        dataframe_filtered_columns = df_model[anomaly_columns]
         
         # Scale the column that we want to flag for anomalies
         min_max_scaler = StandardScaler()
@@ -191,9 +194,9 @@ def if_anomaly_detection(estimator, df, feature_columns, outliers_fraction, wind
         model.fit(scaled_time_series)
         
         #Generate column for Isolation Forest-detected anomalies
-        df["if_anomaly"] = model.predict(scaled_time_series)
-        df["if_anomaly"] = df["if_anomaly"].map( {1: False, -1: True} )
-        return df[df["if_anomaly"]==True].sampleID.values.tolist()
+        df_model["if_anomaly"] = model.predict(scaled_time_series)
+        df_model["if_anomaly"] = df_model["if_anomaly"].map( {1: False, -1: True} )
+        return df_model[df_model["if_anomaly"]==True].sampleID.values.tolist()
     
     X, y = df2vectors(df, feature_columns)
     y_pred = estimator.predict(X)

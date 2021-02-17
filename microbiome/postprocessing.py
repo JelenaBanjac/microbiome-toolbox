@@ -118,7 +118,7 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
         boxplot_alpha = 0.8
         outlier_color = "255,0,0"
         traj_color = "26,150,65" 
-        marker_outlier=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="circle-open", line_width=4)    
+        marker_outlier=dict(size=25, color=f'rgba({outlier_color},0.95)', symbol="star-open", line_width=4)    
 
     if layout_settings is None:
         layout_settings = {}

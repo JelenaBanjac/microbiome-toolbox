@@ -1,3 +1,15 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import GroupShuffleSplit
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score,cross_val_predict
+from sklearn.model_selection import GroupKFold
+from scipy.stats import pearsonr
 import seaborn as sns
 from microbiome.helpers import *
 import numpy as np
@@ -12,6 +24,77 @@ from sklearn.model_selection import GroupKFold
 from sklearn.model_selection import GroupShuffleSplit
 from catboost import CatBoostRegressor
 import pandas as pd
+import scipy as sp
+import scipy.stats as stats
+import seaborn as sns
+
+from sklearn.neighbors import KNeighborsClassifier
+
+def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2):
+    df = df_all.copy()
+    df["month"] = df.age_at_collection//30
+    
+    outliers_above, outliers_below = [], []
+    
+    df_mean_std = df[["month", z_col_name]].groupby(["month"]).agg([np.mean, np.std]).reset_index()
+
+    def fun(row):
+        mean = df_mean_std[df_mean_std.month==row["month"]][[(z_col_name, 'mean')]].values[0][0]
+        std  = df_mean_std[df_mean_std.month==row["month"]][[(z_col_name, 'std')]].values[0][0]
+        row[f"z_{z_col_name}"] = (row[z_col_name] - mean)/std
+        return row
+
+    df = df.apply(lambda row: fun(row), axis=1)
+    df = df.sort_values(by=["month"])
+    
+    # plot for individual subjects
+    fig, ax = plt.subplots(figsize=(20,10))
+
+    x_lim = 39
+    y_lim = 6
+
+    ax.plot(np.linspace(0, x_lim, num=x_lim), np.zeros(x_lim), c="k", lw=2)
+    for i in range(1, y_lim):
+        ax.plot(np.linspace(0, x_lim, num=x_lim), np.ones(x_lim)*i, c="gray", lw=2, linestyle="--")
+        ax.plot(np.linspace(0, x_lim, num=x_lim), -np.ones(x_lim)*i, c="gray", lw=2, linestyle="--")
+
+    for s in df.subjectID.unique():
+        df_subj = df[df.subjectID==s]
+        #df_subj = df_subj[(df_subj.z_weight_growth_pace_during_three_years.max()<=cross_limit)&(df_subj.z_weight_growth_pace_during_three_years.min()>=-cross_limit)]
+        
+        if -cross_limit <= df_subj[f"z_{z_col_name}"].max()<=cross_limit and \
+            -cross_limit <= df_subj[f"z_{z_col_name}"].min()<=cross_limit: 
+            ax.plot(df_subj.month, df_subj[f"z_{z_col_name}"], marker="o", label=s)
+        else:
+            if df_subj[f"z_{z_col_name}"].max() < -cross_limit or \
+                df_subj[f"z_{z_col_name}"].min() < -cross_limit:
+                outliers_below.append(s)
+            elif df_subj[f"z_{z_col_name}"].max() > cross_limit or \
+                df_subj[f"z_{z_col_name}"].min() > cross_limit:
+                outliers_above.append(s)
+            else:
+                pass
+                #print("Check this case?")
+    
+    ax.set_ylim((-y_lim, y_lim));ax.set_xlim((0, x_lim))
+    ax.legend(ncol=12, bbox_to_anchor=(1., -.05))
+    
+    # plot mean+std of z-score
+    fig, ax = plt.subplots(figsize=(20,10))
+
+    x_lim = 39
+    y_lim = 3
+
+    ax.plot(np.linspace(0, x_lim, num=x_lim), np.zeros(x_lim), c="k", lw=2)
+    for i in range(1, y_lim):
+        ax.plot(np.linspace(0, x_lim, num=x_lim), np.ones(x_lim)*i, c="gray", lw=2, linestyle="--")
+        ax.plot(np.linspace(0, x_lim, num=x_lim), -np.ones(x_lim)*i, c="gray", lw=2, linestyle="--")
+    ax = sns.pointplot(x="month", y=f"z_{z_col_name}", hue=hue_col, data=df, ax=ax, capsize=.2)
+    #ax.scatter(df_subj.age_at_collection, df_subj.waz_last)
+    ax.set_ylim((-y_lim, y_lim));ax.set_xlim((0, x_lim))
+    
+    return outliers_below, outliers_above
+
 
 n_splits = 5
 test_size = 0.5
@@ -200,3 +283,4 @@ def plot_shap_abundances_and_ratio(df, important_features, bacteria_name, nice_n
     plt.close()
 
     return total_num_of_crossings1, total_num_of_crossings2, mae, r2
+

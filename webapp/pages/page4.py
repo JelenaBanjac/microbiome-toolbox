@@ -92,31 +92,39 @@ def display_value(session_id):
         plateau_area_start=None #45
         time_unit_size=1
         time_unit_name="days"
+        limit_age = 45
     else:
         plateau_area_start=None  #700
         time_unit_size=30
         time_unit_name="months"
+        limit_age = 750
 
     estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
 
-    # healthy unseen data - Test-1
-    val1 = df[df.classification_dataset_type=="Test-1"]
+    # # healthy unseen data - Test-1
+    # val1 = df[df.classification_dataset_type=="Test-1"]
+    # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+    # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+    # # unhealthy unseen data - Test2
+    # val2 =  df[df.classification_dataset_type=="Test-2"]
+     # healthy unseen data - Test-1
+    val1 = df[df.dataset_type=="Validation"]
     # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-    other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+    other = df[df.dataset_type=="Test"]
     # unhealthy unseen data - Test2
-    val2 =  df[df.classification_dataset_type=="Test-2"]
+    #val2 =  df[df.classification_dataset_type=="Test-2"]
 
-    fig1, outliers, mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=max(df.age_at_collection.values), plateau_area_start=plateau_area_start, nboot=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+    fig1,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
 
-    fig2, outliers, mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", linear_difference=True, start_age=0, limit_age=max(df.age_at_collection.values), plateau_area_start=plateau_area_start, nboot=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+    fig2,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", linear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
 
-    fig3, outliers, mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", nonlinear_difference=True, start_age=0, limit_age=max(df.age_at_collection.values), plateau_area_start=plateau_area_start, nboot=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+    fig3,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start,  time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
 
-    fig4, outliers, mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=other, group=None, nonlinear_difference=True, start_age=0, limit_age=max(df.age_at_collection.values), plateau_area_start=plateau_area_start, nboot=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+    fig4,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=other, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
 
-    fig5 = plot_2_trajectories(estimator, val1, val2, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=max(df.age_at_collection.values), start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, title=None, everytick=False, linear_pval=True, nonlinear_pval=False, img_file_name=None, website=True)
+    fig5 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=True, nonlinear_pval=False, img_file_name=None, website=True)
 
-    fig6 = plot_2_trajectories(estimator, val1, val2, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=max(df.age_at_collection.values), start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, title=None, everytick=False, linear_pval=False, nonlinear_pval=True, img_file_name=None, website=True)
+    fig6 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=False, nonlinear_pval=True, img_file_name=None, website=True)
 
     ret_val = html.Div([])
     if df is not None:

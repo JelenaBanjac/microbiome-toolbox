@@ -478,7 +478,7 @@ def get_pvalue_permuspliner(df, group, degree=2):
 def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, linear_difference=None, nonlinear_difference=None, 
                     plateau_area_start=None, limit_age=1200, start_age=0, 
                     time_unit_size=1, time_unit_name="days", img_file_name=None, 
-                    degree=2, longitudinal_mode="lines+markers", longitudinal_showlegend=True,
+                    degree=2, longitudinal_mode=None, longitudinal_showlegend=True,
                     patent=False, layout_settings=None, website=False, highlight_outliers=None, df_new=None,
                     plot_CI=False, plot_PI=True):
     """Trajectory line with performance stats and many other settings
@@ -539,7 +539,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
     layout_settings_default = dict(
         height=900, 
-        width=1100,
+        width=1000,
         barmode='stack', 
         uniformtext=dict(mode="hide", minsize=10),
         plot_bgcolor='rgba(0,0,0,0)',
@@ -554,6 +554,8 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
         outlier_color = '0,0,0'
         outlier_size = 15
         marker_outlier=dict(size=25, color=f'rgba({outlier_color},0.95)', symbol="star-open", line_width=4)
+        layout_settings_default["height"]=900
+        layout_settings_default["width"]=1100
         layout_settings_default["font"] = dict(
                 #family="Courier New, monospace",
                 size=20,
@@ -564,7 +566,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
         colors = px.colors.qualitative.Plotly
         outlier_color = '255,0,0'
         outlier_size = 15  
-        marker_outlier=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="circle-open", line_width=4)  
+        marker_outlier=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="star-open", line_width=4)  
         
     if layout_settings is None:
         layout_settings = {}
@@ -624,6 +626,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     line = dict(width=3, dash='dash', color=colors[i]),
                     marker=dict(size=10, color=colors[i]),
                     showlegend=True,
+                    legendgroup=group_trace,
                     name=f"{group}={group_trace}",
                     text=list(_df["sampleID"].values), 
                     hovertemplate = f'<b>Group ({group}): {group_trace}</b><br>',
@@ -637,6 +640,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     line = dict(width=3, dash='dash', color=colors[i]),
                     marker=dict(size=10, color=colors[i]),
                     showlegend=True,
+                    legendgroup=group_trace,
                     name=f"sample with {group}={group_trace}",
                     text=list(_df["sampleID"].values), 
                     hovertemplate = '<b>Healthy reference sample</b><br><br>'+
@@ -651,7 +655,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
             comb = combinations(group_vals, 2)
             ret_val += "<b>Linear p-value (k, n)</b>:"
             for c in list(comb):
-                _df = df[df[group].isin(c)]
+                _df = df[(df[group].isin(c))&(df.age_at_collection<limit_age)]
                 pval_k, pval_n = get_pvalue_regliner(_df, group)
                 ret_val += f"<br>{group} {c[0]} vs. {c[1]}: ({pval_k:.3f}, {pval_n:.3f})"
         
@@ -687,6 +691,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     x=x2, y=y2,
                     line_color=colors[i],
                     name=f"trajectory for {group}={group_trace}",
+                    legendgroup=group_trace,
                 ))
                 # prediction interval
                 fig.add_trace(go.Scatter(
@@ -694,7 +699,8 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     y=list(y2-pi)+list(y2+pi)[::-1],
                     fill='toself',
                     fillcolor=f'rgba{tuple(list(colors_rgb[i])+[0.15])}',
-                    line_color=f'rgba{tuple(list(colors_rgb[i])+[0.25])}', 
+                    line_color=f'rgba{tuple(list(colors_rgb[i])+[0.25])}',
+                    legendgroup=group_trace, 
                     showlegend=False,
                     name="95% Prediction Interval"
                 ))
@@ -706,6 +712,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     line = dict(width=3, dash='dash', color=colors[i]),
                     marker=dict(size=10, color=colors[i]),
                     showlegend=True,
+                    legendgroup=group_trace,
                     name=f"sample with {group}={group_trace}",
                     text=list(_df["sampleID"].values), 
                     hovertemplate = '<b>Healthy reference sample</b><br><br>'+
@@ -720,7 +727,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
             comb = combinations(group_vals, 2)
             ret_val += "<b>Nonlinear p-value</b>:"
             for c in list(comb):
-                _df = df[df[group].isin(c)]
+                _df = df[(df[group].isin(c))]  #&(df.age_at_collection<limit_age)&(df.age_at_collection>start_age)
                 error_cnt = 3
                 while error_cnt > 0:
                     try:
@@ -868,10 +875,15 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
     r2    = r2_score(y, y_pred)
     coeff = stats.pearsonr(y_pred, y)
     
+    # performace calculated until limit_age
+    idx       = np.where(y < limit_age/time_unit_size)[0]
+    mae_idx   = round(np.mean(abs(y_pred[idx] - y[idx])), 2)
+    r2_idx    = r2_score(y[idx], y_pred[idx])
+    coeff_idx = stats.pearsonr(y_pred[idx], y[idx])
     ret_val = "<b>Performance Information</b><br>"
-    ret_val += f'MAE: {mae}<br>'
-    ret_val += f'R^2: {r2:.3f}<br>'
-    ret_val += f"Pearson: {coeff[0]:.3f}, 2-tailed p-value: {coeff[1]:.2e}<br>"
+    ret_val += f'MAE: {mae_idx}<br>'
+    ret_val += f'R^2: {r2_idx:.3f}<br>'
+    ret_val += f"Pearson: {coeff_idx[0]:.3f}, 2-tailed p-value: {coeff_idx[1]:.2e}<br>"
     
     if plateau_area_start is not None:
         idx       = np.where(y < plateau_area_start/time_unit_size)[0]
@@ -940,6 +952,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                     line_color=f'rgba({traj_color},{0.1:.2f})',
                     showlegend=True,
                     name="95% Confidence Interval",
+                    legendgroup="trajectory"
                 ))
 
     x2 = np.linspace(0, limit_age_max/time_unit_size, limit_age_max+1) #np.linspace(np.min(x), np.max(x), 100)
@@ -967,6 +980,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
         x=x2, y=y2,
         line_color=f'rgba({traj_color},1.)',
         name=f"{traj_label.title()} trajectory",
+        legendgroup="trajectory"
     ))
     # prediction interval
     if plot_PI:
@@ -978,6 +992,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
             line_color=f'rgba({traj_color},{fillcolor_alpha+0.2})',
             showlegend=True,
             name="95% Prediction Interval",
+            legendgroup="trajectory"
         ))
         
 
