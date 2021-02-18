@@ -3,6 +3,7 @@ import base64
 import html
 from shap.plots._force_matplotlib import draw_additive_plot
 import shap
+import pandas as pd
 
 
 def df2vectors(_df, feature_cols=None):
@@ -49,12 +50,61 @@ import matplotlib.pyplot as plt
 from plotly.tools import mpl_to_plotly
 import numpy as np
 from sklearn.model_selection import GroupShuffleSplit
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import confusion_matrix
+import itertools
+
+def _plot_confusion_matrix(cm, title, classes=['False', 'True'],
+                          cmap=plt.cm.Blues, save=False, saveas="MyFigure.png"):
+    
+    # print Confusion matrix with blue gradient colours
+    plt.rcParams.update({'font.size': 15})
+    
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=90)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.1%'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    
+    if save:
+        plt.savefig(saveas, dpi=100)
+    plt.show()
 
 def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0.5, n_splits=5, nice_name=lambda x: x, style="dot", show=False, website=True, layout_height=1000, layout_width=1000, max_display=20):
     """Style can be dot or hist"""
-    shap.initjs() 
+    if show: 
+        print("two_groups_analysis")
+        shap.initjs() 
     
     df = df_all.copy()
+    
+    df1 = df[df[references_we_compare]==True]
+    df2 = df[df[references_we_compare]==False]
+    
+    min_samples = df[references_we_compare].value_counts(sort=True).values[-1]
+    min_group   = df[references_we_compare].value_counts(sort=True).index[-1]
+    
+    #print(min_samples/len(df))
+    if min_group==True:
+        df2 = df2.sample(n=int(min_samples))  #+(len(df)-min_samples)*0.1)
+    else:
+        df1 = df1.sample(n=int(min_samples))
+    
+    df = pd.concat([df1, df2])
 
     df["dataset_type_classification"] = ""
     if len(df[df[references_we_compare]==True])>0:
@@ -67,7 +117,7 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
         df.loc[df[df[references_we_compare]==False].iloc[train_idx2].index, "classification_dataset_type"] = "Train-2"
         df.loc[df[df[references_we_compare]==False].iloc[test_idx2].index, "classification_dataset_type"] = "Test-2"
 
-        
+    #print(df.classification_dataset_type.value_counts())
     df.loc[df[references_we_compare]==True, "classification_label"] = 1
     df.loc[df[references_we_compare]==False, "classification_label"] = -1
 
@@ -92,12 +142,30 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
         sns.set_style("whitegrid")
         
         if style == "dot":
-            shap.summary_plot(shap_values[0], features=X_train, feature_names=feature_names, show=True, max_display=max_display)
+            shap.summary_plot(shap_values[0], features=X_train, feature_names=feature_names, show=show, max_display=max_display)
         elif style == "hist":
-            shap.summary_plot(shap_values, features=X_train, feature_names=feature_names, class_names=["reference", "other"], show=True, max_display=max_display)
+            shap.summary_plot(shap_values, features=X_train, feature_names=feature_names, class_names=["reference", "other"], show=show, max_display=max_display)
 
 
-        return list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1]
+        y_test_pred = m.predict(X_test)
+        cm_test = confusion_matrix(y_test_pred, y_test)
+        acc = 100*(cm_test[0][0]+cm_test[1][1]) / (sum(cm_test[0]) + sum(cm_test[1]))
+        if show:
+            plot_confusion_matrix(m, X_test, y_test)  
+            plt.show() 
+            _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'])
+
+            print('Total OTHER detected in test set: ' + str(cm_test[1][1]) + ' / ' + str(cm_test[1][1]+cm_test[1][0]))
+            print('Total REFERENCE transactions detected in test set: ' + str(cm_test[0][0]) + ' / ' + str(cm_test[0][1]+cm_test[0][0]))
+            print('Probability to detect a OTHER in the test set: ' + str(cm_test[1][1]/(cm_test[1][1]+cm_test[1][0])))
+            print('Probability to detect a REFERENCE in the test set: ' + str(cm_test[0][0]/(cm_test[0][1]+cm_test[0][0])))
+            print("Accuracy of unsupervised anomaly detection model on the test set: "+f"{acc:.2f}" + "%")
+            print("-----\n\n")
+
+        output = dict(top_features_list=list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1],
+                      accuracy=acc)
+
+        return output
     else:
         if style == "dot":
             shap.summary_plot(shap_values[0], features=X_train, show=show, max_display=max_display)

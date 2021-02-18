@@ -3,12 +3,14 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from microbiome.variables import *
+from microbiome.helpers import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 from skbio.diversity.alpha import shannon, simpson
 from itertools import combinations 
 from microbiome.statistical_analysis import regliner
+from ipywidgets import FloatSlider, ColorPicker, VBox, jslink
 
 ### PLOTLY ###
 def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size=1, time_unit_name="days", nice_name=lambda x: x, file_name=None, height=1900, width=1500, website=False):
@@ -98,8 +100,6 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
                 else:
                     showlegend = False
 
-                print("-----s-ds-s-s")
-                print(type(sid))
                 fig.add_trace(go.Scatter(
                     x=df1.age_at_collection.values[idx]/time_unit_size,
                     y=[sid]*len(idx),
@@ -672,4 +672,243 @@ def plot_ultradense_longitudinal_data_matplotlib(df, infants_to_plot, cols_num, 
             _colors_dict[nice_name(k)] = v
 
         plt.legend(_colors_dict, **legend_kw)
+
+
+import plotly.graph_objects as go
+import sklearn
+
+def embedding(embedding, df_all, feature_columns, embedding_dimension, layout_settings=None, color_column_name=None, website=False):
+    """embedding_dimension can be 2 or 3"""
+    fig = go.Figure()  
+
+    df = df_all.copy()
+    subjectIDs = np.array(df["subjectID"].values.tolist())
+    sampleIDs = np.array(df["sampleID"].values.tolist())
+    X = df[feature_columns].values
+    X_emb = embedding.fit_transform(X)
+    
+    if isinstance(embedding, sklearn.decomposition._pca.PCA):
+        xaxis_label = f"PC1 - {embedding.explained_variance_ratio_[0]:.3f} explained variance"
+        yaxis_label = f"PC2 - {embedding.explained_variance_ratio_[1]:.3f} explained variance"
+    else:
+        xaxis_label = "1st dimension"
+        yaxis_label = "2nd dimension"
+           
+        
+    layout_settings_default = dict(
+        height=600, 
+        width=600,
+        barmode='stack', 
+        uniformtext=dict(mode="hide", minsize=10),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',  
+        margin=dict(l=0, r=0, b=0, pad=0),
+        title_text=f"Embedding in {embedding_dimension}D space",
+        annotations=[
+            dict(
+                x=0.5,
+                y=1.05,
+                align="right",
+                valign="top",
+                text="colored by "+ (color_column_name or ""),
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+                xanchor="center",
+                yanchor="top"
+            )
+        ]
+    )
+
+    if layout_settings is None:
+            layout_settings = {}
+    layout_settings_final = {**layout_settings_default, **layout_settings}
+
+    if embedding_dimension==2:
+        if color_column_name is not None:
+            for g in df[color_column_name].unique():
+                idx = np.where(np.array(df[color_column_name].values)==g)[0]
+                fig.add_trace(go.Scatter(
+                            x=X_emb[:,0][idx],
+                            y=X_emb[:,1][idx],
+                            name=str(g) or "NaN",
+                            mode="markers", 
+                            text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs[idx], subjectIDs[idx])],
+                            hovertemplate = '%{text}'+
+                                            f'<b>Group ({color_column_name}): {g}</b><br>'+
+                                            '<b>x</b>: %{x:.2f}<br>'+
+                                            '<b>y</b>: %{y:.2f}<br>'
+                ))
+        else:
+            fig.add_trace(go.Scatter(
+                            x=X_emb[:,0],
+                            y=X_emb[:,1],
+                            #name=sampleIDs,
+                            mode="markers", 
+                            text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs, subjectIDs)],
+                            hovertemplate = '%{text}'+
+                                            f'<b>Group ({color_column_name}): {g}</b><br>'+
+                                            '<b>x</b>: %{x:.2f}<br>'+
+                                            '<b>y</b>: %{y:.2f}<br>'
+            ))
+    elif embedding_dimension == 3:
+        if color_column_name is not None:
+            for g in df[color_column_name].unique():
+                idx = np.where(np.array(df[color_column_name].values)==g)[0]
+
+                fig.add_trace(go.Scatter3d(
+                            x=X_emb[:,0][idx],
+                            y=X_emb[:,1][idx],
+                            z=X_emb[:,2][idx],
+                            name=str(g) or "NaN",
+                            mode="markers",
+                            marker=dict(
+                                size=5,         
+                                opacity=0.8
+                            ), 
+                            text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs[idx], subjectIDs[idx])],
+                            hovertemplate = '%{text}'+
+                                            f'<b>Group ({color_column_name}): {g}</b><br>'+
+                                            '<b>x</b>: %{x:.2f}<br>'+
+                                            '<b>y</b>: %{y:.2f}<br>'
+                ))
+        else:
+            fig.add_trace(go.Scatter3d(
+                            x=X_emb[:,0],
+                            y=X_emb[:,1],
+                            z=X_emb[:,2],
+                            #name=sampleIDs,
+                            mode="markers",
+                            marker=dict(
+                                size=5,         
+                                opacity=0.9
+                            ), 
+                            text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs, subjectIDs)],
+                            hovertemplate = '%{text}'+
+                                            f'<b>Group ({color_column_name}): {g}</b><br>'+
+                                            '<b>x</b>: %{x:.2f}<br>'+
+                                            '<b>y</b>: %{y:.2f}<br>'
+            ))
+    else: 
+        raise NotImplemented(f"Dimension {embedding_dimension} not supported for visualization :)")
+
+    fig.update_xaxes(title=xaxis_label, 
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
+    fig.update_yaxes(title=yaxis_label,  
+
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
+
+    fig.update_layout(**layout_settings_final)
+
+    if not website:
+        fig.show()
+    
+    f = go.FigureWidget(fig)
+    #print(f.data[0])
+    
+    return fig
+
+
+
+def embeddings_interactive_selection_notebook(df_all, feature_columns, emb, layout_settings=None, file_name=None):
+    df = df_all.copy()
+    fig = go.Figure()  
+    subjectIDs = np.array(df["subjectID"].values.tolist())
+    sampleIDs = np.array(df["sampleID"].values.tolist())
+    X = df[feature_columns].values
+    X_emb = emb.fit_transform(X)
+
+    if isinstance(embedding, sklearn.decomposition._pca.PCA):
+        xaxis_label = f"PC1 - {embedding.explained_variance_ratio_[0]:.3f} explained variance"
+        yaxis_label = f"PC2 - {embedding.explained_variance_ratio_[1]:.3f} explained variance"
+    else:
+        xaxis_label = "1st dimension"
+        yaxis_label = "2nd dimension"
+
+
+    layout_settings_default = dict(
+        height=600, 
+        width=900,
+        barmode='stack', 
+        uniformtext=dict(mode="hide", minsize=10),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',  
+        margin=dict(l=0, r=0, b=0, pad=0),
+        title_text=f"Embedding in 2D space",
+        annotations=[
+            dict(
+                x=0.5,
+                y=1.05,
+                align="right",
+                valign="top",
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+                xanchor="center",
+                yanchor="top"
+            )
+        ]
+    )
+
+    fig.add_trace(go.Scatter(
+                    x=X_emb[:,0],
+                    y=X_emb[:,1],
+                    #name=sampleIDs,
+                    mode="markers", 
+                    text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs, subjectIDs)],
+                    hovertemplate = '%{text}'+
+                                    '<b>x</b>: %{x:.2f}<br>'+
+                                    '<b>y</b>: %{y:.2f}<br>'
+    ))
+
+    if layout_settings is None:
+            layout_settings = {}
+    layout_settings_final = {**layout_settings_default, **layout_settings}
+    
+    fig.update_xaxes(title=xaxis_label, 
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
+    fig.update_yaxes(title=yaxis_label,  
+
+                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
+
+    fig.update_layout(**layout_settings_final)
+
+
+    f = go.FigureWidget(fig)
+    scatter = f.data[0]
+
+    # Create a table FigureWidget that updates on selection from points in the scatter plot of f
+    t = go.FigureWidget([
+        go.Table(
+        header=dict(values=['sampleID','subjectID'],
+                    fill = dict(color='#C2D4FF'),
+                    align = ['left'] * 5),
+        cells=dict(values=[df[col] for col in ['sampleID','subjectID']],
+                   fill = dict(color='#F5F8FF'),
+                   align = ['left'] * 5))])
+
+    def selection_fn(trace,points,selector):
+        t.data[0].cells.values = [df.loc[points.point_inds][col] for col in ['sampleID','subjectID']]
+
+        df_selected = pd.DataFrame(data={"sampleID":t.data[0].cells.values[0],
+                                         "subjectID":t.data[0].cells.values[1]})
+        df_selected.to_csv(file_name, index=False)
+        if file_name:
+            print("Saved to:", file_name)
+        else: 
+            print("Selection file not saved. Specify file_name if you want to save.")
+            
+        ###
+        plt.clf()
+        # create new column called selected to use for reference analysis: True - selected, False - not selected
+        df["selected"] = False
+        df.loc[df["sampleID"].isin(df_selected["sampleID"]), "selected"] = True
+        
+        # plot the result of reference analysis with feature_columns_for_reference
+        two_groups_analysis(df, feature_columns, references_we_compare="selected", test_size=0.5, n_splits=5, nice_name=lambda x: x, style="dot", show=True, website=False, layout_height=1000, layout_width=500, max_display=20);
+
+    scatter.on_selection(selection_fn)
+
+    # Put everything together
+    return VBox((f,t))
 

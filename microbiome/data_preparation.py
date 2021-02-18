@@ -30,7 +30,7 @@ import seaborn as sns
 
 from sklearn.neighbors import KNeighborsClassifier
 
-def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2):
+def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2, plot=True):
     df = df_all.copy()
     df["month"] = df.age_at_collection//30
     
@@ -91,7 +91,10 @@ def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2):
         ax.plot(np.linspace(0, x_lim, num=x_lim), -np.ones(x_lim)*i, c="gray", lw=2, linestyle="--")
     ax = sns.pointplot(x="month", y=f"z_{z_col_name}", hue=hue_col, data=df, ax=ax, capsize=.2)
     #ax.scatter(df_subj.age_at_collection, df_subj.waz_last)
-    ax.set_ylim((-y_lim, y_lim));ax.set_xlim((0, x_lim))
+    ax.set_ylim((-y_lim, y_lim));ax.set_xlim((0, x_lim));
+
+    if plot:
+        plt.show()
     
     return outliers_below, outliers_above
 
@@ -284,3 +287,103 @@ def plot_shap_abundances_and_ratio(df, important_features, bacteria_name, nice_n
 
     return total_num_of_crossings1, total_num_of_crossings2, mae, r2
 
+
+from sklearn.neighbors import LocalOutlierFactor
+
+def update_reference_group_with_novelty_detection(df_all, feature_columns, local_outlier_factor_settings=dict(metric='braycurtis', n_neighbors=2)):
+    """
+    Features with bacteria only and Bray-Curtis distance as a metric.
+
+    The number of neighbors considered (parameter n_neighbors) is typically set 1) greater than the minimum number of samples a cluster has to contain, so that other samples can be local outliers relative to this cluster, and 2) smaller than the maximum number of close by samples that can potentially be local outliers. In practice, such informations are generally not available, so we take it to be 5. Information on other algorithms used: https://scikit-learn.org/stable/modules/outlier_detection.html#novelty-with-lof
+    """
+    df = df_all.copy()
+    
+    X_train = df[df["reference_group"]==True][feature_columns].values
+
+    lof = LocalOutlierFactor(novelty=True, **local_outlier_factor_settings)
+    lof.fit(X_train)
+    
+    X_test = df[df["reference_group"]==False][feature_columns].values
+    y_test = lof.predict(X_test)
+    
+    df.loc[df["reference_group"]==False, "reference_group"] = y_test==1
+    
+    return df["reference_group"].values
+
+
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+def gridsearch_novelty_detection_parameters(df_all, parameter_name, parameter_vals, feature_columns, metadata_columns, meta_and_feature_columns, num_runs=5, website=False, layout_settings=None):
+    df = df_all.copy()
+    
+    df_stats = pd.DataFrame(data={"parameter":[], "run":[], "num_ref":[], "num_nonref":[], "accuracy":[], "columns_type":[]})
+
+    # after modification
+    df["reference_group"].value_counts()
+    
+    d = {}
+    for n in parameter_vals:
+        d["parameter"] = n
+
+        settings = dict(metric='braycurtis')
+        settings[parameter_name] = n
+
+        # temp: reference_group1
+        df = df.assign(reference_group1=update_reference_group_with_novelty_detection(df, meta_and_feature_columns, local_outlier_factor_settings=settings))
+
+        # after modification
+        d["num_ref"] = df["reference_group1"].value_counts()[True]
+        d["num_nonref"] = df["reference_group1"].value_counts()[False]
+
+        for i in range(num_runs):
+            d["run"] = i
+            output1 = two_groups_analysis(df, feature_columns, references_we_compare="reference_group1", nice_name=lambda x: x, style="dot", show=False, website=False);
+            d["columns_type"] = "taxa"
+            d["accuracy"] = output1["accuracy"]
+            df_stats = df_stats.append(d, ignore_index=True)
+            output2 = two_groups_analysis(df, metadata_columns, references_we_compare="reference_group1", nice_name=lambda x: x, style="dot", show=False, website=False);
+            d["columns_type"] = "meta"
+            d["accuracy"] = output2["accuracy"]
+            df_stats = df_stats.append(d, ignore_index=True)
+            output3 = two_groups_analysis(df, meta_and_feature_columns, references_we_compare="reference_group1", nice_name=lambda x: x, style="dot", show=False, website=False);
+            d["columns_type"] = "meta and taxa"
+            d["accuracy"] = output3["accuracy"]
+            df_stats = df_stats.append(d, ignore_index=True)
+
+    num_cols = 3
+    fig = make_subplots(rows=1, cols=num_cols, horizontal_spacing=0.1, subplot_titles=df_stats.columns_type.unique())
+
+    layout_settings_default = dict(
+        height=400, 
+        width=1100, 
+        paper_bgcolor="white",
+        plot_bgcolor='rgba(0,0,0,0)', 
+        margin=dict(l=0, r=0, b=0, pad=0),
+        title_text="Novelty Algorithm Performance measure for different value of parameter",
+        font=dict(size=10),
+        yaxis=dict(position=0.0)
+    )
+
+    if layout_settings is None:
+        layout_settings = {}
+    layout_settings_final = {**layout_settings_default, **layout_settings}
+    
+    for idx, ct in enumerate(df_stats.columns_type.unique()):
+        df_stats1 = df_stats[df_stats.columns_type==ct]
+        fig.add_trace(go.Scatter(
+                x=df_stats1.groupby(by="parameter").agg(np.median)["accuracy"].index,
+                y=df_stats1.groupby(by="parameter").agg(np.median)["accuracy"],
+                error_y=dict(
+                    type='data', # value of error bar given in data coordinates
+                    array=df_stats1.groupby(by="parameter").agg(np.std)["accuracy"],
+                    visible=True), name=ct
+            ), row=1, col=idx%num_cols+1)
+        fig.update_xaxes(title="parameter", row=1, col=idx%num_cols+1)  # gridcolor='lightgrey'
+        fig.update_yaxes(title="accuracy", row=1, col=idx%num_cols+1)  # gridcolor='lightgrey'
+
+    fig.update_layout()
+    if not website:
+        fig.show()
+        
+    return df_stats, fig
