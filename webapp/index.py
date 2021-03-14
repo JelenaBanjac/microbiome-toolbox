@@ -3,7 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash_bootstrap_components._components.Col import Col
 from dash_bootstrap_components._components.Row import Row
-import dash_html_components as html
+import dash_html_components as dhc
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
 
@@ -25,11 +25,11 @@ from pages import page1, page2, page3, page4, page5, page6
 navbar = dbc.Navbar(
             dbc.Container(
                 [
-                    html.A(
+                    dhc.A(
                         # Use row and col to control vertical alignment of logo / brand
                         dbc.Row(
                             [
-                                #dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
+                                #dbc.Col(dhc.Img(src=PLOTLY_LOGO, height="30px")),
                                 dbc.Col(dbc.NavbarBrand("Microbiome Toolbox", className="ml-2")),
                             ],
                             align="center",
@@ -51,13 +51,13 @@ card1 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
-                    html.H4("Data Analysis & Exploration", className="card-title"),
-                    html.P(
+                    dhc.H4("Data Analysis & Exploration", className="card-title"),
+                    dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    #html.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/methods/page-1"),
+                    #dhc.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/methods/page-1"),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card1-btn"), href='/methods/page-1'),
                 ]
             ),
@@ -75,8 +75,8 @@ card2 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
-                    html.H4("Healthy Reference", className="card-title"),
-                    html.P(
+                    dhc.H4("Healthy Reference", className="card-title"),
+                    dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
@@ -98,8 +98,8 @@ card3 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
-                    html.H4("Differential Ranking", className="card-title"),
-                    html.P(
+                    dhc.H4("Differential Ranking", className="card-title"),
+                    dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
@@ -121,8 +121,8 @@ card4 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
-                    html.H4("Microbiome Trajectory", className="card-title"),
-                    html.P(
+                    dhc.H4("Microbiome Trajectory", className="card-title"),
+                    dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
@@ -144,8 +144,8 @@ card5 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
-                    html.H4("Bacteria Importance with Time", className="card-title"),
-                    html.P(
+                    dhc.H4("Bacteria Importance with Time", className="card-title"),
+                    dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
@@ -167,8 +167,8 @@ card6 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
-                    html.H4("Longitudinal Anomaly Detection", className="card-title"),
-                    html.P(
+                    dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
+                    dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
@@ -240,42 +240,42 @@ def read_dataframe(session_id, timestamp):
 
 def main_layout_(session_id, upload_filename):
     if not upload_filename:
-        upload_filename_alert = html.Div([])
+        upload_filename_alert = dhc.Div([])
     else:
-        upload_filename_alert = html.Div(dbc.Alert(f"Currently loaded file: {upload_filename}", color="info"))
+        upload_filename_alert = dhc.Div(dbc.Alert(f"Currently loaded file: {upload_filename}", color="info"))
 
     print("\nMain layout function called only with /methods")
-    return html.Div(id="main",
+    return dhc.Div(id="main",
                  children=[
-                   html.Div(id='main-upload', children=[
+                   dhc.Div(id='main-upload', children=[
                         dbc.Container([
                             dbc.Row([
                                 dbc.Col([
-                                    html.H3("Upload Dataset", style={'textAlign': 'center',}),
-                                    html.Br(),
+                                    dhc.H3("Upload Dataset", style={'textAlign': 'center',}),
+                                    dhc.Br(),
                                     du.Upload(
                                         id='upload-data',
                                         filetypes=['csv', 'xls'],
                                         upload_id=session_id,
                                     ),
-                                    html.Div(id="upload-infobox", children=upload_filename_alert),
+                                    dhc.Div(id="upload-infobox", children=upload_filename_alert),
                                     ]),
                                 ]
                             ),
                         ], className="md-12")
                     ]),
-                    html.Br(),
+                    dhc.Br(),
                    
 
-                    html.Div(id="main-methods", children=[
+                    dhc.Div(id="main-methods", children=[
                             #dcc.Location(id='url', refresh=False),
                         
                             dbc.Container([
                                 dbc.Row(
                                     dbc.Col([
-                                        html.Br(),
-                                        html.Div(html.H3("Methods")),
-                                        html.Br(),
+                                        dhc.Br(),
+                                        dhc.Div(dhc.H3("Methods")),
+                                        dhc.Br(),
                                         ], 
                                     className="md-12"),
                                 ),
@@ -301,11 +301,11 @@ def main_layout_(session_id, upload_filename):
 
 def layout_(session_id, upload_info):
     print("\nLayout function called from server_layout init or can be separately called")
-    return html.Div([
+    return dhc.Div([
         navbar,
         dcc.Location(id='url', refresh=False),
-        html.Div(session_id, id='session-id', style={'display': 'none'}),
-        html.Div(upload_info, id='upload-filename', style={'display': 'none'}),
+        dhc.Div(session_id, id='session-id', style={'display': 'none'}),
+        dhc.Div(upload_info, id='upload-filename', style={'display': 'none'}),
 
         main_layout_(session_id, upload_info)
     ])
@@ -360,14 +360,14 @@ def display_page(pathname, session_id, upload_filename):
 def return_methods(iscompleted, filenames, upload_id, filename_latest):
     print("Upload callback called")
     
-    upload_infobox = html.Div([])
+    upload_infobox = dhc.Div([])
     methods_disabled = True
 
     if filenames is not None:
         filename = filenames[0]
     elif filename_latest != '':
         filename = filename_latest
-        upload_infobox = html.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+        upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
         methods_disabled = False
     else:
         filename = ''
@@ -389,12 +389,12 @@ def return_methods(iscompleted, filenames, upload_id, filename_latest):
         df = parse_dataset(file)
 
         write_dataframe(upload_id, df)
-        upload_infobox = html.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+        upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
 
         methods_disabled = False
 
     if df is None:
-        upload_infobox = html.Div(dbc.Alert("There was an error processing this file!", color="danger"))
+        upload_infobox = dhc.Div(dbc.Alert("There was an error processing this file!", color="danger"))
         methods_disabled = True
 
     print("filename", filename)
