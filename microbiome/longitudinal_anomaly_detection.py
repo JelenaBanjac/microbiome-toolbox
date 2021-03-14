@@ -9,7 +9,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-def pi_anomaly_detection(estimator, df_all, feature_columns, degree, df_new=None):
+def pi_anomaly_detection(estimator, df_all, feature_columns, degree, df_new=None, PI_percentage=95):
     """
     Prediction Interval anomaly detection. We consider samples outside prediction interval to be outliers.
     
@@ -30,6 +30,16 @@ def pi_anomaly_detection(estimator, df_all, feature_columns, degree, df_new=None
         List of sampleIDs that are anomalous.
     """
     df = df_all.copy()
+
+    if PI_percentage == 95:
+        percent = 0.975   
+    elif  PI_percentage == 90:
+        percent = 0.95
+    elif PI_percentage == 80:
+        percent = 0.9
+    else:
+        raise NotImplemented("The percentage not implemented!")
+
     def _inner_pi_anomaly_detection(df_model, df_model_new, degree):
         """ Brain of this anomaly detection
         Parameters
@@ -56,7 +66,7 @@ def pi_anomaly_detection(estimator, df_all, feature_columns, degree, df_new=None
         n = df_model["y_pred"].values.size                                            # number of observations
         m = p.size                                                 # number of parameters
         dof = n - m                                                # degrees of freedom
-        t = stats.t.ppf(0.975, n - m)                              # used for CI and PI bands
+        t = stats.t.ppf(percent, n - m)                              # used for CI and PI bands
 
         # Estimates of Error in Data/Model
         resid = df_model["y_pred"].values - y_model                           

@@ -67,7 +67,7 @@ def get_top_bacteria_in_time(estimator, df_all, top_bacteria, days_start, days_n
 
 def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name, units, num_top_bacteria=5, start_age=0, limit_age=None, patent=False, highlight_outliers=None, df_new=None, 
                                         time_unit_size=1, time_unit_name="days", box_height=None, img_file_name=None, plateau_area_start=None, longitudinal_mode="markers+lines", longitudinal_showlegend=True, 
-                                        fillcolor_alpha=0.3, layout_settings=None, website=False):
+                                        fillcolor_alpha=0.3, layout_settings=None, website=False, PI_percentage=90, dtick=2):
     
     df = df_all.copy()
     
@@ -83,6 +83,7 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
 
     df["y"] = y
     df["y_pred"] = y_pred
+
 
     if df_new is not None:
         X, y = df2vectors(df_new, top_bacteria)
@@ -135,7 +136,7 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
     fig, ret_val, mae, r2, pi_median, traj_x, traj_pi, traj_mean = plot_1_trajectory(fig, estimator, df, top_bacteria, limit_age_max, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", 
                                                                    plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, 
                                                                    longitudinal_showlegend=longitudinal_showlegend, fillcolor_alpha=fillcolor_alpha, highlight_outliers=highlight_outliers,
-                                                                  marker_outlier=marker_outlier, df_new=df_new, plot_CI=False, plot_PI=True)
+                                                                  marker_outlier=marker_outlier, df_new=df_new, plot_CI=False, plot_PI=True, PI_percentage=PI_percentage)
 
     if box_height is None:
         box_height = 2*np.median(traj_pi)
@@ -188,11 +189,11 @@ def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name
     fig.update_xaxes( 
         title=f"Age [{time_unit_name}]",
         range=(0, latest_day/time_unit_size),
-        tick0=start_age/time_unit_size, dtick=2,
+        tick0=start_age/time_unit_size, dtick=dtick,
         showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey')
     fig.update_yaxes(
         title=f"Microbiome Maturation Index [{time_unit_name}]",
-        tick0=start_age/time_unit_size, dtick=2,
+        tick0=start_age/time_unit_size, dtick=dtick,
         range=(0, latest_day/time_unit_size), 
         showline=True, linecolor='lightgrey', gridcolor='lightgrey') 
 

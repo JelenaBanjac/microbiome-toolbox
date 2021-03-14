@@ -1,6 +1,9 @@
+import sys
+sys.path.append("/home/jelena/Desktop/microbiome-toolbox")
+
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
-import dash_html_components as html
+import dash_html_components as dhc
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import os
@@ -8,24 +11,24 @@ import numpy as np
 import sys
 import dash_table
 #sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
-from microbiome.preprocessing import dataset_bacteria_abundances, sampling_statistics, plot_bacteria_abundance_heatmaps, plot_ultradense_longitudinal_data
+from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names
 
 from app import app, cache, UPLOAD_FOLDER_ROOT
 
 
-layout = html.Div([
+layout = dhc.Div([
             dbc.Container([
                 dbc.Row(
                     dbc.Col([
                         dcc.Link('Back', href='/'),
 
-                        html.H3("Longitudinal Anomaly Detection"),
-                        html.Br(),
-                        html.Div(id="page-6-reloaded"),
+                        dhc.H3("Longitudinal Anomaly Detection"),
+                        dhc.Br(),
+                        dhc.Div(id="page-6-reloaded"),
                         
                         # Abundance plot in general
-                        html.Div(id='page-6-display-value-0'),
+                        dhc.Div(id='page-6-display-value-0'),
 
                     ], className="md-4")
                 )
@@ -72,9 +75,9 @@ def display_value(session_id):
     df = read_dataframe(session_id, None)
 
     if df is not None:
-        ret_val =  html.Div([])
+        ret_val =  dhc.Div([])
     else:
-        ret_val = html.Div(dbc.Alert(["You refreshed the page or were idle for too long so data. Data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
+        ret_val = dhc.Div(dbc.Alert(["You refreshed the page or were idle for too long so data. Data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
     return ret_val
 
 
@@ -84,10 +87,10 @@ def display_value(session_id):
 def display_value(session_id):
     df = read_dataframe(session_id, None)
 
-    ret_val = html.Div([])
+    ret_val = dhc.Div([])
     if df is not None:
-        ret_val =  [html.Hr(),
-                    html.H4("Loaded data table"),
+        ret_val =  [dhc.Hr(),
+                    dhc.H4("Loaded data table"),
                     dash_table.DataTable(
                             id='upload-datatable',
                             columns=[{"name": i, "id": i} for i in df.columns],
@@ -102,7 +105,7 @@ def display_value(session_id):
                                 'overflowX': 'auto'
                             }  
                         ),
-                    html.Br(),
+                    dhc.Br(),
                     ]
 
     return ret_val

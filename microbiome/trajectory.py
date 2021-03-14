@@ -480,7 +480,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                     time_unit_size=1, time_unit_name="days", img_file_name=None, 
                     degree=2, longitudinal_mode=None, longitudinal_showlegend=True,
                     patent=False, layout_settings=None, website=False, highlight_outliers=None, df_new=None,
-                    plot_CI=False, plot_PI=True):
+                    plot_CI=False, plot_PI=True, dtick=2, stats_table=True, PI_percentage=95):
     """Trajectory line with performance stats and many other settings
 
     estimator: sklearn models, CatBoostRegressor, etc.
@@ -592,10 +592,19 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
     fig, ret_val, mae, r2, pi_median, _, _, _ = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", 
                                                                             plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, 
                                                                             longitudinal_showlegend=longitudinal_showlegend, highlight_outliers=highlight_outliers, marker_outlier=marker_outlier, df_new=df_new,
-                                                                            plot_CI=plot_CI, plot_PI=plot_PI)
+                                                                            plot_CI=plot_CI, plot_PI=plot_PI, PI_percentage=PI_percentage)
     
     X, y = df2vectors(df, feature_cols)
     y_pred = estimator.predict(X)
+
+    if PI_percentage == 95:
+        percent = 0.975   
+    elif  PI_percentage == 90:
+        percent = 0.95
+    elif PI_percentage == 80:
+        percent = 0.9
+    else:
+        raise NotImplemented("The percentage not implemented!")
     
     y = np.array(y)/time_unit_size
     y_pred = np.array(y_pred)/time_unit_size
@@ -615,7 +624,8 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
             for i, group_trace in enumerate(df[group].unique()):
                 idx = np.where(df[group]==group_trace)[0]
                 _df = df[df[group]==group_trace]
-                xdata = np.linspace(0, limit_age_max//time_unit_size+1, limit_age_max//time_unit_size+1)
+                #xdata = np.linspace(0, limit_age_max//time_unit_size+1, limit_age_max//time_unit_size+1)
+                xdata = np.linspace(y[idx].min()/time_unit_size-dtick, y[idx].max()/time_unit_size+dtick, limit_age_max+1)
 
                 # lines
                 _p, _cov = np.polyfit(y[idx], y_pred[idx], 1, cov=True)    
@@ -674,7 +684,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                 n = ydata.size                                             # number of observations
                 m = _p.size                                                # number of parameters
                 dof = n - m                                                # degrees of freedom
-                t = stats.t.ppf(0.975, n - m)                              # used for CI and PI bands
+                t = stats.t.ppf(percent, n - m)                              # used for CI and PI bands
 
                 # Estimates of Error in Data/Model
                 resid = ydata - _y_model                           
@@ -682,7 +692,8 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
                 chi2_red = chi2 / dof                                      # reduced chi-squared; measures goodness of fit
                 s_err = np.sqrt(np.sum(resid**2) / dof)                    # standard deviation of the error
 
-                x2 = np.linspace(0, limit_age_max/time_unit_size, limit_age_max+1) #np.linspace(np.min(x), np.max(x), 100)
+                #x2 = np.linspace(0, limit_age_max/time_unit_size, limit_age_max+1) #np.linspace(np.min(x), np.max(x), 100)
+                x2 = np.linspace(xdata.min()/time_unit_size-dtick, xdata.max()/time_unit_size+dtick, limit_age_max+1)
                 y2 = equation(_p, x2)
                 pi = t * s_err * np.sqrt(1 + 1/n + (x2 - np.mean(y))**2 / np.sum((y - np.mean(y))**2))   
                 
@@ -800,32 +811,33 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
 
     fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age//time_unit_size, limit_age//time_unit_size), 
-                    tick0=start_age//time_unit_size, dtick=2, 
+                    tick0=start_age//time_unit_size, dtick=dtick, 
                     showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
     fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]", range=(start_age//time_unit_size, limit_age//time_unit_size), 
-                    tick0=start_age//time_unit_size, dtick=2, 
+                    tick0=start_age//time_unit_size, dtick=dtick, 
                     showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
     
     fig.update_layout(**layout_settings_final)
     
     if not patent:
-        fig.update_layout(go.Layout(
-            annotations=[
-                go.layout.Annotation(
-                    text=ret_val,
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=.99,
-                    y=.01,
-                    bordercolor='black',
-                    bgcolor='white',
-                    borderwidth=0.5,
-                    borderpad=8
-                )
-            ]
-        ))
+        if stats_table:
+            fig.update_layout(go.Layout(
+                annotations=[
+                    go.layout.Annotation(
+                        text=ret_val,
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=.99,
+                        y=.01,
+                        bordercolor='black',
+                        bgcolor='white',
+                        borderwidth=0.5,
+                        borderpad=8
+                    )
+                ]
+            ))
     else:
         print(ret_val)
     
@@ -849,7 +861,8 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
 
 
 
-def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, df_new=None, degree=2, longitudinal_mode=None, longitudinal_showlegend=True, fillcolor_alpha=0.3, highlight_outliers=None, marker_outlier=None, plot_CI=False, plot_PI=True): 
+def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, df_new=None, degree=2, longitudinal_mode=None, longitudinal_showlegend=True, 
+                    fillcolor_alpha=0.3, highlight_outliers=None, marker_outlier=None, plot_CI=False, plot_PI=True, PI_percentage=95): 
     """
     longitudinal_mode: str
         How a longitudinal data is plotted: markers+lines, lines, markers, etc.
@@ -896,7 +909,14 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
         ret_val += f'R^2: {r2_idx:.3f}<br>'
         ret_val += f"Pearson: {coeff_idx[0]:.3f}, 2-tailed p-value: {coeff_idx[1]:.2e}<br>"
 
-        
+    if PI_percentage == 95:
+        percent = 0.975   
+    elif  PI_percentage == 90:
+        percent = 0.95
+    elif PI_percentage == 80:
+        percent = 0.9
+    else:
+        raise NotImplemented("The percentage not implemented!")
         
     # Plot data
     equation = lambda a, b: np.polyval(a, b) 
@@ -909,7 +929,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
     n = y_pred.size                                            # number of observations
     m = p.size                                                 # number of parameters
     dof = n - m                                                # degrees of freedom
-    t = stats.t.ppf(0.975, n - m)                              # used for CI and PI bands
+    t = stats.t.ppf(percent, n - m)                              # used for CI and PI bands
 
     # Estimates of Error in Data/Model
     resid = y_pred - y_model                           
@@ -951,7 +971,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                     fillcolor=f'rgba({traj_color},{0.1:.2f})',
                     line_color=f'rgba({traj_color},{0.1:.2f})',
                     showlegend=True,
-                    name="95% Confidence Interval",
+                    name=f"{PI_percentage}% Confidence Interval",
                     legendgroup="trajectory"
                 ))
 
@@ -991,7 +1011,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
             fillcolor=f'rgba({traj_color},{fillcolor_alpha})',
             line_color=f'rgba({traj_color},{fillcolor_alpha+0.2})',
             showlegend=True,
-            name="95% Prediction Interval",
+            name=f"{PI_percentage}% Prediction Interval",
             legendgroup="trajectory"
         ))
         
@@ -1022,9 +1042,9 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                     line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
                     marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
                     showlegend=True,
-                    name="Healthy samples",
+                    name=f"{traj_label.title()} samples",
                     text=list(df_new["sampleID"].values), 
-                    hovertemplate = '<b>Healthy reference sample</b><br><br>'+
+                    hovertemplate = f'<b>{traj_label.title()} reference sample</b><br><br>'+
                                     '<b>SampleID</b>: %{text}<br>'+
                                     '<b>Age</b>: %{x:.2f}'+
                                     '<br><b>MMI</b>: %{y}<br>',
@@ -1043,7 +1063,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                     showlegend=longitudinal_showlegend,
                     name=trace,
                     text=list(df_new["sampleID"].values[idx]), 
-                    hovertemplate = '<b>Healthy reference sample</b><br><br>'+
+                    hovertemplate = f'<b>{traj_label.title()} reference sample</b><br><br>'+
                                     '<b>SampleID</b>: %{text}<br>'+
                                     '<b>Age</b>: %{x:.2f}'+
                                     '<br><b>MMI</b>: %{y}<br>',
@@ -1055,7 +1075,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
 
 def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", 
                         linear_pval=False, nonlinear_pval=False, img_file_name=None, longitudinal_mode="markers+lines", 
-                        website=False, plot_CI=False, plot_PI=True, layout_settings=None):
+                        website=False, plot_CI=False, plot_PI=True, layout_settings=None, stats_table=True, dtick=2,PI_percentage=95):
     val1 = val1.sort_values(by="age_at_collection")
     X1, y1 = df2vectors(val1, feature_cols)
     y_pred1 = estimator_ref.predict(X1)
@@ -1093,10 +1113,10 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
     
     fig, ret_val1, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val1, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="0,0,255", traj_label="reference", 
                                                             plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False,
-                                                            plot_CI=plot_CI, plot_PI=plot_PI)
+                                                            plot_CI=plot_CI, plot_PI=plot_PI, PI_percentage=PI_percentage)
     fig, ret_val2, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val2, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="255,0,0", traj_label="other", 
                                                             plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False,
-                                                            plot_CI=plot_CI, plot_PI=plot_PI)
+                                                            plot_CI=plot_CI, plot_PI=plot_PI, PI_percentage=PI_percentage)
 
               
     # dataframe will be used for linear and nonlinear p-value calculation
@@ -1145,9 +1165,9 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
         ret_val += f"<b>Splines difference:</b><br>p = {pval:.3f}"
         
     fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
-                     tick0=start_age/time_unit_size, dtick=2, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
+                     tick0=start_age/time_unit_size, dtick=dtick, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
     fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
-                     tick0=start_age/time_unit_size, dtick=2, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
+                     tick0=start_age/time_unit_size, dtick=dtick, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
     
 
     layout_settings_default = dict(
@@ -1165,52 +1185,53 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
     
     fig.update_layout(**layout_settings_final)
     
-    fig.update_layout(go.Layout(
-        annotations=[
-            go.layout.Annotation(
-                text=ret_val1,
-                font = dict(size = 10),
-                align='left',
-                showarrow=False,
-                xref='paper',
-                yref='paper',
-                x=0.5,
-                y=.01,
-                bordercolor='black',
-                bgcolor='rgba(0,0,220,0.5)',
-                borderwidth=0.5,
-                borderpad=8
-            ),
-            go.layout.Annotation(
-                text=ret_val2,
-                font = dict(size = 10),
-                align='left',
-                showarrow=False,
-                xref='paper',
-                yref='paper',
-                x=1.0,
-                y=.01,
-                bordercolor='black',
-                bgcolor='rgba(220,0,0,0.5)',
-                borderwidth=0.5,
-                borderpad=8
-            ),
-            go.layout.Annotation(
-                text=ret_val,
-                font = dict(size = 15),
-                align='left',
-                showarrow=False,
-                xref='paper',
-                yref='paper',
-                x=.01,
-                y=.99,
-                bordercolor='black',
-                bgcolor='white',
-                borderwidth=0.5,
-                borderpad=8
-            )
-        ]
-    ), xaxis=dict(domain=[0.1, 0.1]))
+    if stats_table:
+        fig.update_layout(go.Layout(
+            annotations=[
+                go.layout.Annotation(
+                    text=ret_val1,
+                    font = dict(size = 10),
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.5,
+                    y=.01,
+                    bordercolor='black',
+                    bgcolor='rgba(0,0,220,0.5)',
+                    borderwidth=0.5,
+                    borderpad=8
+                ),
+                go.layout.Annotation(
+                    text=ret_val2,
+                    font = dict(size = 10),
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=1.0,
+                    y=.01,
+                    bordercolor='black',
+                    bgcolor='rgba(220,0,0,0.5)',
+                    borderwidth=0.5,
+                    borderpad=8
+                ),
+                go.layout.Annotation(
+                    text=ret_val,
+                    font = dict(size = 15),
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=.01,
+                    y=.99,
+                    bordercolor='black',
+                    bgcolor='white',
+                    borderwidth=0.5,
+                    borderpad=8
+                )
+            ]
+        ), xaxis=dict(domain=[0.1, 0.1]))
     
     if img_file_name:
         fig.write_html(img_file_name)

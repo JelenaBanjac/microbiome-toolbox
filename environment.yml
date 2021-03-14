@@ -3,6 +3,7 @@ channels:
   - anaconda
   - defaults
 dependencies:
+  #- python=3.7.0
   - _py-xgboost-mutex=2.0=cpu_0
   - ca-certificates=2020.10.14=0
   - certifi=2020.6.20
@@ -60,4 +61,19 @@ dependencies:
   - wcwidth=0.2.5
   - wheel=0.35.1
   - zeromq=4.3.2
+  - jupyter
+  - pip:
+    - dash-bootstrap-components
+    - dash-html-components==0.13.2
+    - dash-core-components==0.38.1
+    - dash
+    - dash-renderer==0.15.1
+    - dash-table==3.1.7
+    - dash-uploader
+    - plotly
+    - flask-caching
+    - catboost
+    - statsmodels
+    - scikit-bio
+    - shap
 

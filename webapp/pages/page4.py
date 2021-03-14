@@ -1,14 +1,15 @@
+import sys
+sys.path.append("/home/jelena/Desktop/microbiome-toolbox")
+
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
-import dash_html_components as html
+import dash_html_components as dhc
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import os
 import numpy as np
 import sys
-import dash_table
-#sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
-from microbiome.preprocessing import dataset_bacteria_abundances, sampling_statistics, plot_bacteria_abundance_heatmaps, plot_ultradense_longitudinal_data
+from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 
@@ -17,18 +18,18 @@ from microbiome.variables import *
 from app import app, cache, UPLOAD_FOLDER_ROOT
 
 
-layout = html.Div([
+layout = dhc.Div([
             dbc.Container([
                 dbc.Row(
                     dbc.Col([
                         dcc.Link('Back', href='/'),
 
-                        html.H3("Microbiome Trajectory"),
-                        html.Br(),
-                        html.Div(id="page-4-reloaded"),
+                        dhc.H3("Microbiome Trajectory"),
+                        dhc.Br(),
+                        dhc.Div(id="page-4-reloaded"),
                         
                         # Abundance plot in general
-                        html.Div(id='page-4-display-value-0'),
+                        dhc.Div(id='page-4-display-value-0'),
 
                     ], className="md-4")
                 )
@@ -75,9 +76,9 @@ def display_value(session_id):
     df = read_dataframe(session_id, None)
 
     if df is not None:
-        ret_val =  html.Div([])
+        ret_val =  dhc.Div([])
     else:
-        ret_val = html.Div(dbc.Alert(["You refreshed the page or were idle for too long so data. Data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
+        ret_val = dhc.Div(dbc.Alert(["You refreshed the page or were idle for too long so data. Data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
     return ret_val
 
 
@@ -126,32 +127,32 @@ def display_value(session_id):
 
     fig6 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=False, nonlinear_pval=True, img_file_name=None, website=True)
 
-    ret_val = html.Div([])
+    ret_val = dhc.Div([])
     if df is not None:
-        ret_val =  [html.Hr(),
-                    html.H4("Only Trajectory Line"),
+        ret_val =  [dhc.Hr(),
+                    dhc.H4("Only Trajectory Line"),
                     dcc.Graph(figure=fig1),
-                    html.Br(),
-                    html.Hr(),
-                    html.H4("Universality: Linear Difference between Group Trajectories"),
+                    dhc.Br(),
+                    dhc.Hr(),
+                    dhc.H4("Universality: Linear Difference between Group Trajectories"),
                     dcc.Graph(figure=fig2),
-                    html.Br(),
-                    html.Hr(),
-                    html.H4("Universality: Nonlinear Difference between Group Trajectories"),
+                    dhc.Br(),
+                    dhc.Hr(),
+                    dhc.H4("Universality: Nonlinear Difference between Group Trajectories"),
                     dcc.Graph(figure=fig3),
-                    html.Br(),
-                    html.Hr(),
-                    html.H4("Healthy vs. Non-healthy Longitudinal Trajectories"),
+                    dhc.Br(),
+                    dhc.Hr(),
+                    dhc.H4("Healthy vs. Non-healthy Longitudinal Trajectories"),
                     dcc.Graph(figure=fig4),
-                    html.Br(),
-                    html.Hr(),
-                    html.H4("Differentiation: Linear Healthy vs. Non-healthy Difference Between Trajectories"),
+                    dhc.Br(),
+                    dhc.Hr(),
+                    dhc.H4("Differentiation: Linear Healthy vs. Non-healthy Difference Between Trajectories"),
                     dcc.Graph(figure=fig5),
-                    html.Br(),
-                    html.Hr(),
-                    html.H4("Differentiation: Nonlinear (Spline) Healthy vs. Non-healthy Difference Between Trajectories"),
+                    dhc.Br(),
+                    dhc.Hr(),
+                    dhc.H4("Differentiation: Nonlinear (Spline) Healthy vs. Non-healthy Difference Between Trajectories"),
                     dcc.Graph(figure=fig6),
-                    html.Br(),
+                    dhc.Br(),
                     ]
 
     return ret_val
