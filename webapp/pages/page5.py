@@ -9,11 +9,10 @@ import pandas as pd
 import os
 import numpy as np
 import sys
+import dash_table
+#sys.path.append("C://Users//RDBanjacJe//Desktop//ELMToolBox") 
 from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names
-from microbiome.variables import *
-from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
-from microbiome.postprocessing import plot_importance_boxplots_over_age
 
 from app import app, cache, UPLOAD_FOLDER_ROOT
 
@@ -24,13 +23,11 @@ layout = dhc.Div([
                     dbc.Col([
                         dcc.Link('Back', href='/'),
 
-                        dhc.H3("Bacteria Importance with Time"),
+                        dhc.H3("Longitudinal Anomaly Detection"),
                         dhc.Br(),
-                        dhc.Div(id="page-5-reloaded"),
+                        dhc.Div(id="page-5-main"),
                         
-                        # Abundance plot in general
-                        dhc.Div(id='page-5-display-value-0'),
-
+                        
                     ], className="md-4")
                 )
             ], className="md-4",)
@@ -47,6 +44,12 @@ layout = dhc.Div([
         'zIndex':'1000',
     }
 )
+
+page_content = [
+    # Abundance plot in general
+    dhc.Div(id='page-5-display-value-0'),
+
+]
 
 # cache memoize this and add timestamp as input!
 @cache.memoize()
@@ -70,16 +73,15 @@ def read_dataframe(session_id, timestamp):
 
 
 @app.callback(
-    Output('page-5-reloaded', 'children'),
+    Output('page-5-main', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
+    
+    if df is None:
+        return dhc.Div(dbc.Alert(["You refreshed the page or were idle for too long so data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
 
-    if df is not None:
-        ret_val =  dhc.Div([])
-    else:
-        ret_val = dhc.Div(dbc.Alert(["You refreshed the page or were idle for too long so data. Data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
-    return ret_val
+    return page_content
 
 
 @app.callback(
@@ -87,39 +89,25 @@ def display_value(session_id):
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-    nice_name = lambda x: x[9:].replace("_", " ")
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        box_height = None
-        units = [20, 20, 20] 
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        box_height = None
-        units = [90, 90, 90, 90, 90, 90]
 
-    estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-    # healthy unseen data - Test-1
-    val1 = df[df.classification_dataset_type=="Test-1"]
-    # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-    other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-    # unhealthy unseen data - Test2
-    val2 =  df[df.classification_dataset_type=="Test-2"]
-
-    #fig, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, units=units, start_age=0, patent=False, highlight_outliers=False, df_new=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, box_height=box_height, file_name=None, plateau_area_start=None, longitudinal_mode=None, longitudinal_showlegend=False, fillcolor_alpha=0.2, website=True);
-    
-    fig, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, units=units, patent=False, highlight_outliers=True, df_new=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, box_height=box_height, file_name=None, plateau_area_start=plateau_area_start, longitudinal_mode="markers", longitudinal_showlegend=False, fillcolor_alpha=0.2, website=True);
-    
     ret_val = dhc.Div([])
     if df is not None:
         ret_val =  [dhc.Hr(),
-                    dhc.H4("Important Bacteria w.r.t. Time"),
-                    dcc.Graph(figure=fig),
+                    dhc.H4("Loaded data table"),
+                    dash_table.DataTable(
+                            id='upload-datatable',
+                            columns=[{"name": i, "id": i} for i in df.columns],
+                            data=df.to_dict('records'),
+                            style_data={
+                                'width': '{}%'.format(max(df.columns, key=len)),
+                                'minWidth': '50px',
+                                'maxWidth': '500px',
+                            },
+                            style_table={
+                                'height': 300, 
+                                'overflowX': 'auto'
+                            }  
+                        ),
                     dhc.Br(),
                     ]
 

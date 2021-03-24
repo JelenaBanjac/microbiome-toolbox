@@ -53,9 +53,26 @@ from sklearn.model_selection import GroupShuffleSplit
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.metrics import confusion_matrix
 import itertools
+from io import BytesIO
+
+def fig_to_uri(in_fig, close_all=True, **save_args):
+    # type: (plt.Figure) -> str
+    """
+    Save a figure as a URI
+    :param in_fig:
+    :return:
+    """
+    out_img = BytesIO()
+    in_fig.savefig(out_img, format='png', **save_args)
+    if close_all:
+        in_fig.clf()
+        plt.close('all')
+    out_img.seek(0)  # rewind file
+    encoded = base64.b64encode(out_img.read()).decode("ascii").replace("\n", "")
+    return "data:image/png;base64,{}".format(encoded)
 
 def _plot_confusion_matrix(cm, title, classes=['False', 'True'],
-                          cmap=plt.cm.Blues, save=False, saveas="MyFigure.png"):
+                          cmap=plt.cm.Blues, save=False, saveas="MyFigure.png", website=False):
     
     # print Confusion matrix with blue gradient colours
     plt.rcParams.update({'font.size': 15})
@@ -82,7 +99,11 @@ def _plot_confusion_matrix(cm, title, classes=['False', 'True'],
     
     if save:
         plt.savefig(saveas, dpi=100)
-    plt.show()
+
+    if not website:
+        plt.show()
+    else:
+        return fig_to_uri(plt)
 
 def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0.5, n_splits=5, nice_name=lambda x: x, style="dot", show=False, website=True, layout_height=1000, layout_width=1000, max_display=20):
     """Style can be dot or hist"""
@@ -138,6 +159,21 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
     shap_values = explainer.shap_values(X_train)
     
     feature_names = list(map(nice_name, X_train.columns))
+
+    y_test_pred = m.predict(X_test)
+    print(type(y_test_pred))
+    print(type(y_test))
+    if isinstance(y_test, pd.Series):
+        y_test = np.array(y_test.values, dtype=type(y_test_pred[0]))
+
+    print(type(y_test_pred))
+    print(type(y_test))
+    print(type(y_test_pred[0]))
+    print(type(y_test[0]))
+
+    cm_test = confusion_matrix(y_test_pred, y_test)
+    acc = 100*(cm_test[0][0]+cm_test[1][1]) / (sum(cm_test[0]) + sum(cm_test[1]))
+
     if not website:
         sns.set_style("whitegrid")
         
@@ -147,9 +183,7 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
             shap.summary_plot(shap_values, features=X_train, feature_names=feature_names, class_names=["reference", "other"], show=show, max_display=max_display)
 
 
-        y_test_pred = m.predict(X_test)
-        cm_test = confusion_matrix(y_test_pred, y_test)
-        acc = 100*(cm_test[0][0]+cm_test[1][1]) / (sum(cm_test[0]) + sum(cm_test[1]))
+        
         if show:
             plot_confusion_matrix(m, X_test, y_test)  
             plt.show() 
@@ -189,7 +223,10 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
 #             fig.for_each_trace(
 #                 lambda trace: trace.update(marker_symbol="square") if trace.name == "trace 39" else (),
 #             )
-            return fig
+            img_src = _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'], website=website)
+
+            return fig, img_src
+
         elif style == "hist":
             shap.summary_plot(shap_values, features=X_train, class_names=["reference", "other"], show=show, max_display=max_display)
             

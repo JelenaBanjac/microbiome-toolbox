@@ -13,7 +13,7 @@ from microbiome.helpers import df2vectors
 from microbiome.trajectory import plot_1_trajectory
 from matplotlib.ticker import MaxNLocator
 import plotly.graph_objects as go
-
+from plotly.tools import mpl_to_plotly
 
 def get_top_bacteria_in_time(estimator, df_all, top_bacteria, days_start, days_number_1unit, num_top_bacteria, average=np.median, std=np.std, time_unit_size=1, time_unit_name="days"):  # scipy.stats.hmean
     """
@@ -264,7 +264,25 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     if plot:
         shap.force_plot(explainer.expected_value, shap_values[i], features=X[i], feature_names=feature_columns_short, text_rotation=90, matplotlib=True)
         plt.show()
-    
+    else:
+        fig1, ax = plt.subplots()
+        shap.force_plot(explainer.expected_value, shap_values[i], features=X[i], feature_names=feature_columns_short, text_rotation=90, matplotlib=plot)
+        
+        fig1 =  mpl_to_plotly(fig1)
+            
+        fig1.update_xaxes(title="SHAP value (impact on model output)", 
+                        showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
+        fig1.update_yaxes(title="Features", 
+                            tickmode='array',
+                            tickvals=list(range(0, min(20, len(feature_columns_short)))),  #list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))], # 
+                            #ticktext=list(map(nice_name, list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))][::-1])),
+                        showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
+        fig1.update_layout(#height=layout_height, width=layout_width,
+                        #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        margin=dict(l=0, r=0, b=0, pad=0),
+                        title_text="Classification Important Features")
+
     ### Intervention Table ###
     # get importances of outlier
     feature_importance_outlier = pd.DataFrame(list(zip(feature_columns, np.abs(shap_values).mean(0))), columns=['bacteria_name','feature_importance_outlier'])
@@ -276,6 +294,7 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
                                                                        days_number_1unit=(left+right)*time_unit_size, 
                                                                        num_top_bacteria=5, 
                                                                        average=average, std=std)
+    print(feature_importance)
     #display(feature_importance)
     # merge two importances
     feature_importance["outlier"] = feature_importance.apply(lambda x: df_all.iloc[i][x["bacteria_name"]], axis=1)
@@ -330,7 +349,25 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     if plot:
         shap.force_plot(explainer.expected_value, shap_values[i], features=X[i], feature_names=feature_columns_short, text_rotation=90, matplotlib=True)
         plt.show()
+    else:
 
+        fig2, ax = plt.subplots()
+        shap.force_plot(explainer.expected_value, shap_values[i], features=X[i], feature_names=feature_columns_short, text_rotation=90, matplotlib=plot)
+        
+        fig2 =  mpl_to_plotly(fig2)
+            
+        fig2.update_xaxes(title="SHAP value (impact on model output)", 
+                        showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
+        fig2.update_yaxes(title="Features", 
+                            tickmode='array',
+                            tickvals=list(range(0, min(20, len(feature_columns_short)))),  #list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))], # 
+                            #ticktext=list(map(nice_name, list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))][::-1])),
+                        showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
+        fig2.update_layout(#height=layout_height, width=layout_width,
+                        #paper_bgcolor="white",#'rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        margin=dict(l=0, r=0, b=0, pad=0),
+                        title_text="Classification Important Features")
     
     
-    return df_all_updated
+    return df_all_updated, fig1, fig2, ret_val1+ret_val2+ret_val3

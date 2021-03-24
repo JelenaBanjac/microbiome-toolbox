@@ -875,7 +875,6 @@ def embeddings_interactive_selection_notebook(df_all, feature_columns, emb, layo
 
 
     f = go.FigureWidget(fig)
-    scatter = f.data[0]
 
     # Create a table FigureWidget that updates on selection from points in the scatter plot of f
     t = go.FigureWidget([
@@ -907,7 +906,7 @@ def embeddings_interactive_selection_notebook(df_all, feature_columns, emb, layo
         # plot the result of reference analysis with feature_columns_for_reference
         two_groups_analysis(df, feature_columns, references_we_compare="selected", test_size=0.5, n_splits=5, nice_name=lambda x: x, style="dot", show=True, website=False, layout_height=1000, layout_width=500, max_display=20);
 
-    scatter.on_selection(selection_fn)
+    f.data[0].on_selection(selection_fn)
 
     # Put everything together
     return VBox((f,t))

@@ -51,7 +51,7 @@ card1 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
-                    dhc.H4("Data Analysis & Exploration", className="card-title"),
+                    dhc.H4("Reference Definition & Statistics", className="card-title"),
                     dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
@@ -75,7 +75,7 @@ card2 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
-                    dhc.H4("Healthy Reference", className="card-title"),
+                    dhc.H4("Data Analysis & Exploration", className="card-title"),
                     dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
@@ -98,7 +98,7 @@ card3 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
-                    dhc.H4("Differential Ranking", className="card-title"),
+                    dhc.H4("Microbiome Trajectory", className="card-title"),
                     dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
@@ -121,7 +121,7 @@ card4 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
-                    dhc.H4("Microbiome Trajectory", className="card-title"),
+                    dhc.H4("Bacteria Importance with Time", className="card-title"),
                     dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
@@ -144,7 +144,7 @@ card5 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
-                    dhc.H4("Bacteria Importance with Time", className="card-title"),
+                    dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
                     dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
@@ -167,7 +167,7 @@ card6 = dbc.Col(
             dbc.CardImg(src="static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
-                    dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
+                    dhc.H4("Intervention Simulation", className="card-title"),
                     dhc.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",

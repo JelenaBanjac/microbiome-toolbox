@@ -10,6 +10,7 @@ import uuid
 import time
 import os
 import dash_uploader as du
+import dash_html_components as dhc
 
 
 app_dir = os.getcwd()
@@ -31,3 +32,11 @@ cache = Cache(app.server, config={
     # higher numbers will store more data in the filesystem / redis cache
     'CACHE_THRESHOLD': 200
 })
+
+
+# image_directory =  os.getcwd() + '/img/'
+# image_filename = '/home/jelena/Desktop/microbiome-toolbox/images/loading.gif' # replace with your own image
+# encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+loading_img = dhc.Div([
+    dhc.Img(src="https://www.arcadiacars.com/static/media/loading.a74b50f6.gif")
+])
