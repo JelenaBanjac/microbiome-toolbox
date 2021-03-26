@@ -1,11 +1,10 @@
 shap
-numpy
 dash-bootstrap-components
-dash-html-components==0.13.2
-dash-core-components==0.38.1
+dash-html-components
+dash-core-components
 dash
-dash-renderer==0.15.1
-dash-table==3.1.7
+dash-renderer
+dash-table
 dash-uploader
 plotly
 flask-caching
@@ -16,3 +15,5 @@ seaborn
 ipython
 scikit-learn
 scipy
+numpy
+scikit-bio
