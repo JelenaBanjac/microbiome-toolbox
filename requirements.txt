@@ -1,3 +1,5 @@
+shap
+numpy
 dash-bootstrap-components
 dash-html-components==0.13.2
 dash-core-components==0.38.1
@@ -10,8 +12,6 @@ flask-caching
 catboost
 statsmodels
 scikit-bio
-shap
-numpy
 matplotlib
 seaborn
 ipython
