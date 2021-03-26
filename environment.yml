@@ -74,6 +74,7 @@ dependencies:
     - flask-caching
     - catboost
     - statsmodels
+    - numpy
     - scikit-bio
     - shap
 
