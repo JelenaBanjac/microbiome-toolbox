@@ -93,7 +93,7 @@ def display_value(session_id):
         plateau_area_start=None #45
         time_unit_size=1
         time_unit_name="days"
-        limit_age = 45
+        limit_age = 60
     else:
         plateau_area_start=None  #700
         time_unit_size=30
@@ -117,6 +117,9 @@ def display_value(session_id):
 
     fig1,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
 
+    fig7,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True, longitudinal_mode="markers+lines");
+
+
     fig2,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", linear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
 
     fig3,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start,  time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
@@ -134,6 +137,10 @@ def display_value(session_id):
                     dcc.Graph(figure=fig1),
                     dhc.Br(),
                     dhc.Hr(),
+                    dhc.H4("Longitudinal Subject's Data"),
+                    dcc.Graph(figure=fig7),
+                    dhc.Br(),
+                    dhc.Hr(),
                     dhc.H4("Universality: Linear Difference between Group Trajectories"),
                     dcc.Graph(figure=fig2),
                     dhc.Br(),
@@ -142,15 +149,15 @@ def display_value(session_id):
                     dcc.Graph(figure=fig3),
                     dhc.Br(),
                     dhc.Hr(),
-                    dhc.H4("Healthy vs. Non-healthy Longitudinal Trajectories"),
+                    dhc.H4("Reference vs. Non-reference Longitudinal Trajectories"),
                     dcc.Graph(figure=fig4),
                     dhc.Br(),
                     dhc.Hr(),
-                    dhc.H4("Differentiation: Linear Healthy vs. Non-healthy Difference Between Trajectories"),
+                    dhc.H4("Differentiation: Linear Reference vs. Non-reference Difference Between Trajectories"),
                     dcc.Graph(figure=fig5),
                     dhc.Br(),
                     dhc.Hr(),
-                    dhc.H4("Differentiation: Nonlinear (Spline) Healthy vs. Non-healthy Difference Between Trajectories"),
+                    dhc.H4("Differentiation: Nonlinear (Spline) Reference vs. Non-reference Difference Between Trajectories"),
                     dcc.Graph(figure=fig6),
                     dhc.Br(),
                     ]

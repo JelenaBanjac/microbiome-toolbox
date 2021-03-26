@@ -174,6 +174,8 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
     cm_test = confusion_matrix(y_test_pred, y_test)
     acc = 100*(cm_test[0][0]+cm_test[1][1]) / (sum(cm_test[0]) + sum(cm_test[1]))
 
+    max_limit = max(20, min(max_display, len(feature_names)))
+
     if not website:
         sns.set_style("whitegrid")
         
@@ -210,8 +212,8 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
                             showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
             fig.update_yaxes(title="Features", 
                              tickmode='array',
-                             tickvals=list(range(0, min(20, len(feature_names)))),  #list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))], # 
-                             ticktext=list(map(nice_name, list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))][::-1])),
+                             tickvals=list(range(0, max_limit)),  #list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))], # 
+                             ticktext=list(map(nice_name, list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:max_limit][::-1])),
                             showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
             fig.update_layout(height=layout_height, width=layout_width,
                             #paper_bgcolor="white",#'rgba(0,0,0,0)', 
@@ -236,8 +238,8 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
                             showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
             fig.update_yaxes(title="Features", 
                              tickmode='array',
-                             tickvals=list(range(0, min(20, len(feature_names)))),  #list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))], # 
-                             ticktext=list(map(nice_name, list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))][::-1])),
+                             tickvals=list(range(0, max_limit)),  #list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:min(20, len(feature_names))], # 
+                             ticktext=list(map(nice_name, list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1][:max_limit][::-1])),
                             showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
             fig.update_layout(height=layout_height, width=layout_width,
                             #paper_bgcolor="white",#'rgba(0,0,0,0)', 

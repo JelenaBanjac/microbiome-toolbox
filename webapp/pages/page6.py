@@ -192,12 +192,13 @@ def update_color(clickData, session_id, fig):
                             file_name=None, output_html=False, plot=False, normal_vals=[ False], average=np.median, std=np.std)
 
         fig_after, traj_x, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, units=units, patent=False, highlight_outliers=[outlier_id], df_new=_val, 
-                                  time_unit_size=time_unit_size, time_unit_name=time_unit_name, box_height=10, plateau_area_start=None, longitudinal_mode="markers", longitudinal_showlegend=False, fillcolor_alpha=0.2, 
+                                  time_unit_size=time_unit_size, time_unit_name=time_unit_name, box_height=box_height, plateau_area_start=None, longitudinal_mode="markers", longitudinal_showlegend=False, fillcolor_alpha=0.2, 
                                   img_file_name=None, website=True,
                                   num_top_bacteria=5
                                   );
 
         ret_val = [
+            dhc.Hr(),
             dhc.H4("Before Intervention"),
             dcc.Graph(figure=fig_before),
             dhc.Br(),
