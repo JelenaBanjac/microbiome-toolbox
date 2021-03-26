@@ -11,3 +11,9 @@ catboost
 statsmodels
 scikit-bio
 shap
+numpy
+matplotlib
+seaborn
+ipython
+scikit-learn
+scipy
