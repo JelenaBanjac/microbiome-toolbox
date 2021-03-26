@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/jelena/Desktop/microbiome-toolbox")
+sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
