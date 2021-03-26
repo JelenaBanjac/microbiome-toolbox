@@ -16,4 +16,3 @@ ipython
 scikit-learn
 scipy
 numpy
-scikit-bio

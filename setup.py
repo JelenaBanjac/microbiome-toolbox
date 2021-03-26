@@ -65,6 +65,7 @@ setuptools.setup(
         "pywin32==227",
         "pyzmq==19.0.2",
         "scikit-learn==0.23.2",
+        "scikit-bio",
         "scipy==1.5.2",
         "setuptools==50.3.0",
         "six==1.15.0",
