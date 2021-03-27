@@ -71,10 +71,10 @@ page_content = [
     dhc.H4("Taxa Abundances Histogram"),
     dhc.Div(id='page-2-display-value-3', children=loading_img),
 
-    # Shannon's diversity index and Simpson's dominace
-    dhc.Hr(),
-    dhc.H4("Diversity"),
-    dhc.Div(id='page-2-display-value-4', children=loading_img),
+    # # Shannon's diversity index and Simpson's dominace
+    # dhc.Hr(),
+    # dhc.H4("Diversity"),
+    # dhc.Div(id='page-2-display-value-4', children=loading_img),
 
     # Dense longitudinal data
     dhc.Hr(),
@@ -245,36 +245,36 @@ def display_value(session_id):
         ]
     return ret_val
 
-@app.callback(
-    Output('page-2-display-value-4', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
+# @app.callback(
+#     Output('page-2-display-value-4', 'children'),
+#     Input('session-id', 'children'))
+# def display_value(session_id):
+#     df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
+#     ret_val = dhc.Div([])
+#     if df is not None:
 
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
 
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
-        else:
-            time_unit_name="months"
-            time_unit_size=30
+#         if max(df.age_at_collection.values) < 100:
+#             time_unit_name="days"
+#             time_unit_size=1
+#         else:
+#             time_unit_name="months"
+#             time_unit_size=30
         
-        fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
-        fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
+#         fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
+#         fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
 
-        ret_val = [
+#         ret_val = [
             
-            dcc.Graph(figure=fig1),
-            dhc.Br(),
-            dcc.Graph(figure=fig2),
-            dhc.Br(),
-        ]
+#             dcc.Graph(figure=fig1),
+#             dhc.Br(),
+#             dcc.Graph(figure=fig2),
+#             dhc.Br(),
+#         ]
 
-    return ret_val
+#     return ret_val
 
 @app.callback(
     Output('page-2-display-value-5', 'children'),
