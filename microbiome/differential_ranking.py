@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('agg')
 import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, sem

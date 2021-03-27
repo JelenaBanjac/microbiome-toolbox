@@ -17,6 +17,8 @@ To compare two linear lines, we compare the significant difference in the two co
 In the microbiome trajectory, the only linear part is the part where infant is younger than 2 years. After that, the
 trajectory plateaus, therefore, this test can be used only before 2 years. 
 """
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd

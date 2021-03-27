@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('agg')
 from pickle import FALSE
 import numpy as np
 import pandas as pd
