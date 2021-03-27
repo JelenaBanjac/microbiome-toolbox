@@ -35,5 +35,5 @@ conda activate microbiome
 !pip install microbiome-toolbox==0.0.4 --user
 
 # run ws
-python3 webapp/index.py 
+python3 webapp/app.py 
 ```

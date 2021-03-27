@@ -1,2 +1,1 @@
-web: pip install scikit-bio
-web: python3 webapp/index.py
+web: python3 webapp/app.py
