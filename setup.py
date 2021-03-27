@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 # TODO: authors and emails, and url
 setuptools.setup(
     name="microbiome-toolbox", 
-    version="0.0.6",
+    version="0.0.7",
     author="Jelena Banjac, Shaillay Kumar Dogra, Norbert Sprenger",
     author_email="msjelenabanjac@gmail.com, ShaillayKumar.Dogra@rd.nestle.com, norbert.sprenger@rdls.nestle.com",
     maintainer="Jelena Banjac",
@@ -50,9 +50,9 @@ setuptools.setup(
         "joblib==0.17.0",
         "jupyter_client==6.1.7",
         "jupyter_core==4.6.3",
-        "mkl-service==2.3.0",
-        "mkl_fft==1.2.0",
-        "mkl_random==1.1.1",
+        # "mkl-service==2.3.0",
+        # "mkl_fft==1.2.0",
+        # "mkl_random==1.1.1",
         "numpy==1.19.1",
         "pandas==1.1.3",
         "parso==0.7.0",
