@@ -18,9 +18,9 @@ import os
 import dash_uploader as du
 from pathlib import Path
 
-from index import app, UPLOAD_FOLDER_ROOT, cache
+from webapp.index import app, UPLOAD_FOLDER_ROOT, cache
 
-from pages import page1, page2, page3, page4, page5, page6
+from webapp.pages import page1, page2, page3, page4, page5, page6
 
 
 
