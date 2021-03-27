@@ -13,7 +13,7 @@ from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names, two_groups_analysis
 
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from webapp.index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([

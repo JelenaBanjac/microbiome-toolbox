@@ -15,7 +15,7 @@ from microbiome.data_analysis import *
 from ipywidgets import widgets
 
 import dash
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from webapp.index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 from sklearn import (manifold, datasets, decomposition, ensemble,
                      discriminant_analysis, random_projection, neighbors)
 

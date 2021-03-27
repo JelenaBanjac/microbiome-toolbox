@@ -16,7 +16,7 @@ from microbiome.longitudinal_anomaly_detection import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 import dash_dangerously_set_inner_html
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from webapp.index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([
