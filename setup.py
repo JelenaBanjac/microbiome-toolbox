@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 # TODO: authors and emails, and url
 setuptools.setup(
     name="microbiome-toolbox", 
-    version="0.0.9",
+    version="0.0.10",
     author="Jelena Banjac, Shaillay Kumar Dogra, Norbert Sprenger",
     author_email="msjelenabanjac@gmail.com, ShaillayKumar.Dogra@rd.nestle.com, norbert.sprenger@rdls.nestle.com",
     maintainer="Jelena Banjac",
@@ -61,9 +61,9 @@ setuptools.setup(
         "prompt-toolkit==3.0.8",
         "pygments==2.7.1",
         "python-dateutil==2.8.1",
-        "pytz==2020.1",
-        "pywin32==227",
-        "pyzmq==19.0.2",
+        # "pytz==2020.1",
+        # "pywin32==227",
+        # "pyzmq==19.0.2",
         "scikit-learn==0.23.2",
         "scikit-bio",
         "scipy==1.5.2",
@@ -72,8 +72,8 @@ setuptools.setup(
         "threadpoolctl==2.1.0",
         "tornado==6.0.4",
         "traitlets==4.3.3",
-        "wcwidth==0.2.5",
+        # "wcwidth==0.2.5",
         "wheel==0.35.1",
-        "wincertstore==0.2",
+        # "wincertstore==0.2",
     ]
 )
