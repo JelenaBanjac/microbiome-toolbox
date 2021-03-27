@@ -16,4 +16,4 @@ ipython
 scikit-learn
 scipy
 numpy
-#microbiome-toolbox
+microbiome-toolbox
