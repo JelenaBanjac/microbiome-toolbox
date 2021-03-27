@@ -88,6 +88,7 @@ setuptools.setup(
         "numpy",
         #"- scikit-bio",
         "shap",
-        "tk"
+        "tk",
+        "dash-dangerously-set-inner-html"
     ]
 )
