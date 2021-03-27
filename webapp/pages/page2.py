@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
@@ -13,7 +15,7 @@ from microbiome.data_analysis import *
 from ipywidgets import widgets
 
 import dash
-from app import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 from sklearn import (manifold, datasets, decomposition, ensemble,
                      discriminant_analysis, random_projection, neighbors)
 

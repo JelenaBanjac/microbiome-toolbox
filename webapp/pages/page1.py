@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/jelena/Desktop/microbiome-toolbox")
+
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
@@ -10,7 +13,7 @@ from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names, two_groups_analysis
 
 
-from app import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([

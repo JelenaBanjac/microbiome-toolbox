@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
@@ -12,7 +14,7 @@ from microbiome.variables import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 from microbiome.postprocessing import plot_importance_boxplots_over_age
 
-from app import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([

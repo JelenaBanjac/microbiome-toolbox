@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
@@ -14,7 +16,7 @@ from microbiome.longitudinal_anomaly_detection import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 import dash_dangerously_set_inner_html
 
-from app import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([
