@@ -88,5 +88,6 @@ setuptools.setup(
         "numpy",
         #"- scikit-bio",
         "shap",
+        "gunicorn"
     ]
 )
