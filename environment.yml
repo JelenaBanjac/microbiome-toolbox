@@ -75,6 +75,6 @@ dependencies:
     - catboost
     - statsmodels
     - numpy
-    - scikit-bio
+    # - scikit-bio
     - shap
 
