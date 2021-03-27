@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 # TODO: authors and emails, and url
 setuptools.setup(
     name="microbiome-toolbox", 
-    version="0.0.7",
+    version="0.0.8",
     author="Jelena Banjac, Shaillay Kumar Dogra, Norbert Sprenger",
     author_email="msjelenabanjac@gmail.com, ShaillayKumar.Dogra@rd.nestle.com, norbert.sprenger@rdls.nestle.com",
     maintainer="Jelena Banjac",
@@ -38,7 +38,7 @@ setuptools.setup(
         "matplotlib==2.2.2",
         "pyparsing==2.4.7",
         "seaborn==0.11.0",
-        "sip==4.19.24",
+        # "sip==4.19.24",
         "backcall==0.2.0",
         "colorama==0.4.4",
         "decorator==4.4.2",
