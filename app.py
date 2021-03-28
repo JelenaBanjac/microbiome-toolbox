@@ -18,8 +18,7 @@ import os
 import dash_uploader as du
 from pathlib import Path
 
-from webapp.index import app, UPLOAD_FOLDER_ROOT, cache
-
+from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 from webapp.pages import page1, page2, page3, page4, page5, page6
 
