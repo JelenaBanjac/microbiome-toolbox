@@ -1,0 +1,9 @@
+g__Subdoligranulum
+g__Collinsella
+g__Faecalibacterium
+g__Akkermansia
+g__Sutterella
+g__Bilophila
+g__Anaerotruncus
+g__Anaerofustis
+g__Anaerostipes
