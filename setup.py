@@ -89,6 +89,7 @@ setuptools.setup(
         #"- scikit-bio",
         "shap",
         "tk",
-        "dash-dangerously-set-inner-html"
+        "dash-dangerously-set-inner-html",
+        "gunicorn"
     ]
 )
