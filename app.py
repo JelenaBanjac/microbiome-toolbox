@@ -408,6 +408,8 @@ def return_methods(iscompleted, filenames, upload_id, filename_latest):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False,
+                    host=os.getenv("HOST", "0.0.0.0"),
+                    port=os.getenv("PORT", "5000"))
 
 
