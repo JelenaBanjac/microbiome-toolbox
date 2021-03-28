@@ -257,6 +257,10 @@ def main_layout_(session_id, upload_filename):
                                 dbc.Col([
                                     dhc.H3("Upload Dataset", style={'textAlign': 'center',}),
                                     dhc.Br(),
+                                    dhc.P(["Or use the mouse dataset to see how the Microbiome Toolbox works, which can be downloaded from this ",
+                                            dhc.A("link.", download=True, href="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls", target='_blank'),
+                                        ], style={'textAlign': 'center',}),
+                                    dhc.Br(),
                                     du.Upload(
                                         id='upload-data',
                                         filetypes=['csv', 'xls'],
