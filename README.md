@@ -36,4 +36,6 @@ conda activate microbiome
 
 # run ws
 python3 webapp/app.py 
+
+web: python3 app.py
 ```
