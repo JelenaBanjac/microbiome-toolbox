@@ -52,7 +52,7 @@ navbar = dbc.Navbar(
 card1 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="webapp/static/img/data_analysis.jpg", top=True),
+            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
                     dhc.H4("Reference Definition & Statistics", className="card-title"),
@@ -76,7 +76,7 @@ card1 = dbc.Col(
 card2 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="webapp/static/img/data_analysis2.jpg", top=True),
+            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
                     dhc.H4("Data Analysis & Exploration", className="card-title"),
@@ -99,7 +99,7 @@ card2 = dbc.Col(
 card3 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="webapp/static/img/data_analysis.jpg", top=True),
+            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
                     dhc.H4("Microbiome Trajectory", className="card-title"),
@@ -122,7 +122,7 @@ card3 = dbc.Col(
 card4 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="webapp/static/img/data_analysis2.jpg", top=True),
+            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
                     dhc.H4("Bacteria Importance with Time", className="card-title"),
@@ -145,7 +145,7 @@ card4 = dbc.Col(
 card5 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="webapp/static/img/data_analysis.jpg", top=True),
+            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis.jpg", top=True),
             dbc.CardBody(
                 [
                     dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
@@ -168,7 +168,7 @@ card5 = dbc.Col(
 card6 = dbc.Col(
     dbc.Card(
         [
-            dbc.CardImg(src="webapp/static/img/data_analysis2.jpg", top=True),
+            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis2.jpg", top=True),
             dbc.CardBody(
                 [
                     dhc.H4("Intervention Simulation", className="card-title"),
