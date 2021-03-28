@@ -7,14 +7,10 @@
       <img alt="First release" src="https://img.shields.io/badge/release-v1.0-brightgreen.svg" />
     </a>
   </p>
-
-  <p>
-    <strong>Microbiome Toolbox</strong>
-  </p>
   
   <p>
     <a href="https://microbiome-toolbox.herokuapp.com">
-      Website
+      Dashboard
     </a>
   </p>
 </div>
@@ -32,10 +28,5 @@ conda env create -f environment.yml
 conda activate microbiome
 
 # install microbiome toolbox
-!pip install microbiome-toolbox==0.0.4 --user
-
-# run ws
-python3 webapp/app.py 
-
-web: python3 app.py
+pip install microbiome-toolbox --user
 ```
