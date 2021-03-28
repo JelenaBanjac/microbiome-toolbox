@@ -19,9 +19,9 @@ UPLOAD_FOLDER_ROOT = os.path.join(app_dir, 'cached_files')
 app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.COSMO])
 #app.config.suppress_callback_exceptions = True
 du.configure_upload(app, UPLOAD_FOLDER_ROOT)
+server = app.server
 
-
-cache = Cache(app.server, config={
+cache = Cache(server, config={
     'CACHE_TYPE': 'simple',
     # Note that filesystem cache doesn't work on systems with ephemeral
     # filesystems like Heroku.

@@ -20,6 +20,7 @@ from pathlib import Path
 
 from webapp.index import app, UPLOAD_FOLDER_ROOT, cache
 
+
 from webapp.pages import page1, page2, page3, page4, page5, page6
 
 
