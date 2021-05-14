@@ -30,3 +30,10 @@ conda activate microbiome
 # install microbiome toolbox
 pip install microbiome-toolbox --user
 ```
+
+## Getting started
+
+For the toolbox usage, checkout the notebooks:
+- [1. Mouse Data Extraction (example data)](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mousedata_test.ipynb)
+- [2. Data Analysis and Exploration](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mouse_16S_healthy_reference_definition.ipynb)
+- [3. Microbiome trajectory and Outlier Detection with Intervention Simulation](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mouse_analysis_16S.ipynb)
