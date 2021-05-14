@@ -37,6 +37,7 @@ cache = Cache(server, config={
 # image_directory =  os.getcwd() + '/img/'
 # image_filename = '/home/jelena/Desktop/microbiome-toolbox/images/loading.gif' # replace with your own image
 # encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+# dhc.Img(src="https://www.arcadiacars.com/static/media/loading.a74b50f6.gif")
 loading_img = dhc.Div([
-    dhc.Img(src="https://www.arcadiacars.com/static/media/loading.a74b50f6.gif")
+    dhc.Img(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/images/Ripple.gif")
 ])

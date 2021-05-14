@@ -8,6 +8,7 @@ from microbiome.variables import *
 from microbiome.helpers import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import plotly.express as px
 
 from itertools import combinations 
 from microbiome.statistical_analysis import regliner

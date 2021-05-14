@@ -68,7 +68,7 @@ page_content = [
     
     # Heatmap
     dhc.Hr(),
-    dhc.H4("Taxa Abundances Histogram"),
+    dhc.H4("Taxa Abundances Heatmap"),
     dhc.Div(id='page-2-display-value-3', children=loading_img),
 
     # # Shannon's diversity index and Simpson's dominace
