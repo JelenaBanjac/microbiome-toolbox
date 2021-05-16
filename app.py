@@ -406,8 +406,7 @@ def fix_zeros(row, feature_columns):
               Input('bacteria-log-ratio', 'value'),
               State('session-id', 'children'))
 def display_output(log_ratio_bacteria, session_id):
-    print("input changing dropdown log_ratio_bacteria", log_ratio_bacteria)
-
+    
     df = read_dataframe(f"{session_id}_original", None)
     feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
     df = df.apply(lambda row: fix_zeros(row, feature_columns), axis=1)
@@ -419,7 +418,6 @@ def display_output(log_ratio_bacteria, session_id):
 
         # remove reference, since these are abundances
         df = df.drop(columns=log_ratio_bacteria, axis=1)
-        #df[log_ratio_bacteria] = df[log_ratio_bacteria].apply(lambda row: "")
         
     write_logbacteria(session_id, log_ratio_bacteria)
     write_dataframe(session_id, df)
@@ -452,7 +450,6 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
         filename = FILE_NAME_DEFAULT
         iscompleted = True
         upload_id = session_id
-        print(filename)
     
     upload_infobox = dhc.Div([])
     upload_datatable = dash_table.DataTable(id='upload-datatable2')
@@ -470,12 +467,7 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
         df = read_dataframe(session_id, None)
         log_ratio_bacterias = [b for b in df_original.columns[df_original.columns.str.startswith("bacteria_")] ]
         logbacteria = read_logbacteria(session_id, None)
-        # if logbacteria:
-        #     logbacteria = logbacteria.replace("_", " ")
-        
-        #logbacteria = logbacteria[9:] if logbacteria is not None and logbacteria.startswith("bacteria") else logbacteria
-        print("FIRST ELIF", logbacteria)
-        print(logbacteria, log_ratio_bacterias, logbacteria in log_ratio_bacterias)
+
         upload_datatable = dhc.Div([
                 dash_table.DataTable(
                     id='upload-datatable2',
@@ -533,7 +525,6 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
             
         elif filename in FILE_NAME_DEFAULT:
             df = DF_DEFAULT.copy()
-            print("copied data")
 
         write_dataframe(f"{upload_id}_original", df)
         upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
@@ -541,8 +532,6 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
         methods_disabled = False
         log_ratio_bacterias = [b for b in df.columns[df.columns.str.startswith("bacteria_")] ]
         logbacteria = read_logbacteria(session_id, None)
-        #logbacteria = logbacteria[9:] if logbacteria is not None and logbacteria.startswith("bacteria") else logbacteria
-        print(logbacteria, log_ratio_bacterias, logbacteria in log_ratio_bacterias)
         upload_datatable = dhc.Div([
             dash_table.DataTable(
                 id='upload-datatable2',
@@ -589,9 +578,9 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
-    # app.run_server(debug=False,
-    #             host=os.getenv("HOST", "0.0.0.0"),
-    #             port=os.getenv("PORT", "5000"))
+    #app.run_server(debug=True)
+    app.run_server(debug=False,
+                host=os.getenv("HOST", "0.0.0.0"),
+                port=os.getenv("PORT", "5000"))
 
 
