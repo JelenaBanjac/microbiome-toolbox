@@ -11,10 +11,12 @@ import time
 import os
 import dash_uploader as du
 import dash_html_components as dhc
+import pathlib
 
 
 app_dir = os.getcwd()
 UPLOAD_FOLDER_ROOT = os.path.join(app_dir, 'cached_files')
+pathlib.Path(UPLOAD_FOLDER_ROOT).mkdir(parents=True, exist_ok=True)
 
 app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.COSMO])
 #app.config.suppress_callback_exceptions = True

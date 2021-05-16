@@ -218,8 +218,9 @@ def write_dataframe(session_id, df):
     For now do not preserve or distinguish filename;
     user has one file at once.
     '''
-    print('\nCalling write_dataframe')
+    
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
+    print('\nCalling write_dataframe', filename)
     df.to_pickle(filename)
 
 def write_logbacteria(session_id, bacteria):
@@ -447,6 +448,7 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
     filename = ''
 
     if default_data_clicked > 0:
+        print("load mouse data")
         filename = FILE_NAME_DEFAULT
         iscompleted = True
         upload_id = session_id
@@ -456,10 +458,13 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
     methods_disabled = True
 
     if filenames is not None:
-        if filename is not None and filenames != FILE_NAME_DEFAULT:
+        print("if filenames is not None:")
+        if filename is not None and filename != FILE_NAME_DEFAULT:
+            print("if filename is not None and filename != FILE_NAME_DEFAULT:")
             filename = filenames[0]
 
     elif filename_latest != '':
+        print("elif filename_latest != '':")
         filename = filename_latest
         upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
         methods_disabled = False
@@ -511,7 +516,7 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
     df = None
     if filename is not None:
-        if filename != FILE_NAME_DEFAULT:
+        if filename not in FILE_NAME_DEFAULT:
 
             if upload_id:
                 root_folder = os.path.join(UPLOAD_FOLDER_ROOT, upload_id)
@@ -523,7 +528,7 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
             df = parse_dataset(file)
 
             
-        elif filename in FILE_NAME_DEFAULT:
+        else:
             df = DF_DEFAULT.copy()
 
         write_dataframe(f"{upload_id}_original", df)
