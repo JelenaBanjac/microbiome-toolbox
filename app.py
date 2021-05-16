@@ -6,7 +6,7 @@ from dash_bootstrap_components._components.Row import Row
 import dash_html_components as dhc
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
-
+import dash_table
 import base64
 import datetime
 import io
@@ -17,13 +17,14 @@ import time
 import os
 import dash_uploader as du
 from pathlib import Path
+import math
 
 from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 from webapp.pages import page1, page2, page3, page4, page5, page6
 
-
-
+DF_DEFAULT = pd.read_csv('https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls', sep="\t")
+FILE_NAME_DEFAULT = "website_mousedata.xls"
 
 # this example that adds a logo to the navbar brand
 navbar = dbc.Navbar(
@@ -221,6 +222,12 @@ def write_dataframe(session_id, df):
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
     df.to_pickle(filename)
 
+def write_logbacteria(session_id, bacteria):
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
+    if bacteria:
+        with open(filename, "w") as text_file:
+            text_file.write(bacteria)
+
 # cache memoize this and add timestamp as input!
 @cache.memoize()
 def read_dataframe(session_id, timestamp):
@@ -241,6 +248,16 @@ def read_dataframe(session_id, timestamp):
 
     return df
 
+@cache.memoize()
+def read_logbacteria(session_id, timestamp):
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
+    
+    data = None
+    if os.path.exists(filename):
+        with open(filename, 'r') as file:
+            data = file.read().replace('\n', '')
+    print("read logbacteria", data)
+    return data 
 
 def main_layout_(session_id, upload_filename):
     if not upload_filename:
@@ -257,20 +274,49 @@ def main_layout_(session_id, upload_filename):
                                 dbc.Col([
                                     dhc.H3("Upload Dataset", style={'textAlign': 'center',}),
                                     dhc.Br(),
-                                    dhc.P(["Or use the mouse dataset to see how the Microbiome Toolbox works, which can be downloaded from this ",
-                                            dhc.A("link.", download=True, href="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls", target='_blank'),
-                                        ], style={'textAlign': 'center',}),
-                                    dhc.Br(),
+                                    dhc.P(["The Microbiome Toolbox implements methods that can be used for microbiome dataset analysis and microbiome trajectory prediction. The dashboard offers a wide variety of interactive visualizations.\
+                                           If you are just interested in seeing what methods are coved, you can use a demo dataset (mouse data) which enables the toolbox options below (by pressing the button).\
+                                           You can also upload your own dataset (by clicking or drag-and-dropping the file into the area below).", 
+                                           dhc.Br(),dhc.Br(),
+                                           "In order for the methods to work, please upload the dataset with following columns:",
+                                    ]),
+                                    dhc.Ul(children=[
+                                        dhc.Li("sampleID"),
+                                        dhc.Li("subjecID"),
+                                        dhc.Li("age_at_collection"),
+                                        dhc.Li("group"),
+                                        dhc.Li("meta data with prefix - meta__"),
+                                        dhc.Li("other ID columns starting with id__"),
+                                        dhc.Li("reference_group with True/False values"),
+                                        dhc.Li("all other columns should be bacteria names, the upload will automatically put the prefix bacteria__"),
+                                    ]),
+                                    # dhc.P([
+                                    #        "add the prefix 'meta__' for the metadata columns, and `id__` for the ID columns. The rest of the columns will be considered to be bacteria abundance columns automaticaly after the upload.",
+                                    #        dhc.Br(),
+                                    #        "When data table is loaded, you can remove or modify the column names, and edit table values.", 
+                                    #        dhc.Br(),
+                                    # ]),
+                                    # dhc.P(["Or use the mouse dataset to see how the Microbiome Toolbox works, which can be downloaded from this ",
+                                    #         dhc.A("link.", href="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls", target='_blank'),
+                                    #         "or click on this button to load it now ",
+                                            
+                                    #     ], style={'textAlign': 'center',}),
+                                    dhc.P([dhc.Button("load demo mosue data", id='upload-default-data', n_clicks=0),], style={'textAlign': 'center',}),
+                                    #
+                                    dhc.P("or", style={'textAlign': 'center',}),
                                     du.Upload(
                                         id='upload-data',
                                         filetypes=['csv', 'xls'],
                                         upload_id=session_id,
                                     ),
                                     dhc.Div(id="upload-infobox", children=upload_filename_alert),
+                                    dhc.Br(),
+                                    dhc.Div(id='upload-datatable-div'),
+                                    dhc.Br()
                                     ]),
-                                ]
-                            ),
-                        ], className="md-12")
+                            ]),
+                            
+                        ], className="md-12"),
                     ]),
                     dhc.Br(),
                    
@@ -351,6 +397,35 @@ def display_page(pathname, session_id, upload_filename):
         print("\tohter path....")
         return main_layout_(session_id, upload_filename)  #app.layout  #main_layout_(None)
 
+def fix_zeros(row, feature_columns):
+    for c in feature_columns:
+        row[c] = 1e-10 if row[c]==0.0 or row[c]<1e-10 else row[c]
+    return row
+
+@app.callback(Output('upload-datatable2', 'data'),
+              Input('bacteria-log-ratio', 'value'),
+              State('session-id', 'children'))
+def display_output(log_ratio_bacteria, session_id):
+    print("input changing dropdown log_ratio_bacteria", log_ratio_bacteria)
+
+    df = read_dataframe(f"{session_id}_original", None)
+    feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
+    df = df.apply(lambda row: fix_zeros(row, feature_columns), axis=1)
+
+    if log_ratio_bacteria is not None:
+        for c in feature_columns:
+            if c != log_ratio_bacteria:
+                df[c] = df.apply(lambda row: math.log2(row[c]/row[log_ratio_bacteria]), axis=1)
+
+        # remove reference, since these are abundances
+        df = df.drop(columns=log_ratio_bacteria, axis=1)
+        #df[log_ratio_bacteria] = df[log_ratio_bacteria].apply(lambda row: "")
+        
+    write_logbacteria(session_id, log_ratio_bacteria)
+    write_dataframe(session_id, df)
+    
+
+    return df.to_dict('records')
 
 @app.callback(
     [Output('upload-filename', 'children'),
@@ -360,46 +435,148 @@ def display_page(pathname, session_id, upload_filename):
     Output('card3-btn', 'disabled'),
     Output('card4-btn', 'disabled'),
     Output('card5-btn', 'disabled'),
-    Output('card6-btn', 'disabled')],
-    [Input('upload-data', 'isCompleted')],
-    [State('upload-data', 'fileNames'),
+    Output('card6-btn', 'disabled'),
+    Output('upload-datatable-div', 'children'),],
+    [Input('upload-data', 'isCompleted'),
+     Input('upload-default-data', 'n_clicks')],
+    [State('session-id', 'children'),
+     State('upload-data', 'fileNames'),
      State('upload-data', 'upload_id'),
      State('upload-filename', 'children')])
-def return_methods(iscompleted, filenames, upload_id, filename_latest):
+def return_methods(iscompleted, default_data_clicked, session_id, filenames, upload_id, filename_latest):
     print("Upload callback called")
+    print(default_data_clicked)
+    filename = ''
+
+    if default_data_clicked > 0:
+        filename = FILE_NAME_DEFAULT
+        iscompleted = True
+        upload_id = session_id
+        print(filename)
     
     upload_infobox = dhc.Div([])
+    upload_datatable = dash_table.DataTable(id='upload-datatable2')
     methods_disabled = True
 
     if filenames is not None:
-        filename = filenames[0]
+        if filename is not None and filenames != FILE_NAME_DEFAULT:
+            filename = filenames[0]
+
     elif filename_latest != '':
         filename = filename_latest
         upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
         methods_disabled = False
-    else:
-        filename = ''
+        df_original = read_dataframe(f"{session_id}_original", None)
+        df = read_dataframe(session_id, None)
+        log_ratio_bacterias = [b for b in df_original.columns[df_original.columns.str.startswith("bacteria_")] ]
+        logbacteria = read_logbacteria(session_id, None)
+        # if logbacteria:
+        #     logbacteria = logbacteria.replace("_", " ")
+        
+        #logbacteria = logbacteria[9:] if logbacteria is not None and logbacteria.startswith("bacteria") else logbacteria
+        print("FIRST ELIF", logbacteria)
+        print(logbacteria, log_ratio_bacterias, logbacteria in log_ratio_bacterias)
+        upload_datatable = dhc.Div([
+                dash_table.DataTable(
+                    id='upload-datatable2',
+                    columns=[{
+                        "name": i, 
+                        "id": i,
+                        'deletable': True,
+                        'renamable': True
+                        } for i in df_original.columns],
+                    data=df.to_dict('records'),
+                    style_data={
+                        'width': '{}%'.format(max(df_original.columns, key=len)),
+                        'minWidth': '50px',
+                        'maxWidth': '500px',
+                    },
+                    style_table={
+                        'height': 300, 
+                        'overflowX': 'auto'
+                    },
+                    editable=True, 
+                    export_format='xlsx',
+                    export_headers='display',
+                    merge_duplicate_headers=True
+                ),
+                dcc.Dropdown(
+                    id='bacteria-log-ratio',
+                    optionHeight=20,
+                    options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
+                    searchable=True,
+                    clearable=True,
+                    placeholder="[optional] select a bacteria for log-ratio",
+                    value=logbacteria
+            ),
+        ], style={"height": 530})
+
     
     
     # at the initialization of the page or when back
     if not iscompleted:
-        return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled
+        return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, upload_datatable
 
     df = None
-    if filenames is not None:
-        if upload_id:
-            root_folder = os.path.join(UPLOAD_FOLDER_ROOT, upload_id)
-        else:
-            root_folder = UPLOAD_FOLDER_ROOT
+    if filename is not None:
+        if filename != FILE_NAME_DEFAULT:
 
-        file = os.path.join(root_folder, filename)
+            if upload_id:
+                root_folder = os.path.join(UPLOAD_FOLDER_ROOT, upload_id)
+            else:
+                root_folder = UPLOAD_FOLDER_ROOT
 
-        df = parse_dataset(file)
+            file = os.path.join(root_folder, filename)
 
-        write_dataframe(upload_id, df)
+            df = parse_dataset(file)
+
+            
+        elif filename in FILE_NAME_DEFAULT:
+            df = DF_DEFAULT.copy()
+            print("copied data")
+
+        write_dataframe(f"{upload_id}_original", df)
         upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
 
         methods_disabled = False
+        log_ratio_bacterias = [b for b in df.columns[df.columns.str.startswith("bacteria_")] ]
+        logbacteria = read_logbacteria(session_id, None)
+        #logbacteria = logbacteria[9:] if logbacteria is not None and logbacteria.startswith("bacteria") else logbacteria
+        print(logbacteria, log_ratio_bacterias, logbacteria in log_ratio_bacterias)
+        upload_datatable = dhc.Div([
+            dash_table.DataTable(
+                id='upload-datatable2',
+                columns=[{
+                    "name": i, 
+                    "id": i,
+                    'deletable': True,
+                    'renamable': True
+                    } for i in df.columns],
+                data=df.to_dict('records'),
+                style_data={
+                    'width': '{}%'.format(max(df.columns, key=len)),
+                    'minWidth': '50px',
+                    'maxWidth': '500px',
+                },
+                style_table={
+                    'height': 300, 
+                    'overflowX': 'auto'
+                },
+                editable=True, 
+                export_format='xlsx',
+                export_headers='display',
+                merge_duplicate_headers=True
+            ),
+            dcc.Dropdown(
+                id='bacteria-log-ratio',
+                optionHeight=20,
+                options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
+                searchable=True,
+                clearable=True,
+                placeholder="[optional] select a bacteria for log-ratio",
+                value=logbacteria
+        ),
+    ], style={"height": 530})
 
     if df is None:
         upload_infobox = dhc.Div(dbc.Alert("There was an error processing this file!", color="danger"))
@@ -407,13 +584,14 @@ def return_methods(iscompleted, filenames, upload_id, filename_latest):
 
     print("filename", filename)
     print("upload_infobox", upload_infobox)
-    return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled
+    return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, upload_datatable
 
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False,
-                host=os.getenv("HOST", "0.0.0.0"),
-                port=os.getenv("PORT", "5000"))
+    app.run_server(debug=True)
+    # app.run_server(debug=False,
+    #             host=os.getenv("HOST", "0.0.0.0"),
+    #             port=os.getenv("PORT", "5000"))
 
 

@@ -355,7 +355,7 @@ def display_value(session_id):
         dhc.H4("Statistics"),
         dcc.Graph(figure=ffig),
         dhc.Br(),
-        dhc.Img(src=img_src),
+        dcc.Graph(figure=img_src),
         dhc.Br(),dhc.Br(),
     ]
 

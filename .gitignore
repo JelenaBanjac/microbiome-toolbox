@@ -8,7 +8,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 catboost_info
-
+docs/
 
 # C extensions
 *.so

@@ -4,6 +4,7 @@ import html
 from shap.plots._force_matplotlib import draw_additive_plot
 import shap
 import pandas as pd
+import plotly.graph_objects as go
 
 
 def df2vectors(_df, feature_cols=None):
@@ -104,6 +105,42 @@ def _plot_confusion_matrix(cm, title, classes=['False', 'True'],
         plt.show()
     else:
         return fig_to_uri(plt)
+
+def plot_confusion_matrix(cm, classes, title):
+    # cm : confusion matrix list(list)
+    # classes : name of the data list(str)
+    # title : title for the heatmap
+    
+
+    data = go.Heatmap(z=cm, y=classes, x=classes, colorscale= ["#ffffff", "#F52757"],)
+
+    annotations = []
+
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    fmt = '.1%'
+    thresh = cm.max() / 2.
+
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        annotations.append(
+                {
+                    "x": classes[i],
+                    "y": classes[j],
+                    "font": {"color": "white" if cm[i, j] > thresh else "black", "size":20},
+                    "text": format(cm[i, j], fmt),
+                    "xref": "x1",
+                    "yref": "y1",
+                    "showarrow": False,
+                }
+            )
+
+    layout = {
+        "title": title,
+        "xaxis": {"title": "Predicted value"},
+        "yaxis": {"title": "Real value"},
+        "annotations": annotations
+    }
+    fig = go.Figure(data=data, layout=layout)
+    return fig
 
 def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0.5, n_splits=5, nice_name=lambda x: x, style="dot", show=False, website=True, layout_height=1000, layout_width=1000, max_display=20):
     """Style can be dot or hist"""
@@ -225,7 +262,9 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
 #             fig.for_each_trace(
 #                 lambda trace: trace.update(marker_symbol="square") if trace.name == "trace 39" else (),
 #             )
-            img_src = _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'], website=website)
+            # img_src = _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'], website=website)
+
+            img_src = plot_confusion_matrix(cm_test, ['other', 'reference'], "Confusion matrix")
 
             return fig, img_src
 

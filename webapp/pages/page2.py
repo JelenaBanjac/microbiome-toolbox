@@ -20,7 +20,6 @@ from sklearn import (manifold, datasets, decomposition, ensemble,
                      discriminant_analysis, random_projection, neighbors)
 
 
-print(dir(dhc))
 layout = dhc.Div([
             dbc.Container([
                 dbc.Row(
@@ -428,7 +427,7 @@ def update_color(selectedData, session_id, fig):
             dcc.Graph(figure=t),
             dcc.Graph(figure=ffig),
             dhc.Br(),
-            dhc.Img(src=img_src),
+            dcc.Graph(figure=img_src),
             dhc.Br(),
         ]
     else:
