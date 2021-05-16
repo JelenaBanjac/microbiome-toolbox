@@ -23,8 +23,8 @@ from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 from webapp.pages import page1, page2, page3, page4, page5, page6
 
-DF_DEFAULT = pd.read_csv('https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls', sep="\t")
-FILE_NAME_DEFAULT = "website_mousedata.xls"
+DF_DEFAULT = pd.read_csv('https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata_default.csv', sep="\t")
+FILE_NAME_DEFAULT = "website_mousedata_default.csv"
 
 # this example that adds a logo to the navbar brand
 navbar = dbc.Navbar(
@@ -57,11 +57,11 @@ card1 = dbc.Col(
             dbc.CardBody(
                 [
                     dhc.H4("Reference Definition & Statistics", className="card-title"),
-                    dhc.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text",
-                    ),
+                    # dhc.P(
+                    #     "Some quick example text to build on the card title and "
+                    #     "make up the bulk of the card's content.",
+                    #     className="card-text",
+                    # ),
                     #dhc.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/methods/page-1"),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card1-btn"), href='/methods/page-1'),
                 ]
@@ -81,11 +81,11 @@ card2 = dbc.Col(
             dbc.CardBody(
                 [
                     dhc.H4("Data Analysis & Exploration", className="card-title"),
-                    dhc.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text",
-                    ),
+                    # dhc.P(
+                    #     "Some quick example text to build on the card title and "
+                    #     "make up the bulk of the card's content.",
+                    #     className="card-text",
+                    # ),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card2-btn"), href='/methods/page-2'),
                 ]
             ),
@@ -104,11 +104,11 @@ card3 = dbc.Col(
             dbc.CardBody(
                 [
                     dhc.H4("Microbiome Trajectory", className="card-title"),
-                    dhc.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text",
-                    ),
+                    # dhc.P(
+                    #     "Some quick example text to build on the card title and "
+                    #     "make up the bulk of the card's content.",
+                    #     className="card-text",
+                    # ),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card3-btn"), href='/methods/page-3'),
                 ]
             ),
@@ -127,11 +127,11 @@ card4 = dbc.Col(
             dbc.CardBody(
                 [
                     dhc.H4("Bacteria Importance with Time", className="card-title"),
-                    dhc.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text",
-                    ),
+                    # dhc.P(
+                    #     "Some quick example text to build on the card title and "
+                    #     "make up the bulk of the card's content.",
+                    #     className="card-text",
+                    # ),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card4-btn"), href='/methods/page-4'),
                 ]
             ),
@@ -150,11 +150,11 @@ card5 = dbc.Col(
             dbc.CardBody(
                 [
                     dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
-                    dhc.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text",
-                    ),
+                    # dhc.P(
+                    #     "Some quick example text to build on the card title and "
+                    #     "make up the bulk of the card's content.",
+                    #     className="card-text",
+                    # ),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card5-btn"), href='/methods/page-5'),
                 ]
             ),
@@ -173,11 +173,11 @@ card6 = dbc.Col(
             dbc.CardBody(
                 [
                     dhc.H4("Intervention Simulation", className="card-title"),
-                    dhc.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text",
-                    ),
+                    # dhc.P(
+                    #     "Some quick example text to build on the card title and "
+                    #     "make up the bulk of the card's content.",
+                    #     className="card-text",
+                    # ),
                     dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card6-btn"), href='/methods/page-6'),
                 ]
             ),
@@ -204,6 +204,10 @@ def parse_dataset(filename):
             #df = pd.read_excel(io.BytesIO(decoded))
             #df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep="\t")
             df = pd.read_csv(filename, sep="\t")
+            if len(df.columns)==1:
+                df = pd.read_csv(filename, sep=",")
+                if len(df.columns)==1:
+                    raise Exception("Not a good file separator")
     except Exception as e:
         print(e)
         return None
@@ -212,53 +216,7 @@ def parse_dataset(filename):
     return df
 
 
-def write_dataframe(session_id, df):
-    '''
-    Write dataframe to disk, for now just as CSV
-    For now do not preserve or distinguish filename;
-    user has one file at once.
-    '''
-    
-    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
-    print('\nCalling write_dataframe', filename)
-    df.to_pickle(filename)
 
-def write_logbacteria(session_id, bacteria):
-    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
-    if bacteria:
-        with open(filename, "w") as text_file:
-            text_file.write(bacteria)
-
-# cache memoize this and add timestamp as input!
-@cache.memoize()
-def read_dataframe(session_id, timestamp):
-    '''
-    Read dataframe from disk, for now just as CSV
-    '''
-    print('\nCalling read_dataframe')
-    print('\tsession_id', session_id)
-    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
-    if os.path.exists(filename):
-        print('\tfilename', filename)
-        df = pd.read_pickle(filename)
-        print('** Reading data from disk **')
-    else:
-        print('\tfilename not yet exists', filename)
-        df = None
-        print('** No data, df empty **')
-
-    return df
-
-@cache.memoize()
-def read_logbacteria(session_id, timestamp):
-    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
-    
-    data = None
-    if os.path.exists(filename):
-        with open(filename, 'r') as file:
-            data = file.read().replace('\n', '')
-    print("read logbacteria", data)
-    return data 
 
 def main_layout_(session_id, upload_filename):
     if not upload_filename:
@@ -279,18 +237,18 @@ def main_layout_(session_id, upload_filename):
                                            If you are just interested in seeing what methods are coved, you can use a demo dataset (mouse data) which enables the toolbox options below (by pressing the button).\
                                            You can also upload your own dataset (by clicking or drag-and-dropping the file into the area below).", 
                                            dhc.Br(),dhc.Br(),
-                                           "In order for the methods to work, please upload the dataset with following columns:",
+                                           "In order for the methods to work, make sure the uploaded dataset has the following columns:",
                                     ]),
-                                    dhc.Ul(children=[
-                                        dhc.Li("sampleID"),
-                                        dhc.Li("subjecID"),
-                                        dhc.Li("age_at_collection"),
-                                        dhc.Li("group"),
-                                        dhc.Li("meta data with prefix - meta__"),
-                                        dhc.Li("other ID columns starting with id__"),
-                                        dhc.Li("reference_group with True/False values"),
-                                        dhc.Li("all other columns should be bacteria names, the upload will automatically put the prefix bacteria__"),
-                                    ]),
+                                    dcc.Markdown('''
+                                        * `sampleID`: a unique dataset identifier, the ID of a sample,
+                                        * `subjecID`: an identifier of the subject (i.e. mouse name),
+                                        * `age_at_collection`: the time at which the sample was collected (in days),
+                                        * `group`: the groups that are going to be compared, e.g. different `country` that sample comes from,
+                                        * `meta_*`: prefix for metadata columns, e.g. `csection` becomes `meta_csection`, etc.
+                                        * `id_*`: prefix for other ID columns (don't prefix `sampleID` nor `subjecID`)
+                                        * `reference_group`: with `True`/`False` values, examples of a reference vs. non-reference
+                                        * all other columns left should be bacteria names which will be automatically prefixed with `bacteria_*` after the upload.
+                                    '''),
                                     # dhc.P([
                                     #        "add the prefix 'meta__' for the metadata columns, and `id__` for the ID columns. The rest of the columns will be considered to be bacteria abundance columns automaticaly after the upload.",
                                     #        dhc.Br(),
@@ -302,7 +260,7 @@ def main_layout_(session_id, upload_filename):
                                     #         "or click on this button to load it now ",
                                             
                                     #     ], style={'textAlign': 'center',}),
-                                    dhc.P([dhc.Button("load demo mosue data", id='upload-default-data', n_clicks=0),], style={'textAlign': 'center',}),
+                                    dhc.P([dbc.Button("load demo mosue data", outline=True, color="dark", id='upload-default-data', n_clicks=0),], style={'textAlign': 'center',}),
                                     #
                                     dhc.P("or", style={'textAlign': 'center',}),
                                     du.Upload(
@@ -373,6 +331,70 @@ def serve_layout():
 
 app.layout = serve_layout
 
+def check_dataframe_validity(df):
+    print("\tcolumns:",df.columns.tolist())
+    ret_val_err = ""
+    if "sampleID" not in df.columns.tolist():
+        ret_val_err += "sampleID\n"
+    if "subjectID" not in df.columns.tolist():
+        ret_val_err += "subjectID\n"
+    if "age_at_collection" not in df.columns.tolist():
+        ret_val_err += "age_at_collection\n"
+    if "group" not in df.columns.tolist():
+        ret_val_err += "group\n"
+    if "reference_group" not in df.columns.tolist():
+        ret_val_err += "reference_group\n"
+
+    return ret_val_err
+
+
+def write_dataframe(session_id, df):
+    '''
+    Write dataframe to disk, for now just as CSV
+    For now do not preserve or distinguish filename;
+    user has one file at once.
+    '''
+    
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
+    print('\nCalling write_dataframe', filename)
+    df.to_pickle(filename)
+
+def write_logbacteria(session_id, bacteria):
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
+    if bacteria:
+        with open(filename, "w") as text_file:
+            text_file.write(bacteria)
+
+# cache memoize this and add timestamp as input!
+# @cache.memoize()
+def read_dataframe(session_id, timestamp):
+    '''
+    Read dataframe from disk, for now just as CSV
+    '''
+    print('\nCalling read_dataframe')
+    print('\tsession_id', session_id)
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
+    if os.path.exists(filename):
+        print('\tfilename', filename)
+        df = pd.read_pickle(filename)
+        print('** Reading data from disk **')
+    else:
+        print('\tfilename not yet exists', filename)
+        df = None
+        print('** No data, df empty **')
+
+    return df
+
+# @cache.memoize()
+def read_logbacteria(session_id, timestamp):
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
+    
+    data = None
+    if os.path.exists(filename):
+        with open(filename, 'r') as file:
+            data = file.read().replace('\n', '')
+    print("read logbacteria", data)
+    return data 
 
 
 # Update the index
@@ -407,6 +429,7 @@ def fix_zeros(row, feature_columns):
               Input('bacteria-log-ratio', 'value'),
               State('session-id', 'children'))
 def display_output(log_ratio_bacteria, session_id):
+    print(f"Selected log-bacteria: {log_ratio_bacteria}")
     
     df = read_dataframe(f"{session_id}_original", None)
     feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
@@ -422,7 +445,7 @@ def display_output(log_ratio_bacteria, session_id):
         
     write_logbacteria(session_id, log_ratio_bacteria)
     write_dataframe(session_id, df)
-    
+    print("Stored log-bacteria:", read_logbacteria(session_id, None))
 
     return df.to_dict('records')
 
@@ -446,6 +469,7 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
     print("Upload callback called")
     print(default_data_clicked)
     filename = ''
+    ret_val_err = ''
 
     if default_data_clicked > 0:
         print("load mouse data")
@@ -458,13 +482,11 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
     methods_disabled = True
 
     if filenames is not None:
-        print("if filenames is not None:")
-        if filename is not None and filename != FILE_NAME_DEFAULT:
-            print("if filename is not None and filename != FILE_NAME_DEFAULT:")
+        if filename == '':
+            print("filename", filename, "filenames", filenames)
             filename = filenames[0]
 
     elif filename_latest != '':
-        print("elif filename_latest != '':")
         filename = filename_latest
         upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
         methods_disabled = False
@@ -531,46 +553,58 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
         else:
             df = DF_DEFAULT.copy()
 
-        write_dataframe(f"{upload_id}_original", df)
-        upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+        ret_val_err = check_dataframe_validity(df)
+        if ret_val_err != "":
+            upload_infobox = dhc.Div([dbc.Alert("There was an error processing this file! Missing columns: " + ret_val_err.replace('\n', ', ')[:-2], color="danger")])
+            methods_disabled = True
 
-        methods_disabled = False
-        log_ratio_bacterias = [b for b in df.columns[df.columns.str.startswith("bacteria_")] ]
-        logbacteria = read_logbacteria(session_id, None)
-        upload_datatable = dhc.Div([
-            dash_table.DataTable(
-                id='upload-datatable2',
-                columns=[{
-                    "name": i, 
-                    "id": i,
-                    'deletable': True,
-                    'renamable': True
-                    } for i in df.columns],
-                data=df.to_dict('records'),
-                style_data={
-                    'width': '{}%'.format(max(df.columns, key=len)),
-                    'minWidth': '50px',
-                    'maxWidth': '500px',
-                },
-                style_table={
-                    'height': 300, 
-                    'overflowX': 'auto'
-                },
-                editable=True, 
-                export_format='xlsx',
-                export_headers='display',
-                merge_duplicate_headers=True
-            ),
-            dcc.Dropdown(
-                id='bacteria-log-ratio',
-                optionHeight=20,
-                options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
-                searchable=True,
-                clearable=True,
-                placeholder="[optional] select a bacteria for log-ratio",
-                value=logbacteria
-        ),
-    ], style={"height": 530})
+        else:
+            specific_columns = ["sampleID", "subjectID", "group", "age_at_collection", "reference_group",
+                                'dataset_type', 'dataset_type_classification', 'classification_dataset_type', 'classification_label']
+            #metadata_columns = df.columns[df.columns.str.startswith("meta_")].tolist()
+            #id_columns = df.columns[df.columns.str.startswith("id_")].tolist()
+            other_columns = df.columns[(~df.columns.isin(specific_columns))&(~df.columns.str.startswith("meta_"))&(~df.columns.str.startswith("id_"))].tolist()
+            df = df.rename(mapper={k:f"bacteria_{k}" for k in other_columns}, axis=1)
+
+            write_dataframe(f"{upload_id}_original", df)
+            upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+
+            methods_disabled = False
+            log_ratio_bacterias = [b for b in df.columns[df.columns.str.startswith("bacteria_")] ]
+            logbacteria = read_logbacteria(session_id, None)
+            upload_datatable = dhc.Div([
+                dash_table.DataTable(
+                    id='upload-datatable2',
+                    columns=[{
+                        "name": i, 
+                        "id": i,
+                        'deletable': True,
+                        'renamable': True
+                        } for i in df.columns],
+                    data=df.to_dict('records'),
+                    style_data={
+                        'width': '{}%'.format(max(df.columns, key=len)),
+                        'minWidth': '50px',
+                        'maxWidth': '500px',
+                    },
+                    style_table={
+                        'height': 300, 
+                        'overflowX': 'auto'
+                    },
+                    editable=True, 
+                    export_format='xlsx',
+                    export_headers='display',
+                    merge_duplicate_headers=True
+                ),
+                dcc.Dropdown(
+                    id='bacteria-log-ratio',
+                    optionHeight=20,
+                    options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
+                    searchable=True,
+                    clearable=True,
+                    placeholder="[optional] select a bacteria for log-ratio",
+                    value=logbacteria
+            ),], style={"height": 530})
 
     if df is None:
         upload_infobox = dhc.Div(dbc.Alert("There was an error processing this file!", color="danger"))
@@ -583,9 +617,9 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
 
 if __name__ == '__main__':
-    #app.run_server(debug=True)
-    app.run_server(debug=False,
-                host=os.getenv("HOST", "0.0.0.0"),
-                port=os.getenv("PORT", "5000"))
+    app.run_server(debug=True, port=8081)
+    # app.run_server(debug=False,
+    #             host=os.getenv("HOST", "0.0.0.0"),
+    #             port=os.getenv("PORT", "5000"))
 
 

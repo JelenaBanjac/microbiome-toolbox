@@ -74,7 +74,7 @@ page_content = [
 ]
 
 # cache memoize this and add timestamp as input!
-@cache.memoize()
+# @cache.memoize()
 def read_dataframe(session_id, timestamp):
     '''
     Read dataframe from disk, for now just as CSV
@@ -337,10 +337,25 @@ def display_value(session_id):
     val1["selected"] = False
     val1.loc[val1["sampleID"].isin(all_outliers), "selected"] = True
 
-    ffig, img_src = two_groups_analysis(val1, bacteria_names, references_we_compare="selected", test_size=0.5, n_splits=2, nice_name=nice_name, style="dot", 
+    ffig, img_src, stats = two_groups_analysis(val1, bacteria_names, references_we_compare="selected", test_size=0.5, n_splits=2, nice_name=nice_name, style="dot", 
                                         show=False, website=True, layout_height=1000, layout_width=1000, max_display=50);
     
-    
+    stats = stats.split("\n")   #style={ 'verticalAlign':'left', 'textAlign': 'left',}
+    stats_div = dhc.Div(children=[
+        dhc.Br(), 
+        dhc.H5("Groups discrimination performance results"), 
+        dhc.Br(),dhc.Br(),
+        dhc.P("The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."),]+
+        [dhc.P(r) for r in stats]) 
+    img_src.update_layout(height=400, width=400)
+    confusion_matrix = dcc.Graph(figure=img_src)
+
+    statistics_part = dbc.Container(
+        dbc.Row([
+            dbc.Col(stats_div),
+            dbc.Col(confusion_matrix)
+        ])
+    )
     # ret_val = dhc.Div([])
     # if df is not None:
     #     ret_val =  [
@@ -355,7 +370,7 @@ def display_value(session_id):
         dhc.H4("Statistics"),
         dcc.Graph(figure=ffig),
         dhc.Br(),
-        dcc.Graph(figure=img_src),
+        statistics_part,
         dhc.Br(),dhc.Br(),
     ]
 

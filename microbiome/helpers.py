@@ -150,8 +150,14 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
     
     df = df_all.copy()
     
+    # df1 = df[df[references_we_compare].astype(str)=='True']
+    # df2 = df[df[references_we_compare].astype(str)!='True']
     df1 = df[df[references_we_compare]==True]
     df2 = df[df[references_we_compare]==False]
+    print(references_we_compare)
+    print(df[references_we_compare].dtype)
+    print(df[references_we_compare].unique())
+    print(len(df), len(df1), len(df2))
     
     min_samples = df[references_we_compare].value_counts(sort=True).values[-1]
     min_group   = df[references_we_compare].value_counts(sort=True).index[-1]
@@ -198,42 +204,36 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
     feature_names = list(map(nice_name, X_train.columns))
 
     y_test_pred = m.predict(X_test)
-    print(type(y_test_pred))
-    print(type(y_test))
+
     if isinstance(y_test, pd.Series):
         y_test = np.array(y_test.values, dtype=type(y_test_pred[0]))
-
-    print(type(y_test_pred))
-    print(type(y_test))
-    print(type(y_test_pred[0]))
-    print(type(y_test[0]))
 
     cm_test = confusion_matrix(y_test_pred, y_test)
     acc = 100*(cm_test[0][0]+cm_test[1][1]) / (sum(cm_test[0]) + sum(cm_test[1]))
 
     max_limit = max(20, min(max_display, len(feature_names)))
 
+    ret_val = 'Total OTHER detected in test set: ' + str(cm_test[1][1]) + ' / ' + str(cm_test[1][1]+cm_test[1][0]) + '\n'
+    ret_val += 'Total REFERENCE transactions detected in test set: ' + str(cm_test[0][0]) + ' / ' + str(cm_test[0][1]+cm_test[0][0])+ '\n'
+    ret_val += 'Probability to detect a OTHER in the test set: ' + str(cm_test[1][1]/(cm_test[1][1]+cm_test[1][0]))+ '\n'
+    ret_val += 'Probability to detect a REFERENCE in the test set: ' + str(cm_test[0][0]/(cm_test[0][1]+cm_test[0][0]))+ '\n'
+    ret_val += "Accuracy on the test set: "+f"{acc:.2f}" + "%"+ '\n'
+
+
     if not website:
         sns.set_style("whitegrid")
         
-        if style == "dot":
-            shap.summary_plot(shap_values[0], features=X_train, feature_names=feature_names, show=show, max_display=max_display)
-        elif style == "hist":
-            shap.summary_plot(shap_values, features=X_train, feature_names=feature_names, class_names=["reference", "other"], show=show, max_display=max_display)
+        # if style == "dot":
+        #     shap.summary_plot(shap_values[0], features=X_train, feature_names=feature_names, show=show, max_display=max_display)
+        # elif style == "hist":
+        #     shap.summary_plot(shap_values, features=X_train, feature_names=feature_names, class_names=["reference", "other"], show=show, max_display=max_display)
 
+        # if show:
+        #     plot_confusion_matrix(m, X_test, y_test)  
+        #     plt.show() 
+        #     _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'])
 
-        
-        if show:
-            plot_confusion_matrix(m, X_test, y_test)  
-            plt.show() 
-            _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'])
-
-            print('Total OTHER detected in test set: ' + str(cm_test[1][1]) + ' / ' + str(cm_test[1][1]+cm_test[1][0]))
-            print('Total REFERENCE transactions detected in test set: ' + str(cm_test[0][0]) + ' / ' + str(cm_test[0][1]+cm_test[0][0]))
-            print('Probability to detect a OTHER in the test set: ' + str(cm_test[1][1]/(cm_test[1][1]+cm_test[1][0])))
-            print('Probability to detect a REFERENCE in the test set: ' + str(cm_test[0][0]/(cm_test[0][1]+cm_test[0][0])))
-            print("Accuracy of unsupervised anomaly detection model on the test set: "+f"{acc:.2f}" + "%")
-            print("-----\n\n")
+        #     print(ret_val)
 
         output = dict(top_features_list=list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1],
                       accuracy=acc)
@@ -258,15 +258,10 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
                             margin=dict(l=0, r=0, b=0, pad=0),
                             title_text="Classification Important Features")
             
-            #fig.update_traces(marker=dict(color="red"), selector=dict(type="scatter", mode="marker"))
-#             fig.for_each_trace(
-#                 lambda trace: trace.update(marker_symbol="square") if trace.name == "trace 39" else (),
-#             )
-            # img_src = _plot_confusion_matrix(cm_test,"Confusion matrix", ['False', 'True'], website=website)
 
             img_src = plot_confusion_matrix(cm_test, ['other', 'reference'], "Confusion matrix")
 
-            return fig, img_src
+            return fig, img_src, ret_val
 
         elif style == "hist":
             shap.summary_plot(shap_values, features=X_train, class_names=["reference", "other"], show=show, max_display=max_display)
@@ -285,4 +280,7 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
                             plot_bgcolor='rgba(0,0,0,0)', 
                             margin=dict(l=0, r=0, b=0, pad=0),
                             title_text="Classification Important Features")
-            return fig
+
+            img_src = plot_confusion_matrix(cm_test, ['other', 'reference'], "Confusion matrix")
+
+            return fig, img_src, ret_val

@@ -95,7 +95,7 @@ def display_value(session_id):
     return page_content
 
 # cache memoize this and add timestamp as input!
-@cache.memoize()
+# @cache.memoize()
 def read_dataframe(session_id, timestamp):
     '''
     Read dataframe from disk, for now just as CSV

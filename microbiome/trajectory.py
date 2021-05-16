@@ -432,7 +432,7 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
 
 def train(df, feature_cols, Regressor, parameters, param_grid, n_splits, file_name=None):
     """f"{PIPELINE_DIRECTORY}/model_NoTopImportant"""
-    train1 = df[(df.healthy_reference==True)&(df.dataset_type=="Train")]
+    train1 = df[(df.reference_group==True)&(df.dataset_type=="Train")]
 
     X_train1, y_train1 = df2vectors(train1, feature_cols)
 

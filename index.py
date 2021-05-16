@@ -18,7 +18,8 @@ app_dir = os.getcwd()
 UPLOAD_FOLDER_ROOT = os.path.join(app_dir, 'cached_files')
 pathlib.Path(UPLOAD_FOLDER_ROOT).mkdir(parents=True, exist_ok=True)
 
-app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.COSMO])
+external_stylesheets = [dbc.themes.COSMO]  #dbc.themes.COSMO
+app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=external_stylesheets)
 #app.config.suppress_callback_exceptions = True
 du.configure_upload(app, UPLOAD_FOLDER_ROOT)
 server = app.server
