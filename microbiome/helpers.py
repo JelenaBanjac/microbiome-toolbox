@@ -213,11 +213,11 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
 
     max_limit = max(20, min(max_display, len(feature_names)))
 
-    ret_val = 'Total OTHER detected in test set: ' + str(cm_test[1][1]) + ' / ' + str(cm_test[1][1]+cm_test[1][0]) + '\n'
-    ret_val += 'Total REFERENCE transactions detected in test set: ' + str(cm_test[0][0]) + ' / ' + str(cm_test[0][1]+cm_test[0][0])+ '\n'
-    ret_val += 'Probability to detect a OTHER in the test set: ' + str(cm_test[1][1]/(cm_test[1][1]+cm_test[1][0]))+ '\n'
-    ret_val += 'Probability to detect a REFERENCE in the test set: ' + str(cm_test[0][0]/(cm_test[0][1]+cm_test[0][0]))+ '\n'
-    ret_val += "Accuracy on the test set: "+f"{acc:.2f}" + "%"+ '\n'
+    ret_val = f'Total OTHER detected in test set: **{cm_test[1][1]:.2f} / {cm_test[1][1]+cm_test[1][0]:.2f}**\n'
+    ret_val += f'Total REFERENCE transactions detected in test set: **{cm_test[0][0]:.2f} / {cm_test[0][1]+cm_test[0][0]:.2f}**\n'
+    ret_val += f'Probability to detect a OTHER in the test set: **{cm_test[1][1]/(cm_test[1][1]+cm_test[1][0]):.2f}**\n'
+    ret_val += f'Probability to detect a REFERENCE in the test set: **{cm_test[0][0]/(cm_test[0][1]+cm_test[0][0]):.2f}**\n'
+    ret_val += f"Accuracy on the test set: **{acc:.2f}%** \n"
 
 
     if not website:

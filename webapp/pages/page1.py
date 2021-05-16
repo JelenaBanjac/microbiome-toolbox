@@ -191,7 +191,7 @@ def display_value(session_id):
         dhc.H5("Groups discrimination performance results"), 
         dhc.Br(),dhc.Br(),
         dhc.P("The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."),]+
-        [dhc.P(r) for r in stats]) 
+        [dcc.Markdown(r) for r in stats]) 
     img_src.update_layout(height=400, width=400)
     confusion_matrix = dcc.Graph(figure=img_src)
 
@@ -257,7 +257,7 @@ def display_value(session_id):
         dhc.H5("Groups discrimination performance results"), 
         dhc.Br(),dhc.Br(),
         dhc.P("The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."),]+
-        [dhc.P(r) for r in stats]) 
+        [dcc.Markdown(r) for r in stats]) 
     img_src.update_layout(height=400, width=400)
     confusion_matrix = dcc.Graph(figure=img_src)
 

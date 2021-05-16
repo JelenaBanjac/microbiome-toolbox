@@ -195,13 +195,17 @@ def update_color(clickData, session_id, fig):
                                   img_file_name=None, website=True,
                                   num_top_bacteria=5
                                   );
+        stats = dhc.Div(
+            [dcc.Markdown(r) for r in ret_val.split("\n")]
+        )
 
         ret_val = [
             dhc.Hr(),
             dhc.H4("Before Intervention"),
             dcc.Graph(figure=fig_before),
             dhc.Br(),
-            dhc.P(dash_dangerously_set_inner_html.DangerouslySetInnerHTML(ret_val.replace('\n','<br/>'))),
+            #dhc.P(dash_dangerously_set_inner_html.DangerouslySetInnerHTML(ret_val.replace('\n','<br/>'))),
+            stats,
             # dcc.Graph(figure=fig1),
             # dhc.Br(),
             # dcc.Graph(figure=fig2),

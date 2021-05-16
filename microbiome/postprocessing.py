@@ -253,11 +253,11 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     right_pred     = int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=+1)))
     #print(left_pred, right_pred)
 
-    ret_val1 = "\n--- Before Intervention ---\n"
-    ret_val1 += f"age_at_collection = {y[i]:.2f} days [{int(round(y[i]/time_unit_size))} {time_unit_name}]\n"
-    ret_val1 += f"microbiota_age = {y_pred[i]:.2f} days [{int(round(y_pred[i]/time_unit_size))} {time_unit_name}]\n"
-    ret_val1 += f"put in prediction interval (y-axis) between {left_pred} [{left_pred*time_unit_size} days] and {right_pred} [{right_pred*time_unit_size} days] {time_unit_name} to make it healthy\n"
-    ret_val1 += f"do the stats on interval (x-axis) between {left} [{left*time_unit_size} days] and {right} [{right*time_unit_size} days] {time_unit_name}\n"
+    ret_val1 = "\n### Before Intervention\n"
+    ret_val1 += f"`age_at_collection` = {y[i]:.2f} days ({int(round(y[i]/time_unit_size))} {time_unit_name})\n"
+    ret_val1 += f"`microbiota_age` = {y_pred[i]:.2f} days ({int(round(y_pred[i]/time_unit_size))} {time_unit_name})\n"
+    ret_val1 += f"put in prediction interval (y-axis) between {left_pred} ({left_pred*time_unit_size} days) and {right_pred} ({right_pred*time_unit_size} days) {time_unit_name} to make it healthy\n"
+    ret_val1 += f"do the stats on interval (x-axis) between {left} ({left*time_unit_size} days) and {right} ({right*time_unit_size} days) {time_unit_name}\n"
     if not output_html:
         print(ret_val1)
 
@@ -315,12 +315,12 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     #bacterias_to_change = list(set(list(feature_importance[feature_importance.normal==False].bacteria_name.values) + list( feature_importance.iloc[:5].bacteria_name.values)))
     bacterias_to_change = feature_importance[feature_importance.normal.isin(normal_vals)].bacteria_name.values[:max_num_bacterias_to_change]
 
-    ret_val2 = "\n--- Intervention bacteria ---\n"
+    ret_val2 = "\n### Intervention bacteria\n"
     for bacteria_to_change in bacterias_to_change:
-        ret_val2 += f"\n{nice_name(bacteria_to_change)}\n"
-        ret_val2 +=f"before = {df_all_updated.at[i, bacteria_to_change]}\n"
+        ret_val2 += f"\n**{nice_name(bacteria_to_change)}**: "
+        ret_val2 +=f"_(old)_ {df_all_updated.at[i, bacteria_to_change]} ➜ "
         df_all_updated.at[i, bacteria_to_change] = feature_importance[feature_importance.bacteria_name==bacteria_to_change]["bacteria_avg"].values[0]
-        ret_val2 +=f"after = {df_all_updated.at[i, bacteria_to_change]}\n"
+        ret_val2 +=f"_(new)_ {df_all_updated.at[i, bacteria_to_change]}\n"
     if not output_html:
         print(ret_val2)
 
@@ -341,11 +341,11 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     left_pred  = max(int(round(prediction_interval_with_direction(right, traj_mean, traj_pi, direction=-1))), 0)
     right_pred     = int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=+1)))
     
-    ret_val3 = "\n--- After Intervention ---\n"
-    ret_val3 += f"age_at_collection = {y[i]:.2f} days [{int(round(y[i]/time_unit_size))} {time_unit_name}]\n"
-    ret_val3 += f"microbiota_age = {y_pred[i]:.2f} days [{int(round(y_pred[i]/time_unit_size))} {time_unit_name}]\n"
-    ret_val3 += f"put in prediction interval (y-axis) between {left_pred} [{left_pred*time_unit_size} days] and {right_pred} [{right_pred*time_unit_size} days] months to make it healthy\n"
-    ret_val3 += f"do the stats on interval (x-axis) between {left} [{left*time_unit_size} days] and {right} [{right*time_unit_size} days] {time_unit_name}\n"
+    ret_val3 = "\n### After Intervention\n"
+    ret_val3 += f"`age_at_collection` = {y[i]:.2f} days ({int(round(y[i]/time_unit_size))} {time_unit_name})\n"
+    ret_val3 += f"`microbiota_age` = {y_pred[i]:.2f} days ({int(round(y_pred[i]/time_unit_size))} {time_unit_name})\n"
+    ret_val3 += f"put in prediction interval (y-axis) between {left_pred} ({left_pred*time_unit_size} days) and {right_pred} ({right_pred*time_unit_size} days) months to make it healthy\n"
+    ret_val3 += f"do the stats on interval (x-axis) between {left} ({left*time_unit_size} days) and {right} ({right*time_unit_size} days) {time_unit_name}\n"
     if not output_html:
         print(ret_val3)
     if plot:
@@ -372,4 +372,4 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
                         title_text="Classification Important Features")
     
     
-    return df_all_updated, fig1, fig2, ret_val1+ret_val2+ret_val3
+    return df_all_updated, fig1, fig2, ret_val1+"\n"+ret_val2+"\n"+ret_val3
