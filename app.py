@@ -18,6 +18,7 @@ import os
 import dash_uploader as du
 from pathlib import Path
 import math
+import numpy as np
 
 from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
@@ -449,6 +450,29 @@ def display_output(log_ratio_bacteria, session_id):
 
     return df.to_dict('records')
 
+
+# def train_val_test_split(df, test_size):
+#     df["dataset_type"] = "Test"
+
+#     for g in df.group.unique():
+#         df_ref_g   = df[(df.healthy_reference==True)&(df.group==g)]
+#         train_idx_g, val_idx_g = next(GroupShuffleSplit(test_size=test_size, n_splits=2, random_state=7).split(df_ref_g, groups=df_ref_g["subjectID"]))
+#         df.loc[df_ref_g.iloc[train_idx_g].index, "dataset_type"] = "Train"
+#         df.loc[df_ref_g.iloc[val_idx_g].index, "dataset_type"] = "Validation"
+
+# def train_test_split_per_reference(df, test_size):
+#     train_idx1, test_idx1 = next(GroupShuffleSplit(test_size=test_size, n_splits=n_splits, random_state=7).split(df[df.healthy_reference==True].index, groups=df[df.healthy_reference==True]['subjectID']))
+#     train_idx2, test_idx2 = next(GroupShuffleSplit(test_size=test_size, n_splits=n_splits, random_state=7).split(df[df.healthy_reference==False].index, groups=df[df.healthy_reference==False]['subjectID']))
+
+#     df.loc[df[df.healthy_reference==True].iloc[train_idx1].index, "classification_dataset_type"] = "Train-1"
+#     df.loc[df[df.healthy_reference==True].iloc[test_idx1].index, "classification_dataset_type"] = "Test-1"
+#     df.loc[df[df.healthy_reference==False].iloc[train_idx2].index, "classification_dataset_type"] = "Train-2"
+#     df.loc[df[df.healthy_reference==False].iloc[test_idx2].index, "classification_dataset_type"] = "Test-2"
+
+#     df.loc[df.healthy_reference==True, "classification_label"] = 1
+#     df.loc[df.healthy_reference==False, "classification_label"] = -1
+
+
 @app.callback(
     [Output('upload-filename', 'children'),
     Output('upload-infobox', 'children'),
@@ -494,40 +518,86 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
         df = read_dataframe(session_id, None)
         log_ratio_bacterias = [b for b in df_original.columns[df_original.columns.str.startswith("bacteria_")] ]
         logbacteria = read_logbacteria(session_id, None)
+        
+        testset_size = len(df[df.reference_group!=True])/len(df)
+        val_size_default = 0.2
+        classification_split = 0.2
+        reference_groups = ["user defined", "novelty detection algorithm decision"]
+        reference_group = reference_groups[0]
+
+        table = dash_table.DataTable(
+            id='upload-datatable2',
+            columns=[{
+                "name": i, 
+                "id": i,
+                'deletable': True,
+                'renamable': True
+                } for i in df_original.columns],
+            data=df.to_dict('records'),
+            style_data={
+                'width': '{}%'.format(max(df_original.columns, key=len)),
+                'minWidth': '50px',
+                'maxWidth': '500px',
+            },
+            style_table={
+                'height': 300, 
+                'overflowX': 'auto'
+            },
+            editable=True, 
+            export_format='xlsx',
+            export_headers='display',
+            merge_duplicate_headers=True
+        )
+
+        log_ratio_choice = dcc.Dropdown(
+            id='bacteria-log-ratio',
+            optionHeight=20,
+            options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
+            searchable=True,
+            clearable=True,
+            placeholder="[optional] select a bacteria for log-ratio",
+            value=logbacteria
+        )
+
+        reference_group_choice = dcc.Dropdown(
+            id='reference-group',
+            optionHeight=20,
+            options=[ {'label': rg, "value": rg} for rg in reference_groups],
+            searchable=True,
+            clearable=True,
+            placeholder="reference group",
+            value=reference_group
+        )
+
+        train_test_split_choice = dcc.Dropdown(
+            id='train-val-test-split',
+            optionHeight=20,
+            options=[ {'label': f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%", 
+            "value": f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%"} for r in np.arange(0.0, 1.0-testset_size, 0.2)],
+            searchable=True,
+            clearable=True,
+            placeholder="train-validation-test split",
+            value=f"{(1-val_size_default-testset_size)*100:.0f}%-{val_size_default*100:.0f}%-{testset_size*100:.0f}%"
+        )
+
+        classification_split_choice = dcc.Dropdown(
+            id='classification-split',
+            optionHeight=20,
+            options=[ {'label': f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%", 
+            "value": f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%" } for r in np.arange(0.0, 1.0, 0.2)],
+            searchable=True,
+            clearable=True,
+            placeholder="reference vs. non-reference train-test split",
+            value=f"reference: {(1-testset_size)*(1-classification_split)*100:.0f}%-{(1-testset_size)*classification_split*100:.0f}% & non-reference: {testset_size*(1-classification_split)*100:.0f}%-{testset_size*classification_split*100:.0f}%"
+        )
 
         upload_datatable = dhc.Div([
-                dash_table.DataTable(
-                    id='upload-datatable2',
-                    columns=[{
-                        "name": i, 
-                        "id": i,
-                        'deletable': True,
-                        'renamable': True
-                        } for i in df_original.columns],
-                    data=df.to_dict('records'),
-                    style_data={
-                        'width': '{}%'.format(max(df_original.columns, key=len)),
-                        'minWidth': '50px',
-                        'maxWidth': '500px',
-                    },
-                    style_table={
-                        'height': 300, 
-                        'overflowX': 'auto'
-                    },
-                    editable=True, 
-                    export_format='xlsx',
-                    export_headers='display',
-                    merge_duplicate_headers=True
-                ),
-                dcc.Dropdown(
-                    id='bacteria-log-ratio',
-                    optionHeight=20,
-                    options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
-                    searchable=True,
-                    clearable=True,
-                    placeholder="[optional] select a bacteria for log-ratio",
-                    value=logbacteria
-            ),
+            
+            table,
+            log_ratio_choice,
+            reference_group_choice,
+            train_test_split_choice,
+            classification_split_choice,
         ], style={"height": 530})
 
     
@@ -572,39 +642,88 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
             methods_disabled = False
             log_ratio_bacterias = [b for b in df.columns[df.columns.str.startswith("bacteria_")] ]
             logbacteria = read_logbacteria(session_id, None)
+
+            testset_size = len(df[df.reference_group!=True])/len(df)
+            val_size_default = 0.2
+            classification_split = 0.2
+            reference_groups = ["user defined", "novelty detection algorithm decision"]
+            reference_group = reference_groups[0]
+
+            table = dash_table.DataTable(
+                id='upload-datatable2',
+                columns=[{
+                    "name": i, 
+                    "id": i,
+                    'deletable': True,
+                    'renamable': True
+                    } for i in df.columns],
+                data=df.to_dict('records'),
+                style_data={
+                    'width': '{}%'.format(max(df.columns, key=len)),
+                    'minWidth': '50px',
+                    'maxWidth': '500px',
+                },
+                style_table={
+                    'height': 300, 
+                    'overflowX': 'auto'
+                },
+                editable=True, 
+                export_format='xlsx',
+                export_headers='display',
+                merge_duplicate_headers=True
+            )
+
+            log_ratio_choice = dcc.Dropdown(
+                id='bacteria-log-ratio',
+                optionHeight=20,
+                options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
+                searchable=True,
+                clearable=True,
+                placeholder="[optional] select a bacteria for log-ratio",
+                value=logbacteria
+            )
+
+            reference_group_choice = dcc.Dropdown(
+                id='reference-group',
+                optionHeight=20,
+                options=[ {'label': rg, "value": rg} for rg in reference_groups],
+                searchable=True,
+                clearable=True,
+                placeholder="reference group",
+                value=reference_group
+            )
+
+            train_test_split_choice = dcc.Dropdown(
+                id='train-val-test-split',
+                optionHeight=20,
+                options=[ {'label': f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%", 
+                "value": f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%"} for r in np.arange(0.0, 1.0-testset_size, 0.2)],
+                searchable=True,
+                clearable=True,
+                placeholder="train-validation-test split",
+                value=f"{(1-val_size_default-testset_size)*100:.0f}%-{val_size_default*100:.0f}%-{testset_size*100:.0f}%"
+            )
+
+            classification_split_choice = dcc.Dropdown(
+                id='classification-split',
+                optionHeight=20,
+                options=[ {'label': f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%", 
+                "value": f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%" } for r in np.arange(0.0, 1.0, 0.2)],
+                searchable=True,
+                clearable=True,
+                placeholder="reference vs. non-reference train-test split",
+                value=f"reference: {(1-testset_size)*(1-classification_split)*100:.0f}%-{(1-testset_size)*classification_split*100:.0f}% & non-reference: {testset_size*(1-classification_split)*100:.0f}%-{testset_size*classification_split*100:.0f}%"
+            )
+
             upload_datatable = dhc.Div([
-                dash_table.DataTable(
-                    id='upload-datatable2',
-                    columns=[{
-                        "name": i, 
-                        "id": i,
-                        'deletable': True,
-                        'renamable': True
-                        } for i in df.columns],
-                    data=df.to_dict('records'),
-                    style_data={
-                        'width': '{}%'.format(max(df.columns, key=len)),
-                        'minWidth': '50px',
-                        'maxWidth': '500px',
-                    },
-                    style_table={
-                        'height': 300, 
-                        'overflowX': 'auto'
-                    },
-                    editable=True, 
-                    export_format='xlsx',
-                    export_headers='display',
-                    merge_duplicate_headers=True
-                ),
-                dcc.Dropdown(
-                    id='bacteria-log-ratio',
-                    optionHeight=20,
-                    options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
-                    searchable=True,
-                    clearable=True,
-                    placeholder="[optional] select a bacteria for log-ratio",
-                    value=logbacteria
-            ),], style={"height": 530})
+                
+                table,
+                log_ratio_choice,
+                reference_group_choice,
+                train_test_split_choice,
+                classification_split_choice,
+            ], style={"height": 530})
+
 
     if df is None:
         upload_infobox = dhc.Div(dbc.Alert("There was an error processing this file!", color="danger"))
