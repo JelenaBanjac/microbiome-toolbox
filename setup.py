@@ -58,7 +58,7 @@ setuptools.setup(
         "pickleshare==0.7.5",
         "pip==20.2.3",
         "prompt-toolkit==3.0.8",
-        "pygments==2.7.1",
+        "pygments>=2.7.1",
         "python-dateutil==2.8.1",
         # "pytz==2020.1",
         # "pywin32==227",
