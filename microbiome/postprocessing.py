@@ -39,32 +39,38 @@ def get_top_bacteria_in_time(estimator, df_all, top_bacteria, days_start, days_n
     df_time_block = df[(days_start<df.y)&(df.y<days_start+days_number_1unit)]
     # and now exctract only the columns we need
     df_time_block = df_time_block[top_bacteria+["age_at_collection", "y", "y_pred"]]
+    i = 1
+    while df_time_block.shape[0]==0:
+        df_time_block = df[(days_start-(2*i-1)*days_number_1unit<df.y)&(df.y<days_start+(1+i)*days_number_1unit)]
+        # and now exctract only the columns we need
+        df_time_block = df_time_block[top_bacteria+["age_at_collection", "y", "y_pred"]]
+        i += 0.1
     
     xpos, bottom, bacteria_name, ratios, avgs, stds = None, None, None, None, None, None
     feature_importance = None
-    if df_time_block.shape[0]!=0:
-        # average, std, and median of samples in the time block for a given bacteria (and age, y, y_pred)
-        avgs    = pd.Series(data=dict([(c, average(df_time_block[c].values)) for c in df_time_block.columns])) 
-        stds    = pd.Series(data=dict([(c, std(df_time_block[c].values)) for c in df_time_block.columns]))
-         
-        # for this time block average, determine what are the most important features based on SHAP
-        X, y = df2vectors(pd.DataFrame(dict(avgs), index=[0]), top_bacteria)
-        explainer = shap.TreeExplainer(estimator)
-        shap_values = explainer.shap_values(X)
-        feature_importance = pd.DataFrame(list(zip(top_bacteria, np.abs(shap_values).mean(0))), columns=['bacteria_name','feature_importance_vals'])
-        #feature_importance.sort_values(by=['feature_importance_vals'], ascending=True,inplace=True)
-        # besides bacteria name and its importance, add its average and std for this time block
-        feature_importance["bacteria_avg"] = feature_importance.apply(lambda x: avgs[x["bacteria_name"]], axis=1)
-        feature_importance["bacteria_std"] = feature_importance.apply(lambda x: stds[x["bacteria_name"]], axis=1)
-        feature_importance.sort_values(by=['feature_importance_vals'], ascending=True,inplace=True)
 
-        # location of boxplots (medians)
-        xpos   = (days_start+days_number_1unit/2)/time_unit_size
-        bottom = df_time_block.median()["y_pred"]/time_unit_size
-        ratios = feature_importance["feature_importance_vals"].values[-num_top_bacteria:]
-        bacteria_name = feature_importance["bacteria_name"].values[-num_top_bacteria:]
-        ratios /= sum(ratios)
+    # average, std, and median of samples in the time block for a given bacteria (and age, y, y_pred)
+    avgs    = pd.Series(data=dict([(c, average(df_time_block[c].values)) for c in df_time_block.columns])) 
+    stds    = pd.Series(data=dict([(c, std(df_time_block[c].values)) for c in df_time_block.columns]))
         
+    # for this time block average, determine what are the most important features based on SHAP
+    X, y = df2vectors(pd.DataFrame(dict(avgs), index=[0]), top_bacteria)
+    explainer = shap.TreeExplainer(estimator)
+    shap_values = explainer.shap_values(X)
+    feature_importance = pd.DataFrame(list(zip(top_bacteria, np.abs(shap_values).mean(0))), columns=['bacteria_name','feature_importance_vals'])
+    #feature_importance.sort_values(by=['feature_importance_vals'], ascending=True,inplace=True)
+    # besides bacteria name and its importance, add its average and std for this time block
+    feature_importance["bacteria_avg"] = feature_importance.apply(lambda x: avgs[x["bacteria_name"]], axis=1)
+    feature_importance["bacteria_std"] = feature_importance.apply(lambda x: stds[x["bacteria_name"]], axis=1)
+    feature_importance.sort_values(by=['feature_importance_vals'], ascending=True,inplace=True)
+
+    # location of boxplots (medians)
+    xpos   = (days_start+days_number_1unit/2)/time_unit_size
+    bottom = df_time_block.median()["y_pred"]/time_unit_size
+    ratios = feature_importance["feature_importance_vals"].values[-num_top_bacteria:]
+    bacteria_name = feature_importance["bacteria_name"].values[-num_top_bacteria:]
+    ratios /= sum(ratios)  
+    
     return xpos, bottom, bacteria_name, ratios, avgs, stds, feature_importance, len(df_time_block)
 
 def plot_importance_boxplots_over_age(estimator, df_all, top_bacteria, nice_name, units, num_top_bacteria=5, start_age=0, limit_age=None, patent=False, highlight_outliers=None, df_new=None, 
@@ -221,7 +227,7 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     
     def prediction_interval_with_direction(x, traj_mean, traj_pi, direction):
         # direction=-1 for lower limit, +1 for upper
-        p, _ = np.polyfit(traj_x, traj_mean+direction*traj_pi, 2, cov=True)    
+        p, _ = np.polyfit(traj_x, traj_mean+direction*traj_pi, 3, cov=True)    
         y = np.polyval(p, x) 
         return y
     
@@ -240,24 +246,32 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     # margin will be used as a +- range we want to put the outlier in
     # for e.g. outlier has 15 months on x-axis, so in order to align it to healthy region on y-axis, we need to collect the samples in the region 15+-margin months and do the stats on these healthy subset of samples.
     # if outlier has age_at_collection < 7 months, put +-1 month in MMI, etc.
-    margin = 1*30/time_unit_size if int(round(y[i]/time_unit_size)) < 7*30/time_unit_size else 2*30/time_unit_size if  7*30/time_unit_size <= int(round(y[i]/time_unit_size)) < 27*30/time_unit_size else int(round(np.median(traj_pi)))
+    if time_unit_size == 30:
+        margin = 1*30/time_unit_size if int(round(y[i]/time_unit_size)) < 7*30/time_unit_size else 2*30/time_unit_size if  7*30/time_unit_size <= int(round(y[i]/time_unit_size)) < 27*30/time_unit_size else int(round(np.median(traj_pi)))
+    else:
+        margin = 1/time_unit_size if int(round(y[i]/time_unit_size)) < 7/time_unit_size else 2/time_unit_size if  7/time_unit_size <= int(round(y[i]/time_unit_size)) < 27/time_unit_size else int(round(np.median(traj_pi)))
     #print(margin)
 
     shift_direction = -1 if y_pred[i]>y[i] else +1
     additional_push = int(shift_direction*np.median(traj_pi)/2)
-    left  = max(int(round(y[i]/time_unit_size - margin)) + additional_push, 0)
-    right = max(int(round(y[i]/time_unit_size + margin)) + additional_push,0) + margin
+    # left  = max(int(round(y[i]/time_unit_size - margin)) + additional_push, 0) - margin
+    # right = max(int(round(y[i]/time_unit_size + margin)) + additional_push, 0) + margin
+    left  = max(int(round(y[i]/time_unit_size - margin)), 0) - margin
+    right = max(int(round(y[i]/time_unit_size + margin)), 0) + margin
     print(left, right)
 
-    left_pred  = max(int(round(prediction_interval_with_direction(right, traj_mean, traj_pi, direction=-1))), 0)
-    right_pred     = int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=+1)))
-    #print(left_pred, right_pred)
+    scale_traj_pi = 0.5
+    # left_pred  = max(int(round(prediction_interval_with_direction(right, traj_mean, traj_pi, direction=-1))), 0)
+    # right_pred     = int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=+1)))
+    left_pred  = max(int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=-1))), 0)
+    right_pred =     int(round(prediction_interval_with_direction(right, traj_mean, traj_pi, direction=+1)))
+    print(left_pred, right_pred)
 
     ret_val1 = "\n### Before Intervention\n"
-    ret_val1 += f"`age_at_collection` = {y[i]:.2f} days ({int(round(y[i]/time_unit_size))} {time_unit_name})\n"
-    ret_val1 += f"`microbiota_age` = {y_pred[i]:.2f} days ({int(round(y_pred[i]/time_unit_size))} {time_unit_name})\n"
-    ret_val1 += f"put in prediction interval (y-axis) between {left_pred} ({left_pred*time_unit_size} days) and {right_pred} ({right_pred*time_unit_size} days) {time_unit_name} to make it healthy\n"
-    ret_val1 += f"do the stats on interval (x-axis) between {left} ({left*time_unit_size} days) and {right} ({right*time_unit_size} days) {time_unit_name}\n"
+    ret_val1 += f"`age_at_collection` = {y[i]:.2f} days\n"
+    ret_val1 += f"`microbiota_age` = {y_pred[i]:.2f} days\n"
+    ret_val1 += f"put in prediction interval (y-axis) between {left_pred} and {right_pred} {time_unit_name} to make it healthy\n"
+    ret_val1 += f"do the stats on interval (x-axis) between {left} and {right} {time_unit_name}\n"
     if not output_html:
         print(ret_val1)
 
@@ -330,22 +344,29 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
     explainer = shap.TreeExplainer(estimator)
     shap_values = explainer.shap_values(X)
 
-    margin = 1*30/time_unit_size if int(round(y[i]/time_unit_size)) < 7*30/time_unit_size else 2*30/time_unit_size if  7*30/time_unit_size <= int(round(y[i]/time_unit_size)) < 27*30/time_unit_size else int(round(np.median(traj_pi)))
-    
+    if time_unit_size == 30:
+        margin = 1*30/time_unit_size if int(round(y[i]/time_unit_size)) < 7*30/time_unit_size else 2*30/time_unit_size if  7*30/time_unit_size <= int(round(y[i]/time_unit_size)) < 27*30/time_unit_size else int(round(np.median(traj_pi)))
+    else:
+        margin = 1/time_unit_size if int(round(y[i]/time_unit_size)) < 7/time_unit_size else 2/time_unit_size if  7/time_unit_size <= int(round(y[i]/time_unit_size)) < 27/time_unit_size else int(round(np.median(traj_pi)))
+   
     shift_direction = -1 if y_pred[i]>y[i] else +1
     additional_push = shift_direction*np.median(traj_pi)/2
     left  = max(int(round(y[i]/time_unit_size - margin)) + additional_push, 0)
     right = max(int(round(y[i]/time_unit_size + margin)) + additional_push,0) + margin
     print(left, right)
     
-    left_pred  = max(int(round(prediction_interval_with_direction(right, traj_mean, traj_pi, direction=-1))), 0)
-    right_pred     = int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=+1)))
+    # left_pred  = max(int(round(prediction_interval_with_direction(left, traj_mean, traj_pi, direction=-1))), 0)
+    # right_pred     = int(round(prediction_interval_with_direction(right, traj_mean, traj_pi, direction=+1)))
     
     ret_val3 = "\n### After Intervention\n"
-    ret_val3 += f"`age_at_collection` = {y[i]:.2f} days ({int(round(y[i]/time_unit_size))} {time_unit_name})\n"
-    ret_val3 += f"`microbiota_age` = {y_pred[i]:.2f} days ({int(round(y_pred[i]/time_unit_size))} {time_unit_name})\n"
-    ret_val3 += f"put in prediction interval (y-axis) between {left_pred} ({left_pred*time_unit_size} days) and {right_pred} ({right_pred*time_unit_size} days) months to make it healthy\n"
-    ret_val3 += f"do the stats on interval (x-axis) between {left} ({left*time_unit_size} days) and {right} ({right*time_unit_size} days) {time_unit_name}\n"
+    ret_val3 += f"`age_at_collection` = {y[i]:.2f} days \n"
+    ret_val3 += f"`microbiota_age` = {y_pred[i]:.2f} days\n"
+    # ret_val3 += f"put in prediction interval (y-axis) between {left_pred} and {right_pred}  to make it healthy\n"
+    # ret_val3 += f"do the stats on interval (x-axis) between {left} and {right} {time_unit_name}\n"
+
+    
+
+
     if not output_html:
         print(ret_val3)
     if plot:
@@ -370,6 +391,12 @@ def outlier_intervention(outlier_sampleID, estimator, df_all, feature_columns, n
                         plot_bgcolor='rgba(0,0,0,0)', 
                         margin=dict(l=0, r=0, b=0, pad=0),
                         title_text="Classification Important Features")
+
+    if left_pred <= y_pred[i] <= right_pred:
+        intervention_text = ret_val1+"\n"+ret_val2+"\n"+ret_val3
+    else:
+        intervention_text = ret_val1 + "\n\n" + "The method wasn't able to move this sample into a healthy region :("
+        df_all_updated = None
     
     
-    return df_all_updated, fig1, fig2, ret_val1+"\n"+ret_val2+"\n"+ret_val3
+    return df_all_updated, fig1, fig2, intervention_text 

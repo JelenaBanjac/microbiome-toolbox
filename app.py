@@ -3,6 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash_bootstrap_components._components.Col import Col
 from dash_bootstrap_components._components.Row import Row
+from dash_core_components.Markdown import Markdown
 import dash_html_components as dhc
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
@@ -19,6 +20,9 @@ import dash_uploader as du
 from pathlib import Path
 import math
 import numpy as np
+import pickle
+from sklearn.model_selection import GroupShuffleSplit
+from microbiome.data_preparation import *
 
 from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
@@ -219,16 +223,12 @@ def parse_dataset(filename):
 
 
 
-def main_layout_(session_id, upload_filename):
-    if not upload_filename:
-        upload_filename_alert = dhc.Div([])
-    else:
-        upload_filename_alert = dhc.Div(dbc.Alert(f"Currently loaded file: {upload_filename}", color="info"))
+def main_layout_(session_id, upload_info=None):
 
     print("\nMain layout function called only with /methods")
     return dhc.Div(id="main",
-                 children=[
-                   dhc.Div(id='main-upload', children=[
+                    children=[
+                    dhc.Div(id='main-content', children=[
                         dbc.Container([
                             dbc.Row([
                                 dbc.Col([
@@ -250,67 +250,38 @@ def main_layout_(session_id, upload_filename):
                                         * `reference_group`: with `True`/`False` values, examples of a reference vs. non-reference
                                         * all other columns left should be bacteria names which will be automatically prefixed with `bacteria_*` after the upload.
                                     '''),
-                                    # dhc.P([
-                                    #        "add the prefix 'meta__' for the metadata columns, and `id__` for the ID columns. The rest of the columns will be considered to be bacteria abundance columns automaticaly after the upload.",
-                                    #        dhc.Br(),
-                                    #        "When data table is loaded, you can remove or modify the column names, and edit table values.", 
-                                    #        dhc.Br(),
-                                    # ]),
-                                    # dhc.P(["Or use the mouse dataset to see how the Microbiome Toolbox works, which can be downloaded from this ",
-                                    #         dhc.A("link.", href="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls", target='_blank'),
-                                    #         "or click on this button to load it now ",
-                                            
-                                    #     ], style={'textAlign': 'center',}),
+                                    dcc.Markdown("More methods and specific details of method implementations can be seen in the Github repository [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox)."),
+                                    dhc.Br(),
                                     dhc.P([dbc.Button("load demo mosue data", outline=True, color="dark", id='upload-default-data', n_clicks=0),], style={'textAlign': 'center',}),
-                                    #
                                     dhc.P("or", style={'textAlign': 'center',}),
                                     du.Upload(
                                         id='upload-data',
                                         filetypes=['csv', 'xls'],
                                         upload_id=session_id,
                                     ),
-                                    dhc.Div(id="upload-infobox", children=upload_filename_alert),
+                                    dhc.Div(id="upload-infobox"),
                                     dhc.Br(),
-                                    dhc.Div(id='upload-datatable-div'),
-                                    dhc.Br()
-                                    ]),
+                                    dhc.Div(id='dataset-settings'),
+                                    dhc.Br(),
+                                    dhc.Div(id='methods',style={
+                                        'verticalAlign':'middle',
+                                        'textAlign': 'center',
+                                        'backgroundColor': 'rgb(255, 255, 255)',
+                                        'position':'relative',
+                                        'width':'100%',
+                                        #'height':'100vh',
+                                        'bottom':'0px',
+                                        'left':'0px',
+                                        'zIndex':'1000',
+                                    }),
+                                    dhc.Br(),
+                                ]),
                             ]),
                             
                         ], className="md-12"),
                     ]),
-                    dhc.Br(),
-                   
+                    dhc.Br(),dhc.Br(),
 
-                    dhc.Div(id="main-methods", children=[
-                            #dcc.Location(id='url', refresh=False),
-                        
-                            dbc.Container([
-                                dbc.Row(
-                                    dbc.Col([
-                                        dhc.Br(),
-                                        dhc.Div(dhc.H3("Methods")),
-                                        dhc.Br(),
-                                        ], 
-                                    className="md-12"),
-                                ),
-                                dbc.Row([card1, card2, card3]),
-                                dbc.Row([card4, card5, card6])
-                            ],
-                            className="md-4",
-                            )
-                        ],
-                        style={
-                            'verticalAlign':'middle',
-                            'textAlign': 'center',
-                            'backgroundColor': 'rgb(255, 255, 255)', #'rgb(245, 245, 245)',
-                            'position':'relative',
-                            'width':'100%',
-                            #'height':'100vh',
-                            'bottom':'0px',
-                            'left':'0px',
-                            'zIndex':'1000',
-                        }
-                )
         ])
 
 def layout_(session_id, upload_info):
@@ -321,7 +292,7 @@ def layout_(session_id, upload_info):
         dhc.Div(session_id, id='session-id', style={'display': 'none'}),
         dhc.Div(upload_info, id='upload-filename', style={'display': 'none'}),
 
-        main_layout_(session_id, upload_info)
+        main_layout_(session_id)
     ])
 
 def serve_layout():
@@ -360,11 +331,11 @@ def write_dataframe(session_id, df):
     print('\nCalling write_dataframe', filename)
     df.to_pickle(filename)
 
-def write_logbacteria(session_id, bacteria):
+def write_dataset_settings(session_id, settings):
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
-    if bacteria:
-        with open(filename, "w") as text_file:
-            text_file.write(bacteria)
+
+    with open(filename, "wb") as f:
+        pickle.dump(settings, f)
 
 # cache memoize this and add timestamp as input!
 # @cache.memoize()
@@ -387,15 +358,23 @@ def read_dataframe(session_id, timestamp):
     return df
 
 # @cache.memoize()
-def read_logbacteria(session_id, timestamp):
-    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
-    
-    data = None
+def read_dataset_settings(session_id, timestamp):
+    filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt") 
+
+    settings = None
     if os.path.exists(filename):
-        with open(filename, 'r') as file:
-            data = file.read().replace('\n', '')
-    print("read logbacteria", data)
-    return data 
+        with open(filename, 'rb') as f:
+            settings = pickle.loads(f.read())
+
+    if settings is None:
+        settings = {
+            "log_ratio_bacteria": None, 
+            "ref_group_choice": "user defined", 
+            "train_val_test_split": 0.2, 
+            "classification_split": 0.2
+        }  
+
+    return settings 
 
 
 # Update the index
@@ -427,15 +406,20 @@ def fix_zeros(row, feature_columns):
     return row
 
 @app.callback(Output('upload-datatable2', 'data'),
-              Input('bacteria-log-ratio', 'value'),
+              [Input('bacteria-log-ratio', 'value'),
+              Input('reference-group', 'value'),
+              Input('train-val-test-split', 'value'),
+              Input('classification-split', 'value')],
               State('session-id', 'children'))
-def display_output(log_ratio_bacteria, session_id):
+def display_output(log_ratio_bacteria, ref_group_choice, tvt_split, c_split, session_id):
     print(f"Selected log-bacteria: {log_ratio_bacteria}")
     
     df = read_dataframe(f"{session_id}_original", None)
+    #df = read_dataframe(session_id, None)
     feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
     df = df.apply(lambda row: fix_zeros(row, feature_columns), axis=1)
 
+    # trigger for log-ratio bacteria change
     if log_ratio_bacteria is not None:
         for c in feature_columns:
             if c != log_ratio_bacteria:
@@ -443,46 +427,231 @@ def display_output(log_ratio_bacteria, session_id):
 
         # remove reference, since these are abundances
         df = df.drop(columns=log_ratio_bacteria, axis=1)
-        
-    write_logbacteria(session_id, log_ratio_bacteria)
+
+    df = reference_group_definition(df, ref_group_choice)
+    df = train_val_test_split(df, tvt_split)
+    df = classification_split(df, c_split)
+
+    settings = {
+        "log_ratio_bacteria": log_ratio_bacteria, 
+        "ref_group_choice": ref_group_choice, 
+        "train_val_test_split": tvt_split, 
+        "classification_split": c_split
+    }    
+    write_dataset_settings(session_id, settings)
     write_dataframe(session_id, df)
-    print("Stored log-bacteria:", read_logbacteria(session_id, None))
 
     return df.to_dict('records')
 
 
-# def train_val_test_split(df, test_size):
-#     df["dataset_type"] = "Test"
+def train_val_test_split(dfa, test_size):
+    df = dfa.copy()
+    df["dataset_type"] = "Test"
 
-#     for g in df.group.unique():
-#         df_ref_g   = df[(df.healthy_reference==True)&(df.group==g)]
-#         train_idx_g, val_idx_g = next(GroupShuffleSplit(test_size=test_size, n_splits=2, random_state=7).split(df_ref_g, groups=df_ref_g["subjectID"]))
-#         df.loc[df_ref_g.iloc[train_idx_g].index, "dataset_type"] = "Train"
-#         df.loc[df_ref_g.iloc[val_idx_g].index, "dataset_type"] = "Validation"
+    for g in df.group.unique():
+        df_ref_g   = df[(df.reference_group==True)&(df.group==g)]
+        train_idx_g, val_idx_g = next(GroupShuffleSplit(test_size=test_size, n_splits=2, random_state=7).split(df_ref_g, groups=df_ref_g["subjectID"]))
+        df.loc[df_ref_g.iloc[train_idx_g].index, "dataset_type"] = "Train"
+        df.loc[df_ref_g.iloc[val_idx_g].index, "dataset_type"] = "Validation"
 
-# def train_test_split_per_reference(df, test_size):
-#     train_idx1, test_idx1 = next(GroupShuffleSplit(test_size=test_size, n_splits=n_splits, random_state=7).split(df[df.healthy_reference==True].index, groups=df[df.healthy_reference==True]['subjectID']))
-#     train_idx2, test_idx2 = next(GroupShuffleSplit(test_size=test_size, n_splits=n_splits, random_state=7).split(df[df.healthy_reference==False].index, groups=df[df.healthy_reference==False]['subjectID']))
+    return df
 
-#     df.loc[df[df.healthy_reference==True].iloc[train_idx1].index, "classification_dataset_type"] = "Train-1"
-#     df.loc[df[df.healthy_reference==True].iloc[test_idx1].index, "classification_dataset_type"] = "Test-1"
-#     df.loc[df[df.healthy_reference==False].iloc[train_idx2].index, "classification_dataset_type"] = "Train-2"
-#     df.loc[df[df.healthy_reference==False].iloc[test_idx2].index, "classification_dataset_type"] = "Test-2"
+def classification_split(dfa, test_size):
+    df = dfa.copy()
+    train_idx1, test_idx1 = next(GroupShuffleSplit(test_size=test_size, n_splits=2, random_state=7).split(df[df.reference_group==True].index, groups=df[df.reference_group==True]['subjectID']))
+    train_idx2, test_idx2 = next(GroupShuffleSplit(test_size=test_size, n_splits=2, random_state=7).split(df[df.reference_group==False].index, groups=df[df.reference_group==False]['subjectID']))
 
-#     df.loc[df.healthy_reference==True, "classification_label"] = 1
-#     df.loc[df.healthy_reference==False, "classification_label"] = -1
+    df.loc[df[df.reference_group==True].iloc[train_idx1].index, "classification_dataset_type"] = "Train-1"
+    df.loc[df[df.reference_group==True].iloc[test_idx1].index, "classification_dataset_type"] = "Test-1"
+    df.loc[df[df.reference_group==False].iloc[train_idx2].index, "classification_dataset_type"] = "Train-2"
+    df.loc[df[df.reference_group==False].iloc[test_idx2].index, "classification_dataset_type"] = "Test-2"
+
+    df.loc[df.reference_group==True, "classification_label"] = 1
+    df.loc[df.reference_group==False, "classification_label"] = -1
+
+    return df
+
+def reference_group_definition(dfa, ref_group_choice):
+    df = dfa.copy(deep=True)
+    df.sampleID = df.sampleID.astype(str)
+    df.subjectID = df.subjectID.astype(str)
+
+    df = df.fillna(0)
+    df = df.convert_dtypes()
+
+    feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
+    metadata_columns = df.columns[df.columns.str.startswith("meta_")].tolist()
+    id_columns = df.columns[df.columns.str.startswith("id_")].tolist()
+    other_columns = df.columns[(~df.columns.str.startswith("bacteria_"))&(~df.columns.str.startswith("meta_"))&(~df.columns.str.startswith("id_"))].tolist()
+
+    str_cols_meta = list(set(df[metadata_columns].columns[df[metadata_columns].dtypes=="string"]))
+    obj_cols_meta = list(set(df[metadata_columns].columns[df[metadata_columns].dtypes=="object"]))
+    df = pd.get_dummies(df, columns=str_cols_meta+obj_cols_meta)
+
+    # update
+    feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
+    metadata_columns = df.columns[df.columns.str.startswith("meta_")].tolist()
+    id_columns = df.columns[df.columns.str.startswith("id_")].tolist()
+    other_columns = df.columns[(~df.columns.str.startswith("bacteria_"))&(~df.columns.str.startswith("meta_"))&(~df.columns.str.startswith("id_"))].tolist()
+
+    meta_and_feature_columns = feature_columns + metadata_columns
+
+    references_we_compare = 'reference_group'
+    if ref_group_choice == "novelty detection algorithm decision":
+        
+        df[references_we_compare] = df[references_we_compare].apply(lambda x: True if str(x)=='True' else False)
+
+        #[25, 30, 35, 40]
+        df_stats, fig = gridsearch_novelty_detection_parameters(df, "n_neighbors", [1, 2, 3], feature_columns, metadata_columns, meta_and_feature_columns, num_runs=3, website=True, layout_settings=None)
+        df_stats_best = df_stats.groupby(["parameter", "columns_type"]).agg(np.mean)
+        #best_params = df_stats_best.iloc[df_stats_best[['accuracy']].idxmax()]
+        best_param, best_features_type = int(df_stats_best[['accuracy']].idxmax()['accuracy'][0]), df_stats_best[['accuracy']].idxmax()['accuracy'][1]
+
+        best_features = metadata_columns if best_features_type=="meta" else feature_columns if best_features_type=="taxa" else meta_and_feature_columns 
+        best_params = dict(metric='braycurtis', n_neighbors=best_param)
+        df = df.assign(reference_group=update_reference_group_with_novelty_detection(df, meta_and_feature_columns, local_outlier_factor_settings=best_params))
+
+    else:
+        df[references_we_compare] = df[references_we_compare].apply(lambda x: True if str(x)=='True' else False)
+
+    reference_names = df[df.reference_group==True].sampleID.tolist()
+
+    df = dfa.copy(deep=True)
+    df["reference_group"] = df.apply(lambda row: True if row["sampleID"] in reference_names else False, axis=1)
+    return df
+
+def dataset_and_methods_components(df, df_original, session_id, filename):
+    upload_infobox = dhc.Div()
+
+    log_ratio_bacterias = [b for b in df_original.columns[df_original.columns.str.startswith("bacteria_")] ]
+    settings = read_dataset_settings(session_id, None)
+
+    print(settings)
+
+    testset_size = len(df[df.reference_group!=True])/len(df)
+    
+    reference_groups = ["user defined", "novelty detection algorithm decision"]
+    
+
+    table = dash_table.DataTable(
+        id='upload-datatable2',
+        columns=[{
+            "name": i, 
+            "id": i,
+            'deletable': True,
+            'renamable': True
+            } for i in df_original.columns],
+        data=df.to_dict('records'),
+        style_data={
+            'width': '{}%'.format(max(df_original.columns, key=len)),
+            'minWidth': '50px',
+            'maxWidth': '500px',
+        },
+        style_table={
+            'height': 300, 
+            'overflowX': 'auto'
+        },
+        editable=True, 
+        export_format='xlsx',
+        export_headers='display',
+        merge_duplicate_headers=True
+    )
+
+    log_ratio_choice = dcc.Dropdown(
+        id='bacteria-log-ratio',
+        optionHeight=20,
+        options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
+        searchable=True,
+        clearable=True,
+        placeholder="[optional] select a bacteria for log-ratio",
+        value=settings["log_ratio_bacteria"]
+    )
+
+    reference_group_choice = dcc.Dropdown(
+        id='reference-group',
+        optionHeight=20,
+        options=[ {'label': rg, "value": rg} for rg in reference_groups],
+        searchable=True,
+        clearable=True,
+        placeholder="reference group",
+        value=settings["ref_group_choice"]
+    )
+
+    val_size_default = float(settings["train_val_test_split"])
+    train_test_split_choice = dcc.Dropdown(
+        id='train-val-test-split',
+        optionHeight=20,
+        options=[ {'label': f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%", 
+        "value": r} for r in np.arange(0.0, 1.0-testset_size, 0.2)],
+        searchable=True,
+        clearable=True,
+        placeholder="train-validation-test split",
+        value=val_size_default
+    )
+
+    classification_split = float(settings["classification_split"])
+    classification_split_choice = dcc.Dropdown(
+        id='classification-split',
+        optionHeight=20,
+        options=[ {'label': f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%", 
+        "value": r } for r in np.arange(0.0, 1.0, 0.2)],
+        searchable=True,
+        clearable=True,
+        placeholder="reference vs. non-reference train-test split",
+        value=classification_split
+    )
+
+    
+    dataset_settings = [
+        dhc.Br(),dhc.Br(),dhc.Br(),
+        dhc.H3("Dataset Settings", style={'textAlign': 'center',}),
+        dhc.Br(),
+        dcc.Markdown(f"Currently loaded file: `{filename}`"),
+        table,
+        dhc.Br(),
+        dbc.Container([
+            dbc.Row([
+                dbc.Col("Log-ratio bacteria for denominator:", className="md-3"),
+                dbc.Col(log_ratio_choice, className="md-9")
+            ]),
+            dbc.Row([
+                dbc.Col("Reference group choice:", className="md-3"),
+                dbc.Col(reference_group_choice, className="md-9")
+            ]),
+            dbc.Row([
+                dbc.Col("Train-val-test split proportions:", className="md-3"),
+                dbc.Col(train_test_split_choice, className="md-9")
+            ]),
+            dbc.Row([
+                dbc.Col("Classification split:", className="md-3"),
+                dbc.Col(classification_split_choice, className="md-9")
+            ]),
+        ], className="md-12", style={"height": 250})    
+    ]
+
+    methods = [
+        dbc.Container([
+            dbc.Row(
+                dbc.Col([
+                    dhc.Br(),
+                    dhc.Div(dhc.H3("Methods")),
+                    dhc.Br(),
+                    ], 
+                className="md-12"),
+            ),
+            dbc.Row([card1, card2, card3]),
+            dbc.Row([card4, card5, card6])
+        ], className="md-4",
+    )]
+
+    return upload_infobox, dataset_settings, methods, filename
 
 
 @app.callback(
-    [Output('upload-filename', 'children'),
-    Output('upload-infobox', 'children'),
-    Output('card1-btn', 'disabled'),
-    Output('card2-btn', 'disabled'),
-    Output('card3-btn', 'disabled'),
-    Output('card4-btn', 'disabled'),
-    Output('card5-btn', 'disabled'),
-    Output('card6-btn', 'disabled'),
-    Output('upload-datatable-div', 'children'),],
+    [Output('upload-infobox', 'children'),
+     Output('dataset-settings', 'children'),
+     Output('methods', 'children'),
+     Output('upload-filename', 'children')],
     [Input('upload-data', 'isCompleted'),
      Input('upload-default-data', 'n_clicks')],
     [State('session-id', 'children'),
@@ -503,7 +672,8 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
     
     upload_infobox = dhc.Div([])
     upload_datatable = dash_table.DataTable(id='upload-datatable2')
-    methods_disabled = True
+    dataset_settings = []
+    methods = []
 
     if filenames is not None:
         if filename == '':
@@ -512,99 +682,18 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
     elif filename_latest != '':
         filename = filename_latest
-        upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
-        methods_disabled = False
-        df_original = read_dataframe(f"{session_id}_original", None)
+
         df = read_dataframe(session_id, None)
-        log_ratio_bacterias = [b for b in df_original.columns[df_original.columns.str.startswith("bacteria_")] ]
-        logbacteria = read_logbacteria(session_id, None)
-        
-        testset_size = len(df[df.reference_group!=True])/len(df)
-        val_size_default = 0.2
-        classification_split = 0.2
-        reference_groups = ["user defined", "novelty detection algorithm decision"]
-        reference_group = reference_groups[0]
+        df_original = read_dataframe(f"{session_id}_original", None)
 
-        table = dash_table.DataTable(
-            id='upload-datatable2',
-            columns=[{
-                "name": i, 
-                "id": i,
-                'deletable': True,
-                'renamable': True
-                } for i in df_original.columns],
-            data=df.to_dict('records'),
-            style_data={
-                'width': '{}%'.format(max(df_original.columns, key=len)),
-                'minWidth': '50px',
-                'maxWidth': '500px',
-            },
-            style_table={
-                'height': 300, 
-                'overflowX': 'auto'
-            },
-            editable=True, 
-            export_format='xlsx',
-            export_headers='display',
-            merge_duplicate_headers=True
-        )
-
-        log_ratio_choice = dcc.Dropdown(
-            id='bacteria-log-ratio',
-            optionHeight=20,
-            options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
-            searchable=True,
-            clearable=True,
-            placeholder="[optional] select a bacteria for log-ratio",
-            value=logbacteria
-        )
-
-        reference_group_choice = dcc.Dropdown(
-            id='reference-group',
-            optionHeight=20,
-            options=[ {'label': rg, "value": rg} for rg in reference_groups],
-            searchable=True,
-            clearable=True,
-            placeholder="reference group",
-            value=reference_group
-        )
-
-        train_test_split_choice = dcc.Dropdown(
-            id='train-val-test-split',
-            optionHeight=20,
-            options=[ {'label': f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%", 
-            "value": f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%"} for r in np.arange(0.0, 1.0-testset_size, 0.2)],
-            searchable=True,
-            clearable=True,
-            placeholder="train-validation-test split",
-            value=f"{(1-val_size_default-testset_size)*100:.0f}%-{val_size_default*100:.0f}%-{testset_size*100:.0f}%"
-        )
-
-        classification_split_choice = dcc.Dropdown(
-            id='classification-split',
-            optionHeight=20,
-            options=[ {'label': f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%", 
-            "value": f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%" } for r in np.arange(0.0, 1.0, 0.2)],
-            searchable=True,
-            clearable=True,
-            placeholder="reference vs. non-reference train-test split",
-            value=f"reference: {(1-testset_size)*(1-classification_split)*100:.0f}%-{(1-testset_size)*classification_split*100:.0f}% & non-reference: {testset_size*(1-classification_split)*100:.0f}%-{testset_size*classification_split*100:.0f}%"
-        )
-
-        upload_datatable = dhc.Div([
-            
-            table,
-            log_ratio_choice,
-            reference_group_choice,
-            train_test_split_choice,
-            classification_split_choice,
-        ], style={"height": 530})
+        #if df is not None:
+        upload_infobox, dataset_settings, methods, filename = dataset_and_methods_components(df, df_original, session_id, filename)
 
     
     
     # at the initialization of the page or when back
     if not iscompleted:
-        return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, upload_datatable
+        return upload_infobox, dataset_settings, methods, filename
 
     df = None
     if filename is not None:
@@ -626,119 +715,39 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
         ret_val_err = check_dataframe_validity(df)
         if ret_val_err != "":
             upload_infobox = dhc.Div([dbc.Alert("There was an error processing this file! Missing columns: " + ret_val_err.replace('\n', ', ')[:-2], color="danger")])
-            methods_disabled = True
+
 
         else:
             specific_columns = ["sampleID", "subjectID", "group", "age_at_collection", "reference_group",
                                 'dataset_type', 'dataset_type_classification', 'classification_dataset_type', 'classification_label']
-            #metadata_columns = df.columns[df.columns.str.startswith("meta_")].tolist()
-            #id_columns = df.columns[df.columns.str.startswith("id_")].tolist()
+
             other_columns = df.columns[(~df.columns.isin(specific_columns))&(~df.columns.str.startswith("meta_"))&(~df.columns.str.startswith("id_"))].tolist()
             df = df.rename(mapper={k:f"bacteria_{k}" for k in other_columns}, axis=1)
 
+            write_dataframe(upload_id, df)
             write_dataframe(f"{upload_id}_original", df)
-            upload_infobox = dhc.Div(dbc.Alert(f"Currently loaded file: {filename}", color="info"))
+            
+            df = read_dataframe(session_id, None)
+            df_original = read_dataframe(f"{session_id}_original", None)
 
-            methods_disabled = False
-            log_ratio_bacterias = [b for b in df.columns[df.columns.str.startswith("bacteria_")] ]
-            logbacteria = read_logbacteria(session_id, None)
+            if df is not None:
+                upload_infobox, dataset_settings, methods, filename = dataset_and_methods_components(df, df_original, session_id, filename)
 
-            testset_size = len(df[df.reference_group!=True])/len(df)
-            val_size_default = 0.2
-            classification_split = 0.2
-            reference_groups = ["user defined", "novelty detection algorithm decision"]
-            reference_group = reference_groups[0]
-
-            table = dash_table.DataTable(
-                id='upload-datatable2',
-                columns=[{
-                    "name": i, 
-                    "id": i,
-                    'deletable': True,
-                    'renamable': True
-                    } for i in df.columns],
-                data=df.to_dict('records'),
-                style_data={
-                    'width': '{}%'.format(max(df.columns, key=len)),
-                    'minWidth': '50px',
-                    'maxWidth': '500px',
-                },
-                style_table={
-                    'height': 300, 
-                    'overflowX': 'auto'
-                },
-                editable=True, 
-                export_format='xlsx',
-                export_headers='display',
-                merge_duplicate_headers=True
-            )
-
-            log_ratio_choice = dcc.Dropdown(
-                id='bacteria-log-ratio',
-                optionHeight=20,
-                options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
-                searchable=True,
-                clearable=True,
-                placeholder="[optional] select a bacteria for log-ratio",
-                value=logbacteria
-            )
-
-            reference_group_choice = dcc.Dropdown(
-                id='reference-group',
-                optionHeight=20,
-                options=[ {'label': rg, "value": rg} for rg in reference_groups],
-                searchable=True,
-                clearable=True,
-                placeholder="reference group",
-                value=reference_group
-            )
-
-            train_test_split_choice = dcc.Dropdown(
-                id='train-val-test-split',
-                optionHeight=20,
-                options=[ {'label': f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%", 
-                "value": f"{(1-r-testset_size)*100:.0f}%-{r*100:.0f}%-{testset_size*100:.0f}%"} for r in np.arange(0.0, 1.0-testset_size, 0.2)],
-                searchable=True,
-                clearable=True,
-                placeholder="train-validation-test split",
-                value=f"{(1-val_size_default-testset_size)*100:.0f}%-{val_size_default*100:.0f}%-{testset_size*100:.0f}%"
-            )
-
-            classification_split_choice = dcc.Dropdown(
-                id='classification-split',
-                optionHeight=20,
-                options=[ {'label': f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%", 
-                "value": f"reference: {(1-testset_size)*(1-r)*100:.0f}%-{(1-testset_size)*r*100:.0f}% & non-reference: {testset_size*(1-r)*100:.0f}%-{testset_size*r*100:.0f}%" } for r in np.arange(0.0, 1.0, 0.2)],
-                searchable=True,
-                clearable=True,
-                placeholder="reference vs. non-reference train-test split",
-                value=f"reference: {(1-testset_size)*(1-classification_split)*100:.0f}%-{(1-testset_size)*classification_split*100:.0f}% & non-reference: {testset_size*(1-classification_split)*100:.0f}%-{testset_size*classification_split*100:.0f}%"
-            )
-
-            upload_datatable = dhc.Div([
-                
-                table,
-                log_ratio_choice,
-                reference_group_choice,
-                train_test_split_choice,
-                classification_split_choice,
-            ], style={"height": 530})
 
 
     if df is None:
         upload_infobox = dhc.Div(dbc.Alert("There was an error processing this file!", color="danger"))
-        methods_disabled = True
 
     print("filename", filename)
     print("upload_infobox", upload_infobox)
-    return filename, upload_infobox, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, methods_disabled, upload_datatable
+    return upload_infobox, dataset_settings, methods, filename
 
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8081)
-    # app.run_server(debug=False,
-    #             host=os.getenv("HOST", "0.0.0.0"),
-    #             port=os.getenv("PORT", "5000"))
+    # app.run_server(debug=True, port=8082)
+    app.run_server(debug=False,
+                host=os.getenv("HOST", "0.0.0.0"),
+                port=os.getenv("PORT", "5000"))
 
 

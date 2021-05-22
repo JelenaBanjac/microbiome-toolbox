@@ -27,10 +27,13 @@ layout = dhc.Div([
 
                         dhc.H3("Intervention Simulation"),
                         dhc.Br(),
+                        dcc.Markdown('''
+                        Click on one of the outliers below to see the suggestion for the intervention. 
+                        The intervention simulation consists of suggesting the taxa values to change (or log-ratio values to change) in order to bring back the sample to the reference microbiome trajectory.
+                        ''', style={'textAlign': 'left',}),
+
                         dhc.Div(id="page-6-main"),
                         
-                        
-
                     ], className="md-4")
                 )
             ], className="md-4",)
@@ -187,7 +190,9 @@ def update_color(clickData, session_id, fig):
                                                                 fillcolor_alpha=0.2, website=True);
         nice_name = lambda name: " | ".join([c[3:] for c in name[9:].split("|")[-2:]])
 
-        _val, fig1, fig2, ret_val = outlier_intervention(outlier_sampleID=outlier_id, estimator=estimator, df_all=val1, feature_columns=bacteria_names, nice_name=nice_name, max_num_bacterias_to_change=20, traj_x=traj_x, traj_mean=traj_mean, traj_pi=traj_pi, time_unit_size=30, time_unit_name="months", 
+        _val, fig1, fig2, ret_val = outlier_intervention(outlier_sampleID=outlier_id, estimator=estimator, df_all=val1, feature_columns=bacteria_names, nice_name=nice_name, max_num_bacterias_to_change=20, 
+                            traj_x=traj_x, traj_mean=traj_mean, traj_pi=traj_pi, 
+                            time_unit_size=1, time_unit_name="days", 
                             file_name=None, output_html=False, plot=False, normal_vals=[ False], average=np.median, std=np.std)
 
         fig_after, traj_x, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, units=units, patent=False, highlight_outliers=[outlier_id], df_new=_val, 
@@ -199,6 +204,15 @@ def update_color(clickData, session_id, fig):
             [dcc.Markdown(r) for r in ret_val.split("\n")]
         )
 
+        if _val is not None:
+            after_intervention = [
+                dhc.Br(),
+                dhc.H4("After Intervention"),
+                dcc.Graph(figure=fig_after) if fig_after else ""
+            ]
+        else:
+            after_intervention = []
+
         ret_val = [
             dhc.Hr(),
             dhc.H4("Before Intervention"),
@@ -209,9 +223,7 @@ def update_color(clickData, session_id, fig):
             # dcc.Graph(figure=fig1),
             # dhc.Br(),
             # dcc.Graph(figure=fig2),
-            dhc.Br(),
-            dhc.H4("After Intervention"),
-            dcc.Graph(figure=fig_after),
+            *after_intervention,
             dhc.Br(),
             dhc.Br(),]
 

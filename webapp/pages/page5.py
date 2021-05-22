@@ -27,6 +27,21 @@ layout = dhc.Div([
 
                         dhc.H3("Longitudinal Anomaly Detection"),
                         dhc.Br(),
+                        dcc.Markdown('''
+                        * Detecting the outlier depending on outlier definition (in healthy reference data)
+                            - *Prediction Interval:* outside 95% prediction interval (healthy trajectory interval)
+                            - Other ways of detecting outliers - *longitudinal anomaly detection* - implemented rolling average:
+                                - *z-score on the trajectory*: Anomaly detection with z-scores and ones that pass 2xSTD
+                                - *Isolation Forest (IF):* unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous
+                        * Exploring trajectory outliers and finding the *commonalities - reference analysis*:
+                            - Looking across different outliers, are there common features that are *off/FALSE* in most of these? Gives a common intervention angle
+                            - Build a supervised model (`XGBoost`) and get the `SHAP` values in order to explain the anomalies.
+                        * What do we do with these outliers that are detected in a healthy reference?
+                            - Returning the (one) outlier back to the healthy region by changing the bacteria abundances that are not in normal range (healthy reference data)
+                            - Remove these outliers and retrain the model with updated reference dataset
+                        * Importance of different bacteria and their abundances across time boxes on non-healthy data (but model trained on healthy samples).
+                        ''', style={'textAlign': 'left',}),
+                        dcc.Markdown("The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.", style={'textAlign': 'left',}),
                         dhc.Div(id="page-5-main"),
                         
                         
@@ -139,7 +154,6 @@ def display_value(session_id):
     
 
     outliers = pi_anomaly_detection(estimator=estimator, df_all=val1, feature_columns=bacteria_names, degree=2)
-    outlier_id = outliers[0]
 
     fig, traj_x, traj_pi, traj_mean = plot_importance_boxplots_over_age(estimator, val1, bacteria_names, nice_name=nice_name, 
                                                                 units=units, patent=False, highlight_outliers=outliers, df_new=None, time_unit_size=time_unit_size, time_unit_name=time_unit_name, 

@@ -1,4 +1,7 @@
 import sys
+from dash_core_components.Markdown import Markdown
+
+from dash_html_components.Mark import Mark
 sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -28,6 +31,17 @@ layout = dhc.Div([
 
                         dhc.H3("Data Analysis & Exploration"),
                         dhc.Br(),
+
+                        dcc.Markdown('''
+                        Some of the methods for data analysis and exploration provided are:
+                        - Sampling statistics
+                        - Heatmap of taxa abundances w.r.t. time
+                        - Taxa abundance errorbars
+                        - Dense longitudinal data
+                        - Shannon diversity index and Simpson dominance index
+                        - Embeddings (different algorithms that we used in 2D and 3D space) with interactive selection and reference analysis.
+                        ''', style={'textAlign': 'left',}),
+
                         dhc.Div(id="page-2-main"),
 
                         
@@ -93,6 +107,11 @@ page_content = [
     # Embedding in 2D, interactive
     dhc.Hr(),
     dhc.H4("Embedding in 2D space - Interactive Analysis"),
+    dcc.Markdown('''To use an interactive option:   
+    - click on `Lasso Select` on the plot toolbox,  
+    - select the samples you want to group,  
+    - wait for the explainatory information to load (with confusion matrix).  
+    ''', style={'textAlign': 'left',}),
     dhc.Div(id='page-2-display-value-8', children=loading_img),
 ]
 
@@ -168,6 +187,7 @@ def display_value(session_id):
         
         
         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+        print("BACTERIA", bacteria_names)
         nice_name = lambda x: x[9:].replace("_", " ")
 
         if max(df.age_at_collection.values) < 100:
