@@ -745,9 +745,9 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
 
 if __name__ == '__main__':
-    # app.run_server(debug=True, port=8082)
-    app.run_server(debug=False,
-                host=os.getenv("HOST", "0.0.0.0"),
-                port=os.getenv("PORT", "5000"))
+    app.run_server(debug=True, port=8082)
+    # app.run_server(debug=False,
+    #             host=os.getenv("HOST", "0.0.0.0"),
+    #             port=os.getenv("PORT", "5000"))
 
 

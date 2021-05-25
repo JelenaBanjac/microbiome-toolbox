@@ -14,7 +14,7 @@ from microbiome.variables import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 from microbiome.postprocessing import plot_importance_boxplots_over_age
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
 
 
 layout = dhc.Div([
@@ -34,8 +34,15 @@ layout = dhc.Div([
                         * Importance of different bacteria and their abundances across time boxes on non-healthy data (but model trained on healthy samples)
                         ''', style={'textAlign': 'left',}),
                         dcc.Markdown("The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.", style={'textAlign': 'left',}),
-                        dhc.Div(id="page-4-main"),
                         
+                        dhc.Br(),
+                        dhc.Div(id="page-4-main"),
+                        dcc.Interval(
+                            id='page-4-main-interval-component',
+                            interval=INTERVAL, # in milliseconds
+                            n_intervals=0,  # start counter
+                            max_intervals=MAX_INTERVALS
+                        )
                         
 
                     ], className="md-4")
@@ -58,6 +65,7 @@ layout = dhc.Div([
 page_content = [
     # Abundance plot in general
     dhc.Div(id='page-4-display-value-0', children=loading_img),
+    dhc.Div(id='page-4-display-value-0-hidden', hidden=True),
 ]
 
 # cache memoize this and add timestamp as input!
@@ -93,9 +101,17 @@ def display_value(session_id):
     return page_content
 
 
+@app.callback(
+   Output('page-4-display-value-0', 'children'),
+   [Input('page-4-main-interval-component', 'children'),
+    Input('page-4-display-value-0-hidden', 'children')])
+def display_value(n, c0):
+    print("Interval: ", n)
+    return c0
+
 
 @app.callback(
-    Output('page-4-display-value-0', 'children'),
+    Output('page-4-display-value-0-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)

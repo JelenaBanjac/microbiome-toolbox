@@ -15,7 +15,7 @@ from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names, two_groups_analysis
 import dash_table
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
 
 
 layout = dhc.Div([
@@ -43,6 +43,12 @@ layout = dhc.Div([
 
                         dhc.Br(),
                         dhc.Div(id="page-1-main"),
+                        dcc.Interval(
+                            id='page-1-main-interval-component',
+                            interval=INTERVAL, # in milliseconds
+                            n_intervals=0,  # start counter
+                            max_intervals=MAX_INTERVALS
+                        )
                         
                         
 
@@ -68,14 +74,18 @@ page_content = [
     dhc.Hr(),
     dhc.H4("Table of Reference Group Samples"),
     dhc.Div(id='page-1-display-value-0', children=loading_img),
+    dhc.Div(id='page-1-display-value-0-hidden', hidden=True),
+
 
     dhc.Hr(),
     dhc.H4("(1) Rest of the samples put into Non-Reference Group"),
     dhc.Div(id='page-1-display-value-1', children=loading_img),
+    dhc.Div(id='page-1-display-value-1-hidden', hidden=True),
 
     dhc.Hr(),
     dhc.H4("(2) Novelty detection with respect to defined Reference Group"),
     dhc.Div(id='page-1-display-value-2', children=loading_img),
+    dhc.Div(id='page-1-display-value-2-hidden', hidden=True),
 ]
 
 # cache memoize this and add timestamp as input!
@@ -138,9 +148,20 @@ def display_value(session_id):
 
     return page_content
 
+@app.callback(
+   [Output('page-1-display-value-0', 'children'),
+    Output('page-1-display-value-1', 'children'),
+    Output('page-1-display-value-2', 'children')],
+   [Input('page-1-main-interval-component', 'children'),
+    Input('page-1-display-value-0-hidden', 'children'),
+    Input('page-1-display-value-1-hidden', 'children'),
+    Input('page-1-display-value-2-hidden', 'children')])
+def display_value(n, c0, c1, c2):
+    print("Interval: ", n)
+    return c0, c1, c2
 
 @app.callback(
-    Output('page-1-display-value-0', 'children'),
+    Output('page-1-display-value-0-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df, *_ = read_dataframe(session_id, None)
@@ -171,7 +192,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-1-display-value-1', 'children'),
+    Output('page-1-display-value-1-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df, feature_columns, metadata_columns, id_columns, other_columns = read_dataframe(session_id, None)
@@ -237,7 +258,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-1-display-value-2', 'children'),
+    Output('page-1-display-value-2-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df, feature_columns, metadata_columns, id_columns, other_columns = read_dataframe(session_id, None)

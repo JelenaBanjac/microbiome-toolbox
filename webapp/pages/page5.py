@@ -16,7 +16,7 @@ from microbiome.postprocessing import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 from microbiome.longitudinal_anomaly_detection import *
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
 
 
 layout = dhc.Div([
@@ -42,8 +42,15 @@ layout = dhc.Div([
                         * Importance of different bacteria and their abundances across time boxes on non-healthy data (but model trained on healthy samples).
                         ''', style={'textAlign': 'left',}),
                         dcc.Markdown("The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.", style={'textAlign': 'left',}),
-                        dhc.Div(id="page-5-main"),
                         
+                        dhc.Br(),
+                        dhc.Div(id="page-5-main"),
+                        dcc.Interval(
+                            id='page-5-main-interval-component',
+                            interval=INTERVAL, # in milliseconds
+                            n_intervals=0,  # start counter
+                            max_intervals=MAX_INTERVALS
+                        )
                         
                     ], className="md-4")
                 )
@@ -67,24 +74,28 @@ page_content = [
     dhc.Hr(),dhc.Br(),
     dhc.H4("Outside Prediction Interval"),
     dhc.Div(id='page-5-display-value-0', children=loading_img),
+    dhc.Div(id='page-5-display-value-0-hidden', hidden=True),
     dhc.Br(),
 
     # Low Pass Filter Longitudinal Anomaly Detection
     dhc.Hr(),dhc.Br(),
     dhc.H4("Low Pass Filter Longitudinal Anomaly Detection"),
     dhc.Div(id='page-5-display-value-1', children=loading_img),
+    dhc.Div(id='page-5-display-value-1-hidden', hidden=True),
     dhc.Br(),
     
     # Isolation Forest Longitudinal Anomaly Detection
     dhc.Hr(),dhc.Br(),
     dhc.H4("Isolation Forest Longitudinal Anomaly Detection"),
     dhc.Div(id='page-5-display-value-2', children=loading_img),
+    dhc.Div(id='page-5-display-value-2-hidden', hidden=True),
     dhc.Br(),
     
     # All outliers analysis
     dhc.Hr(),dhc.Br(),
     dhc.H4("Outliers analysis"),
     dhc.Div(id='page-5-display-value-3', children=loading_img),
+    dhc.Div(id='page-5-display-value-3-hidden', hidden=True),
     dhc.Br(),
 ]
 
@@ -122,7 +133,22 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-5-display-value-0', 'children'),
+   [Output('page-5-display-value-0', 'children'),
+    Output('page-5-display-value-1', 'children'),
+    Output('page-5-display-value-2', 'children'),
+    Output('page-5-display-value-3', 'children')],
+   [Input('page-5-main-interval-component', 'children'),
+    Input('page-5-display-value-0-hidden', 'children'),
+    Input('page-5-display-value-1-hidden', 'children'),
+    Input('page-5-display-value-2-hidden', 'children'),
+    Input('page-5-display-value-3-hidden', 'children')])
+def display_value(n, c0, c1, c2):
+    print("Interval: ", n)
+    return c0, c1, c2
+
+
+@app.callback(
+    Output('page-5-display-value-0-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -174,7 +200,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-5-display-value-1', 'children'),
+    Output('page-5-display-value-1-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -235,7 +261,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-5-display-value-2', 'children'),
+    Output('page-5-display-value-2-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -294,7 +320,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-5-display-value-3', 'children'),
+    Output('page-5-display-value-3-hidden', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)

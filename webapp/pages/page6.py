@@ -16,7 +16,7 @@ from microbiome.longitudinal_anomaly_detection import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 import dash_dangerously_set_inner_html
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
 
 
 layout = dhc.Div([
@@ -35,9 +35,9 @@ layout = dhc.Div([
                         dhc.Div(id="page-6-main"),
                         dcc.Interval(
                             id='page-6-main-interval-component',
-                            interval=100*1000, # in milliseconds
+                            interval=INTERVAL, # in milliseconds
                             n_intervals=0,
-                            max_intervals=5
+                            max_intervals=MAX_INTERVALS
                         )
                         
                     ], className="md-4")
@@ -62,7 +62,7 @@ page_content = [
     dhc.Hr(),
     dhc.H4("Select Outlier"),
     dhc.Div(id='page-6-display-value-0', children=loading_img),
-    dhc.Div(id='page-6-display-value-0-hidden', children=loading_img, hidden=True),
+    dhc.Div(id='page-6-display-value-0-hidden', hidden=True),
 ]
 
 # cache memoize this and add timestamp as input!
