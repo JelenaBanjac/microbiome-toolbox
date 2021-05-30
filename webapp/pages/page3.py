@@ -52,10 +52,11 @@ layout = dhc.Div([
                         dhc.Div(id="page-3-main"),
                         dcc.Interval(
                             id='page-3-main-interval-component',
-                            interval=INTERVAL, # in milliseconds
+                            interval=10000, # in milliseconds
                             n_intervals=0,  # start counter
-                            max_intervals=MAX_INTERVALS
-                        )
+                            max_intervals=30  #MAX_INTERVALS
+                        ),
+                        dhc.Div(id="test"),
                         
                     ], className="md-4")
                 )
@@ -78,44 +79,86 @@ page_content = [
     
     dhc.Hr(),
     dhc.H4("Only Trajectory Line"),
-    dhc.Div(id='page-3-display-value-0', children=loading_img),
-    dhc.Div(id='page-3-display-value-0-hidden', hidden=True),
+    dhc.Br(),
+    #dhc.Div(id='page-3-display-value-0', children=loading_img),
+    #dhc.Div(id='page-3-display-value-0-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-0",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-0-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Longitudinal Subject's Data"),
-    dhc.Div(id='page-3-display-value-1', children=loading_img),
-    dhc.Div(id='page-3-display-value-1-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-3-display-value-1', children=loading_img),
+    # dhc.Div(id='page-3-display-value-1-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-1",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-1-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Universality: Linear Difference between Group Trajectories"),
-    dhc.Div(id='page-3-display-value-2', children=loading_img),
-    dhc.Div(id='page-3-display-value-2-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-3-display-value-2', children=loading_img),
+    # dhc.Div(id='page-3-display-value-2-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-2",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-2-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Universality: Nonlinear Difference between Group Trajectories"),
-    dhc.Div(id='page-3-display-value-3', children=loading_img),
-    dhc.Div(id='page-3-display-value-3-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-3-display-value-3', children=loading_img),
+    # dhc.Div(id='page-3-display-value-3-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-3",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-3-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Reference vs. Non-reference Longitudinal Trajectories"),
-    dhc.Div(id='page-3-display-value-4', children=loading_img),
-    dhc.Div(id='page-3-display-value-4-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-3-display-value-4', children=loading_img),
+    # dhc.Div(id='page-3-display-value-4-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-4",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-4-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Differentiation: Linear Reference vs. Non-reference Difference Between Trajectories"),
-    dhc.Div(id='page-3-display-value-5', children=loading_img),
-    dhc.Div(id='page-3-display-value-5-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-3-display-value-5', children=loading_img),
+    # dhc.Div(id='page-3-display-value-5-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-5",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-5-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Differentiation: Nonlinear (Spline) Reference vs. Non-reference Difference Between Trajectories"),
-    dhc.Div(id='page-3-display-value-6', children=loading_img),
-    dhc.Div(id='page-3-display-value-6-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-3-display-value-6', children=loading_img),
+    # dhc.Div(id='page-3-display-value-6-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-3-6",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-6-hidden")])],
+        type="circle",
+    ),
 
     dhc.Br(),
 ]
@@ -128,15 +171,11 @@ def read_dataframe(session_id, timestamp):
     '''
     Read dataframe from disk, for now just as CSV
     '''
-    print('\nCalling read_dataframe')
-    print('\tsession_id', session_id)
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
     if os.path.exists(filename):
-        print('\tfilename', filename)
         df = pd.read_pickle(filename)
         print('** Reading data from disk **')
     else:
-        print('\tfilename not yet exists', filename)
         df = None
         print('** No data, df empty **')
 
@@ -153,24 +192,37 @@ def display_value(session_id):
 
     return page_content
 
+# @app.callback(
+#    [#Output('page-3-display-value-0', 'children'),
+#     Output('page-3-display-value-1', 'children'),
+#     Output('page-3-display-value-2', 'children'),
+#     Output('page-3-display-value-3', 'children'),
+#     Output('page-3-display-value-4', 'children'),
+#     Output('page-3-display-value-5', 'children'),
+#     Output('page-3-display-value-6', 'children')],
+#    [#Input('page-3-main-interval-component', 'n_intervals'),
+#     State('page-3-display-value-0-hidden', 'children'),
+#     State('page-3-display-value-1-hidden', 'children'),
+#     State('page-3-display-value-2-hidden', 'children'),
+#     State('page-3-display-value-3-hidden', 'children'),
+#     State('page-3-display-value-4-hidden', 'children'),
+#     State('page-3-display-value-5-hidden', 'children'),
+#     State('page-3-display-value-6-hidden', 'children')])
+# def display_value(n, c0, c1, c2, c3, c4, c5, c6):
+#     print("=====")
+#     print("interval:", n)
+#     print(c0)
+#     print("=====")
+#     return c0, c1, c2, c3, c4, c5, c6
+
+
 @app.callback(
-   [Output('page-3-display-value-0', 'children'),
-    Output('page-3-display-value-1', 'children'),
-    Output('page-3-display-value-2', 'children'),
-    Output('page-3-display-value-3', 'children'),
-    Output('page-3-display-value-4', 'children'),
-    Output('page-3-display-value-5', 'children'),
-    Output('page-3-display-value-6', 'children')],
-   [Input('page-3-main-interval-component', 'children'),
-    Input('page-3-display-value-0-hidden', 'children'),
-    Input('page-3-display-value-1-hidden', 'children'),
-    Input('page-3-display-value-2-hidden', 'children'),
-    Input('page-3-display-value-3-hidden', 'children'),
-    Input('page-3-display-value-4-hidden', 'children'),
-    Input('page-3-display-value-5-hidden', 'children'),
-    Input('page-3-display-value-6-hidden', 'children')])
-def display_value(n, c0, c1, c2, c3, c4, c5, c6):
-    return c0, c1, c2, c3, c4, c5, c6
+    Output('test', 'children'),
+    Input('page-3-main-interval-component', 'n_intervals'))
+def display_value(n_intervals):
+    print("n_intervals", n_intervals)
+    return ""
+
 
 @app.callback(
     Output('page-3-display-value-0-hidden', 'children'),

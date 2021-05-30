@@ -164,7 +164,6 @@ def display_value(session_id):
     Output('page-2-display-value-1', 'children'),
     Output('page-2-display-value-2', 'children'),
     Output('page-2-display-value-3', 'children'),
-    Output('page-2-display-value-4', 'children'),
     Output('page-2-display-value-5', 'children'),
     Output('page-2-display-value-6', 'children'),
     Output('page-2-display-value-7', 'children'),
@@ -174,13 +173,12 @@ def display_value(session_id):
     Input('page-2-display-value-1-hidden', 'children'),
     Input('page-2-display-value-2-hidden', 'children'),
     Input('page-2-display-value-3-hidden', 'children'),
-    Input('page-2-display-value-4-hidden', 'children'),
     Input('page-2-display-value-5-hidden', 'children'),
     Input('page-2-display-value-6-hidden', 'children'),
     Input('page-2-display-value-7-hidden', 'children'),
     Input('page-2-display-value-8-hidden', 'children')])
-def display_value(n, c0, c1, c2, c3, c4, c5, c6, c7, c8):
-    return c0, c1, c2, c3, c4, c5, c6, c7, c8
+def display_value(n, c0, c1, c2, c3, c5, c6, c7, c8):
+    return c0, c1, c2, c3, c5, c6, c7, c8
 
 
 @app.callback(
