@@ -1,26 +1,28 @@
 import sys
-from dash_core_components.Markdown import Markdown
-
-from dash_html_components.Mark import Mark
 sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
 from dash.dependencies import Input, Output, State
-import dash_table
-import plotly.graph_objects as go
 import pandas as pd
 import os
-import numpy as np
-from microbiome.data_preparation import *
-from microbiome.helpers import get_bacteria_names
-from microbiome.data_analysis import *
-from ipywidgets import widgets
-
 import dash
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
-from sklearn import (manifold, datasets, decomposition, ensemble,
-                     discriminant_analysis, random_projection, neighbors)
+from microbiome.data_preparation import *
+from microbiome.data_analysis import *
+from celery.result import AsyncResult
+from tasks import *
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+
+def slogger(origin, message):
+    """Log a message in the Terminal
+    Args:
+        str: The origin of the message, e.g. the name of a function
+        str: The message itself, e.g. 'Query the database'
+    Returns:
+        None
+    """
+    print('\033[94m[SLOG] \u001b[36m|  \033[1m\u001b[33m{} \u001b[0m{}'.format(origin.upper(), message))
+    sys.stdout.flush()
 
 
 layout = dhc.Div([
@@ -43,13 +45,6 @@ layout = dhc.Div([
                         ''', style={'textAlign': 'left',}),
 
                         dhc.Div(id="page-2-main"),
-                        dcc.Interval(
-                            id='page-2-main-interval-component',
-                            interval=INTERVAL, # in milliseconds
-                            n_intervals=0,
-                            max_intervals=MAX_INTERVALS
-                        )
-                        
                         
                     ], className="md-4")
                 )
@@ -72,28 +67,49 @@ page_content = [
     # Loaded table
     dhc.Hr(),
     dhc.H4("Loaded data table"),
-    dhc.Div(id='page-2-display-value-0', children=loading_img),
-    dhc.Div(id='page-2-display-value-0-hidden', hidden=True),
-
+    # dhc.Div(id='page-2-display-value-0', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-0', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-0', children='task-status-2-0', hidden=True),                
+    dcc.Interval(id='task-interval-2-0', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-0', children=loading_img),
+    dhc.Div(id='page-2-display-value-0'),
+    
+    
     # Abundance plot in general
     dhc.Hr(),
     dhc.H4("Taxa Abundances"),
-    dhc.Div(id='page-2-display-value-1', children=loading_img),
-    dhc.Div(id='page-2-display-value-1-hidden', hidden=True),
+    # dhc.Div(id='page-2-display-value-1', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-1', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-1', children='task-status-2-1', hidden=True),                
+    dcc.Interval(id='task-interval-2-1', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-1', children=loading_img),
+    dhc.Div(id='page-2-display-value-1'),
     
     # Sampling statistics
     dhc.Hr(),
     dhc.H4("Sampling Statistics"),
-    dhc.Div(id='page-2-display-value-2', children=loading_img),
-    dhc.Div(id='page-2-display-value-2-hidden', hidden=True),
+    # dhc.Div(id='page-2-display-value-2', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-2', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-2', children='task-status-2-2', hidden=True),                
+    dcc.Interval(id='task-interval-2-2', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-2', children=loading_img),
+    dhc.Div(id='page-2-display-value-2'),
     
     # Heatmap
     dhc.Hr(),
     dhc.H4("Taxa Abundances Heatmap"),
-    dhc.Div(id='page-2-display-value-3', children=loading_img),
-    dhc.Div(id='page-2-display-value-3-hidden', hidden=True),
-
-    # # Shannon's diversity index and Simpson's dominace
+    # dhc.Div(id='page-2-display-value-3', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-3', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-3', children='task-status-2-3', hidden=True),                
+    dcc.Interval(id='task-interval-2-3', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-3', children=loading_img),
+    dhc.Div(id='page-2-display-value-3'),
+    
+    # Shannon's diversity index and Simpson's dominace
     # dhc.Hr(),
     # dhc.H4("Diversity"),
     # dhc.Div(id='page-2-display-value-4', children=loading_img),
@@ -101,21 +117,36 @@ page_content = [
     # Dense longitudinal data
     dhc.Hr(),
     dhc.H4("Dense Longitudinal Data"),
-    dhc.Div(id='page-2-display-value-5', children=loading_img),
-    dhc.Div(id='page-2-display-value-5-hidden', hidden=True),
-
+    # dhc.Div(id='page-2-display-value-5', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-4', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-4', children='task-status-2-4', hidden=True),                
+    dcc.Interval(id='task-interval-2-4', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-4', children=loading_img),
+    dhc.Div(id='page-2-display-value-4'),
+    
     # Embedding in 2D
     dhc.Hr(),
     dhc.H4("Embedding in 2D space"),
-    dhc.Div(id='page-2-display-value-6', children=loading_img),
-    dhc.Div(id='page-2-display-value-6-hidden', hidden=True),
-
+    # dhc.Div(id='page-2-display-value-6', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-5', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-5', children='task-status-2-5', hidden=True),                
+    dcc.Interval(id='task-interval-2-5', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-5', children=loading_img),
+    dhc.Div(id='page-2-display-value-5'),
+    
     # Embedding in 3D
     dhc.Hr(),
     dhc.H4("Embedding in 3D space"),
-    dhc.Div(id='page-2-display-value-7', children=loading_img),
-    dhc.Div(id='page-2-display-value-7-hidden', hidden=True),
-
+    # dhc.Div(id='page-2-display-value-7', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-6', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-6', children='task-status-2-6', hidden=True),                
+    dcc.Interval(id='task-interval-2-6', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-6', children=loading_img),
+    dhc.Div(id='page-2-display-value-6'),
+    
     # Embedding in 2D, interactive
     dhc.Hr(),
     dhc.H4("Embedding in 2D space - Interactive Analysis"),
@@ -124,8 +155,14 @@ page_content = [
     - select the samples you want to group,  
     - wait for the explainatory information to load (with confusion matrix).  
     ''', style={'textAlign': 'left',}),
-    dhc.Div(id='page-2-display-value-8', children=loading_img),
-    dhc.Div(id='page-2-display-value-8-hidden', hidden=True),
+    # dhc.Div(id='page-2-display-value-8', children=loading_img),
+    dhc.Br(),
+    dhc.Div(id='task-id-2-7', children='none', hidden=True),                
+    dhc.Div(id='task-status-2-7', children='task-status-2-7', hidden=True),                
+    dcc.Interval(id='task-interval-2-7', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-2-7', children=loading_img),
+    dhc.Div(id='page-2-display-value-7'),
+    
 ]
 
 # cache memoize this and add timestamp as input!
@@ -134,15 +171,11 @@ def read_dataframe(session_id, timestamp):
     '''
     Read dataframe from disk, for now just as CSV
     '''
-    print('\nCalling read_dataframe')
-    print('\tsession_id', session_id)
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
     if os.path.exists(filename):
-        print('\tfilename', filename)
         df = pd.read_pickle(filename)
         print('** Reading data from disk **')
     else:
-        print('\tfilename not yet exists', filename)
         df = None
         print('** No data, df empty **')
 
@@ -159,280 +192,220 @@ def display_value(session_id):
 
     return page_content
 
-@app.callback(
-   [Output('page-2-display-value-0', 'children'),
-    Output('page-2-display-value-1', 'children'),
-    Output('page-2-display-value-2', 'children'),
-    Output('page-2-display-value-3', 'children'),
-    Output('page-2-display-value-5', 'children'),
-    Output('page-2-display-value-6', 'children'),
-    Output('page-2-display-value-7', 'children'),
-    Output('page-2-display-value-8', 'children')],
-   [Input('page-2-main-interval-component', 'children'),
-    Input('page-2-display-value-0-hidden', 'children'),
-    Input('page-2-display-value-1-hidden', 'children'),
-    Input('page-2-display-value-2-hidden', 'children'),
-    Input('page-2-display-value-3-hidden', 'children'),
-    Input('page-2-display-value-5-hidden', 'children'),
-    Input('page-2-display-value-6-hidden', 'children'),
-    Input('page-2-display-value-7-hidden', 'children'),
-    Input('page-2-display-value-8-hidden', 'children')])
-def display_value(n, c0, c1, c2, c3, c5, c6, c7, c8):
-    return c0, c1, c2, c3, c5, c6, c7, c8
 
 
-@app.callback(
-    Output('page-2-display-value-0-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-
-    ret_val = dhc.Div([])
-    if df is not None:
-        ret_val =  [
-            
-            dash_table.DataTable(
-                        id='upload-datatable',
-                        columns=[{"name": i, "id": i} for i in df.columns],
-                        data=df.to_dict('records'),
-                        style_data={
-                            'width': '{}%'.format(max(df.columns, key=len)),
-                            'minWidth': '50px',
-                            'maxWidth': '500px',
-                        },
-                        style_table={
-                            'height': 300, 
-                            'overflowX': 'auto'
-                        }  
-                    ),
-            dhc.Br()
-            ]
-    return ret_val
-
-
-@app.callback(
-    Output('page-2-display-value-1-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-
-    ret_val = dhc.Div([])
-    if df is not None:
-        
-        
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        print("BACTERIA", bacteria_names)
-        nice_name = lambda x: x[9:].replace("_", " ")
-
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
+for idx in range(8):
+    # Don't touch this:
+    @app.callback(Output(f'task-interval-2-{idx}', 'interval'),
+                [Input(f'task-id-2-{idx}', 'children'),
+                Input(f'task-status-2-{idx}', 'children')])
+    def toggle_interval_speed(task_id, task_status):
+        """This callback is triggered by changes in task-id and task-status divs.  It switches the 
+        page refresh interval to fast (1 sec) if a task is running, or slow (24 hours) if a task is 
+        pending or complete."""
+        if task_id == 'none':
+            slogger('toggle_interval_speed', 'no task-id --> slow refresh')
+            return 24*60*60*1000
+        if task_id != 'none' and (task_status in ['SUCCESS', 'FAILURE']):
+            slogger('toggle_interval_speed', 'task-id is {} and status is {} --> slow refresh'.format(task_id, task_status))
+            return 24*60*60*1000
         else:
-            time_unit_name="months"
-            time_unit_size=30
-        
-        num_cols = 3
-        total_num_rows = len(bacteria_names)//num_cols+1
+            slogger('toggle_interval_speed', 'task-id is {} and status is {} --> fast refresh'.format(task_id, task_status))
+            return 1000
 
-        fig = dataset_bacteria_abundances(df, bacteria_names, time_unit_size=time_unit_size, time_unit_name=time_unit_name, num_cols=num_cols, nice_name=nice_name, file_name=None, width=1200, height=200*total_num_rows, website=True)
-        
-        ret_val = [
-            
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    return ret_val
+
+    # Don't touch this:
+    @app.callback(Output(f'spinner-2-{idx}', 'hidden'),
+                [Input(f'task-interval-2-{idx}', 'n_intervals'),
+                Input(f'task-status-2-{idx}', 'children')])
+    def show_hide_spinner(n_intervals, task_status):
+        """This callback is triggered by then Interval clock and checks the task progress
+        via the invisible div 'task-status'.  If a task is running it will show the spinner,
+        otherwise it will be hidden."""
+        if task_status == 'PROGRESS':
+            slogger('show_hide_spinner', 'show spinner')
+            return False
+        else:
+            slogger('show_hide_spinner', 'hide spinner because task_status={}'.format(task_status))
+            return True
+
+
+    # Don't touch this:
+    @app.callback(Output(f'task-status-2-{idx}', 'children'),
+                [Input(f'task-interval-2-{idx}', 'n_intervals'),
+                Input(f'task-id-2-{idx}', 'children')])
+    def update_task_status(n_intervals, task_id):
+        """This callback is triggered by the Interval clock and task-id .  It checks the task
+        status in Celery and returns the status to an invisible div"""
+        return str(AsyncResult(task_id, app=celery_app).state)
+
+
+    @app.callback(
+        Output(f'page-2-display-value-{idx}', 'children'),
+        [Input(f'task-status-2-{idx}', 'children')],
+        [State(f'task-id-2-{idx}', 'children')])
+    def display_value(task_status, task_id):
+        if task_status == 'SUCCESS':
+            # Fetch results from Celery and forget the task
+            slogger('get_results', 'retrieve results for task-id {} from Celery'.format(task_id))
+            result = AsyncResult(task_id, app=celery_app).result    # fetch results
+            forget = AsyncResult(task_id, app=celery_app).forget()  # delete from Celery
+            # Display a message if their were no hits
+            if result == [{}]:
+                return ["We couldn\'t find any results.  Try broadening your search."]
+            # Otherwise return the populated DataTable
+            return result
+
+        else:
+            # don't display any results
+            return []
+
+
+
 
 @app.callback(
-    Output('page-2-display-value-2-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
+    Output(f'task-id-2-0', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-0', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    ret_val = dhc.Div([])
-    if df is not None:
-
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
-        else:
-            time_unit_name="months"
-            time_unit_size=30
-
-        num_sids = len(df.subjectID.unique())
-        fig = sampling_statistics(df, group="group", start_age=0, limit_age=max(df.age_at_collection.values), time_unit_size=time_unit_size, time_unit_name=time_unit_name, file_name=None, height=300+5*num_sids, width=1200, website=True)
-
-        ret_val = [
-            
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    return ret_val
-
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-@app.callback(
-    Output('page-2-display-value-3-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-
-    ret_val = dhc.Div([])
-    if df is not None:
-
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
-
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
-        else:
-            time_unit_name="months"
-            time_unit_size=30
-
-        fig1, fig2 = plot_bacteria_abundance_heatmaps(df, bacteria_names=bacteria_names, short_bacteria_name=nice_name, time_unit_name=time_unit_name, time_unit_size=time_unit_size, avg_fn=np.median, fillna=False, website=True, width=1200)
-
-        ret_val = [
-            
-            dhc.Div([dcc.Graph(figure=fig1), dcc.Graph(figure=fig2)]),
-            dhc.Br(),
-        ]
-    return ret_val
-
-# @app.callback(
-#     Output('page-2-display-value-4', 'children'),
-#     Input('session-id', 'children'))
-# def display_value(session_id):
-#     df = read_dataframe(session_id, None)
-
-#     ret_val = dhc.Div([])
-#     if df is not None:
-
-#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-
-#         if max(df.age_at_collection.values) < 100:
-#             time_unit_name="days"
-#             time_unit_size=1
-#         else:
-#             time_unit_name="months"
-#             time_unit_size=30
-        
-#         fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
-#         fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
-
-#         ret_val = [
-            
-#             dcc.Graph(figure=fig1),
-#             dhc.Br(),
-#             dcc.Graph(figure=fig2),
-#             dhc.Br(),
-#         ]
-
-#     return ret_val
+    task = eval(f"query_mt_20").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-2-display-value-5-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
+    Output(f'task-id-2-1', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-1', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    ret_val = dhc.Div([])
-    if df is not None:
-
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
-
-        fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
-
-        ret_val = [
-            
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-
-    return ret_val
-
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_21").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-2-display-value-6-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
+    Output(f'task-id-2-2', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-2', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    ret_val = dhc.Div([])
-    if df is not None:
-
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
-
-        emb = decomposition.PCA(n_components=3)
-        fig = embedding(emb, df_all=df, feature_columns=bacteria_names, embedding_dimension=2, layout_settings=dict(height=600, width=600), color_column_name="group", website=True);
-
-        #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
-
-        ret_val = [
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-
-    return ret_val
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_22").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-2-display-value-7-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
+    Output(f'task-id-2-3', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-3', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    ret_val = dhc.Div([])
-    if df is not None:
-
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
-
-        emb = decomposition.PCA(n_components=3)
-        fig = embedding(emb, df_all=df, feature_columns=bacteria_names, embedding_dimension=3, layout_settings=dict(height=1000, width=1000), color_column_name="group", website=True);
-
-        #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
-
-        ret_val = [
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-
-    return ret_val
-
-from IPython.display import display
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_23").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-2-display-value-8-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
+    Output(f'task-id-2-4', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-4', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    ret_val = dhc.Div([])
-    if df is not None:
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_24").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
+@app.callback(
+    Output(f'task-id-2-5', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-5', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-        emb = decomposition.PCA(n_components=3)
-        vbox = embeddings_interactive_selection_notebook(df_all=df, feature_columns=bacteria_names, emb=emb, layout_settings=dict(height=1000, width=1000));
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_25").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
-        #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
-        
-        ret_val = [
-            dcc.Graph(figure=vbox.children[0], id="graph"),
-            #dcc.Graph(figure=vbox.children[1]),
-            #fig,
-            dhc.Div(id="graph-info"),
-            dhc.Br(),
-        ]
+@app.callback(
+    Output(f'task-id-2-6', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-6', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    return ret_val
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_26").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
+@app.callback(
+    Output(f'task-id-2-7', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-2-7', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
+    
+    task = eval(f"query_mt_27").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
+
+
+##############################3
 
 
 @app.callback(Output("graph-info", "children"), 
-             [Input("graph", "selectedData"), Input('session-id', 'children')],
+             [Input("graph", "selectedData"), 
+             Input('session-id', 'children')],
              [State("graph", "figure")])
 def update_color(selectedData, session_id, fig):
     selection = None

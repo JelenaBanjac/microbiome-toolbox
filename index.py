@@ -17,8 +17,6 @@ import pathlib
 app_dir = os.getcwd()
 UPLOAD_FOLDER_ROOT = os.path.join(app_dir, 'cached_files')
 pathlib.Path(UPLOAD_FOLDER_ROOT).mkdir(parents=True, exist_ok=True)
-INTERVAL = 100*1000  # ms
-MAX_INTERVALS = 10
 
 external_stylesheets = [dbc.themes.COSMO]  #dbc.themes.COSMO
 app = dash.Dash(suppress_callback_exceptions=True, external_stylesheets=external_stylesheets)
@@ -46,3 +44,4 @@ cache = Cache(server, config={
 loading_img = dhc.Div([
     dhc.Img(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/images/Ripple.gif")
 ])
+

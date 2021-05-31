@@ -195,19 +195,13 @@ card6 = dbc.Col(
 
 
 def parse_dataset(filename):
-    #content_type, content_string = content.split(',')
-
-    #decoded = base64.b64decode(content_string)
     df = None
     try:
         if 'csv' in filename:
             # Assume that the user uploaded a CSV file
-            #df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
             df = pd.read_csv(filename)
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
-            #df = pd.read_excel(io.BytesIO(decoded))
-            #df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep="\t")
             df = pd.read_csv(filename, sep="\t")
             if len(df.columns)==1:
                 df = pd.read_csv(filename, sep=",")
@@ -219,8 +213,6 @@ def parse_dataset(filename):
     print('\nFinished parsing df parse_dataset')
 
     return df
-
-
 
 
 def main_layout_(session_id, upload_info=None):
@@ -745,9 +737,10 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
 
 if __name__ == '__main__':
+    app.run_server()
     # app.run_server(debug=True, port=8082)
-    app.run_server(debug=False,
-                host=os.getenv("HOST", "0.0.0.0"),
-                port=os.getenv("PORT", "5000"))
+    # app.run_server(debug=False,
+    #             host=os.getenv("HOST", "0.0.0.0"),
+    #             port=os.getenv("PORT", "5000"))
 
 

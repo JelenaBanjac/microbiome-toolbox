@@ -15,7 +15,7 @@ from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names, two_groups_analysis
 import dash_table
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([
@@ -43,13 +43,6 @@ layout = dhc.Div([
 
                         dhc.Br(),
                         dhc.Div(id="page-1-main"),
-                        dcc.Interval(
-                            id='page-1-main-interval-component',
-                            interval=INTERVAL, # in milliseconds
-                            n_intervals=0,  # start counter
-                            max_intervals=MAX_INTERVALS
-                        )
-                        
                         
 
                     ], className="md-4")
@@ -74,18 +67,16 @@ page_content = [
     dhc.Hr(),
     dhc.H4("Table of Reference Group Samples"),
     dhc.Div(id='page-1-display-value-0', children=loading_img),
-    dhc.Div(id='page-1-display-value-0-hidden', hidden=True),
-
+    
 
     dhc.Hr(),
     dhc.H4("(1) Rest of the samples put into Non-Reference Group"),
     dhc.Div(id='page-1-display-value-1', children=loading_img),
-    dhc.Div(id='page-1-display-value-1-hidden', hidden=True),
-
+    
     dhc.Hr(),
     dhc.H4("(2) Novelty detection with respect to defined Reference Group"),
     dhc.Div(id='page-1-display-value-2', children=loading_img),
-    dhc.Div(id='page-1-display-value-2-hidden', hidden=True),
+
 ]
 
 # cache memoize this and add timestamp as input!
@@ -148,20 +139,9 @@ def display_value(session_id):
 
     return page_content
 
-@app.callback(
-   [Output('page-1-display-value-0', 'children'),
-    Output('page-1-display-value-1', 'children'),
-    Output('page-1-display-value-2', 'children')],
-   [Input('page-1-main-interval-component', 'children'),
-    Input('page-1-display-value-0-hidden', 'children'),
-    Input('page-1-display-value-1-hidden', 'children'),
-    Input('page-1-display-value-2-hidden', 'children')])
-def display_value(n, c0, c1, c2):
-    print("Interval: ", n)
-    return c0, c1, c2
 
 @app.callback(
-    Output('page-1-display-value-0-hidden', 'children'),
+    Output('page-1-display-value-0', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df, *_ = read_dataframe(session_id, None)
@@ -192,73 +172,75 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-1-display-value-1-hidden', 'children'),
+    Output('page-1-display-value-1', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
-    df, feature_columns, metadata_columns, id_columns, other_columns = read_dataframe(session_id, None)
-    # feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
-    # metadata_columns = df.columns[df.columns.str.startswith("meta_")].tolist()
-    # id_columns = df.columns[df.columns.str.startswith("id_")].tolist()
-    # other_columns = df.columns[(~df.columns.str.startswith("bacteria_"))&(~df.columns.str.startswith("meta_"))&(~df.columns.str.startswith("id_"))].tolist()
+    try:
+        df, feature_columns, metadata_columns, id_columns, other_columns = read_dataframe(session_id, None)
+        # feature_columns = df.columns[df.columns.str.startswith("bacteria_")].tolist()
+        # metadata_columns = df.columns[df.columns.str.startswith("meta_")].tolist()
+        # id_columns = df.columns[df.columns.str.startswith("id_")].tolist()
+        # other_columns = df.columns[(~df.columns.str.startswith("bacteria_"))&(~df.columns.str.startswith("meta_"))&(~df.columns.str.startswith("id_"))].tolist()
 
-    # df = df.convert_dtypes() 
-    # id_cols = list(df.columns[df.columns.str.contains("id", case=False)&(df.columns.str.len()<20)].values)
-    # cols_to_ignore = [ 'dataset_type', 'dataset_type_classification', 'classification_dataset_type', 'classification_label' ]  
-    # str_cols = list(set(df.columns[df.dtypes=="string"]) - set(id_cols + cols_to_ignore))
-    # df = pd.get_dummies(df, columns=str_cols)
-    # print(df.columns.values)
-    
-    #bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-    
-    #feature_columns = set(df.columns) - set(id_cols + cols_to_ignore)
-    print("feature_columns", feature_columns)
+        # df = df.convert_dtypes() 
+        # id_cols = list(df.columns[df.columns.str.contains("id", case=False)&(df.columns.str.len()<20)].values)
+        # cols_to_ignore = [ 'dataset_type', 'dataset_type_classification', 'classification_dataset_type', 'classification_label' ]  
+        # str_cols = list(set(df.columns[df.dtypes=="string"]) - set(id_cols + cols_to_ignore))
+        # df = pd.get_dummies(df, columns=str_cols)
+        # print(df.columns.values)
+        
+        #bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+        
+        #feature_columns = set(df.columns) - set(id_cols + cols_to_ignore)
+        print("feature_columns", feature_columns)
 
-    # reference_group column needs 2 values: True and False
-    # here we populate all non-True to False
-    references_we_compare = 'reference_group'
-    df[references_we_compare] = df[references_we_compare].apply(lambda x: True if str(x)=='True' else False)
-    before_ref = df[references_we_compare].value_counts()
+        # reference_group column needs 2 values: True and False
+        # here we populate all non-True to False
+        references_we_compare = 'reference_group'
+        df[references_we_compare] = df[references_we_compare].apply(lambda x: True if str(x)=='True' else False)
+        before_ref = df[references_we_compare].value_counts()
 
-    fig1, img_src, stats  = two_groups_analysis(df, feature_columns, references_we_compare=references_we_compare,nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, 
-                                        style="dot", show=False, website=True, layout_height=800, layout_width=1000)
-    fig2, _, _            = two_groups_analysis(df, feature_columns, references_we_compare=references_we_compare, nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, 
-                                        style="hist", show=False, website=True, layout_height=800, layout_width=1000)
+        fig1, img_src, stats  = two_groups_analysis(df, feature_columns, references_we_compare=references_we_compare,nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, 
+                                            style="dot", show=False, website=True, layout_height=800, layout_width=1000)
+        fig2, _, _            = two_groups_analysis(df, feature_columns, references_we_compare=references_we_compare, nice_name=lambda x: x[9:] if x.startswith("bacteria_") else x, 
+                                            style="hist", show=False, website=True, layout_height=800, layout_width=1000)
 
-    stats = stats.split("\n")   #style={ 'verticalAlign':'left', 'textAlign': 'left',}
-    stats_div = dhc.Div(children=[
-        dhc.Br(), 
-        dhc.H5("Groups discrimination performance results"), 
-        dhc.Br(),dhc.Br(),
-        dhc.P("The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."),]+
-        [dcc.Markdown(r) for r in stats]) 
-    img_src.update_layout(height=400, width=400)
-    confusion_matrix = dcc.Graph(figure=img_src)
-
-    statistics_part = dbc.Container(
-        dbc.Row([
-            dbc.Col(stats_div),
-            dbc.Col(confusion_matrix)
-        ])
-    )
-
-    ret_val = []
-    if df is not None:
-        ret_val =  [
-            dhc.P("Reference vs. Non-reference count: "+str(before_ref)),
-            dhc.Br(),
-            dcc.Graph(figure=fig1),
-            dhc.Br(),
-            dcc.Graph(figure=fig2),
-            dhc.Br(),
-            statistics_part,
+        stats = stats.split("\n")   #style={ 'verticalAlign':'left', 'textAlign': 'left',}
+        stats_div = dhc.Div(children=[
+            dhc.Br(), 
+            dhc.H5("Groups discrimination performance results"), 
             dhc.Br(),dhc.Br(),
-        ]
+            dhc.P("The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."),]+
+            [dcc.Markdown(r) for r in stats]) 
+        img_src.update_layout(height=400, width=400)
+        confusion_matrix = dcc.Graph(figure=img_src)
 
+        statistics_part = dbc.Container(
+            dbc.Row([
+                dbc.Col(stats_div),
+                dbc.Col(confusion_matrix)
+            ])
+        )
+
+        ret_val = []
+        if df is not None:
+            ret_val =  [
+                dhc.P("Reference vs. Non-reference count: "+str(before_ref)),
+                dhc.Br(),
+                dcc.Graph(figure=fig1),
+                dhc.Br(),
+                dcc.Graph(figure=fig2),
+                dhc.Br(),
+                statistics_part,
+                dhc.Br(),dhc.Br(),
+            ]
+    except:
+        ret_val = dhc.Div("Error in processing, please try again... (return back to main page and enter this one again)")
     return ret_val
 
 
 @app.callback(
-    Output('page-1-display-value-2-hidden', 'children'),
+    Output('page-1-display-value-2', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df, feature_columns, metadata_columns, id_columns, other_columns = read_dataframe(session_id, None)

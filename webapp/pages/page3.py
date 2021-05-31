@@ -6,16 +6,22 @@ import dash_html_components as dhc
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import os
-import numpy as np
 import sys
-from microbiome.data_preparation import *
-from microbiome.helpers import get_bacteria_names
-from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
+from celery.result import AsyncResult
+from tasks import *
 
-from microbiome.variables import *
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
-
+def slogger(origin, message):
+    """Log a message in the Terminal
+    Args:
+        str: The origin of the message, e.g. the name of a function
+        str: The message itself, e.g. 'Query the database'
+    Returns:
+        None
+    """
+    print('\033[94m[SLOG] \u001b[36m|  \033[1m\u001b[33m{} \u001b[0m{}'.format(origin.upper(), message))
+    sys.stdout.flush()
 
 layout = dhc.Div([
             dbc.Container([
@@ -50,14 +56,7 @@ layout = dhc.Div([
                         ''', style={'textAlign': 'left',}),
 
                         dhc.Div(id="page-3-main"),
-                        dcc.Interval(
-                            id='page-3-main-interval-component',
-                            interval=10000, # in milliseconds
-                            n_intervals=0,  # start counter
-                            max_intervals=30  #MAX_INTERVALS
-                        ),
-                        dhc.Div(id="test"),
-                        
+                       
                     ], className="md-4")
                 )
             ], className="md-4",)
@@ -80,89 +79,77 @@ page_content = [
     dhc.Hr(),
     dhc.H4("Only Trajectory Line"),
     dhc.Br(),
-    #dhc.Div(id='page-3-display-value-0', children=loading_img),
-    #dhc.Div(id='page-3-display-value-0-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-0",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-0-hidden")])],
-        type="circle",
-    ),
-
+    dhc.Div(id='task-id-3-0', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-0', children='task-status-3-0', hidden=True),                
+    dcc.Interval(id='task-interval-3-0', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-0', children=loading_img),
+    dhc.Div(id='page-3-display-value-0'),
+    
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Longitudinal Subject's Data"),
     dhc.Br(),
-    # dhc.Div(id='page-3-display-value-1', children=loading_img),
-    # dhc.Div(id='page-3-display-value-1-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-1",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-1-hidden")])],
-        type="circle",
-    ),
+    dhc.Div(id='task-id-3-1', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-1', children='task-status-3-1', hidden=True),                
+    dcc.Interval(id='task-interval-3-1', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-1', children=loading_img),
+    dhc.Div(id='page-3-display-value-1'),
+    
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Universality: Linear Difference between Group Trajectories"),
     dhc.Br(),
-    # dhc.Div(id='page-3-display-value-2', children=loading_img),
-    # dhc.Div(id='page-3-display-value-2-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-2",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-2-hidden")])],
-        type="circle",
-    ),
+    dhc.Div(id='task-id-3-2', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-2', children='task-status-3-2', hidden=True),                
+    dcc.Interval(id='task-interval-3-2', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-2', children=loading_img),
+    dhc.Div(id='page-3-display-value-2'),
+    
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Universality: Nonlinear Difference between Group Trajectories"),
     dhc.Br(),
-    # dhc.Div(id='page-3-display-value-3', children=loading_img),
-    # dhc.Div(id='page-3-display-value-3-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-3",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-3-hidden")])],
-        type="circle",
-    ),
-
+    dhc.Div(id='task-id-3-3', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-3', children='task-status-3-3', hidden=True),                
+    dcc.Interval(id='task-interval-3-3', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-3', children=loading_img),
+    dhc.Div(id='page-3-display-value-3'),
+    
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Reference vs. Non-reference Longitudinal Trajectories"),
     dhc.Br(),
-    # dhc.Div(id='page-3-display-value-4', children=loading_img),
-    # dhc.Div(id='page-3-display-value-4-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-4",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-4-hidden")])],
-        type="circle",
-    ),
+    dhc.Div(id='task-id-3-4', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-4', children='task-status-3-4', hidden=True),                
+    dcc.Interval(id='task-interval-3-4', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-4', children=loading_img),
+    dhc.Div(id='page-3-display-value-4'),
+    
 
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Differentiation: Linear Reference vs. Non-reference Difference Between Trajectories"),
     dhc.Br(),
-    # dhc.Div(id='page-3-display-value-5', children=loading_img),
-    # dhc.Div(id='page-3-display-value-5-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-5",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-5-hidden")])],
-        type="circle",
-    ),
-
+    dhc.Div(id='task-id-3-5', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-5', children='task-status-3-5', hidden=True),                
+    dcc.Interval(id='task-interval-3-5', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-5', children=loading_img),
+    dhc.Div(id='page-3-display-value-5'),
+    
     dhc.Br(),
     dhc.Hr(),
     dhc.H4("Differentiation: Nonlinear (Spline) Reference vs. Non-reference Difference Between Trajectories"),
     dhc.Br(),
-    # dhc.Div(id='page-3-display-value-6', children=loading_img),
-    # dhc.Div(id='page-3-display-value-6-hidden', hidden=True),
-    dcc.Loading(
-        id="loading-3-6",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-6-hidden")])],
-        type="circle",
-    ),
-
+    dhc.Div(id='task-id-3-6', children='none', hidden=True),                
+    dhc.Div(id='task-status-3-6', children='task-status-3-6', hidden=True),                
+    dcc.Interval(id='task-interval-3-6', interval=250, n_intervals=0),
+    dhc.Div(id='spinner-3-6', children=loading_img),
+    dhc.Div(id='page-3-display-value-6'),
+    
     dhc.Br(),
 ]
-
 
 
 # cache memoize this and add timestamp as input!
@@ -181,6 +168,7 @@ def read_dataframe(session_id, timestamp):
 
     return df
 
+
 @app.callback(
     Output('page-3-main', 'children'),
     Input('session-id', 'children'))
@@ -192,383 +180,189 @@ def display_value(session_id):
 
     return page_content
 
-# @app.callback(
-#    [#Output('page-3-display-value-0', 'children'),
-#     Output('page-3-display-value-1', 'children'),
-#     Output('page-3-display-value-2', 'children'),
-#     Output('page-3-display-value-3', 'children'),
-#     Output('page-3-display-value-4', 'children'),
-#     Output('page-3-display-value-5', 'children'),
-#     Output('page-3-display-value-6', 'children')],
-#    [#Input('page-3-main-interval-component', 'n_intervals'),
-#     State('page-3-display-value-0-hidden', 'children'),
-#     State('page-3-display-value-1-hidden', 'children'),
-#     State('page-3-display-value-2-hidden', 'children'),
-#     State('page-3-display-value-3-hidden', 'children'),
-#     State('page-3-display-value-4-hidden', 'children'),
-#     State('page-3-display-value-5-hidden', 'children'),
-#     State('page-3-display-value-6-hidden', 'children')])
-# def display_value(n, c0, c1, c2, c3, c4, c5, c6):
-#     print("=====")
-#     print("interval:", n)
-#     print(c0)
-#     print("=====")
-#     return c0, c1, c2, c3, c4, c5, c6
+
+for idx in range(7):
+    # Don't touch this:
+    @app.callback(Output(f'task-interval-3-{idx}', 'interval'),
+                [Input(f'task-id-3-{idx}', 'children'),
+                Input(f'task-status-3-{idx}', 'children')])
+    def toggle_interval_speed(task_id, task_status):
+        """This callback is triggered by changes in task-id and task-status divs.  It switches the 
+        page refresh interval to fast (1 sec) if a task is running, or slow (24 hours) if a task is 
+        pending or complete."""
+        if task_id == 'none':
+            slogger('toggle_interval_speed', 'no task-id --> slow refresh')
+            return 24*60*60*1000
+        if task_id != 'none' and (task_status in ['SUCCESS', 'FAILURE']):
+            slogger('toggle_interval_speed', 'task-id is {} and status is {} --> slow refresh'.format(task_id, task_status))
+            return 24*60*60*1000
+        else:
+            slogger('toggle_interval_speed', 'task-id is {} and status is {} --> fast refresh'.format(task_id, task_status))
+            return 1000
 
 
-@app.callback(
-    Output('test', 'children'),
-    Input('page-3-main-interval-component', 'n_intervals'))
-def display_value(n_intervals):
-    print("n_intervals", n_intervals)
-    return ""
+    # Don't touch this:
+    @app.callback(Output(f'spinner-3-{idx}', 'hidden'),
+                [Input(f'task-interval-3-{idx}', 'n_intervals'),
+                Input(f'task-status-3-{idx}', 'children')])
+    def show_hide_spinner(n_intervals, task_status):
+        """This callback is triggered by then Interval clock and checks the task progress
+        via the invisible div 'task-status'.  If a task is running it will show the spinner,
+        otherwise it will be hidden."""
+        if task_status == 'PROGRESS':
+            slogger('show_hide_spinner', 'show spinner')
+            return False
+        else:
+            slogger('show_hide_spinner', 'hide spinner because task_status={}'.format(task_status))
+            return True
 
 
-@app.callback(
-    Output('page-3-display-value-0-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-    
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
+    # Don't touch this:
+    @app.callback(Output(f'task-status-3-{idx}', 'children'),
+                [Input(f'task-interval-3-{idx}', 'n_intervals'),
+                Input(f'task-id-3-{idx}', 'children')])
+    def update_task_status(n_intervals, task_id):
+        """This callback is triggered by the Interval clock and task-id .  It checks the task
+        status in Celery and returns the status to an invisible div"""
+        return str(AsyncResult(task_id, app=celery_app).state)
 
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
 
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
+    @app.callback(
+        Output(f'page-3-display-value-{idx}', 'children'),
+        [Input(f'task-status-3-{idx}', 'children')],
+        [State(f'task-id-3-{idx}', 'children')])
+    def display_value(task_status, task_id):
+        if task_status == 'SUCCESS':
+            # Fetch results from Celery and forget the task
+            slogger('get_results', 'retrieve results for task-id {} from Celery'.format(task_id))
+            result = AsyncResult(task_id, app=celery_app).result    # fetch results
+            forget = AsyncResult(task_id, app=celery_app).forget()  # delete from Celery
+            # Display a message if their were no hits
+            if result == [{}]:
+                return ["We couldn\'t find any results.  Try broadening your search."]
+            # Otherwise return the populated DataTable
+            return result
 
-        fig1,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
-
-    
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig1),
-        ]
-    else:
-        ret_val = dhc.Div([])
-
-    return ret_val
-
+        else:
+            # don't display any results
+            return []
 
 @app.callback(
-    Output('page-3-display-value-1-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    Output(f'task-id-3-0', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-0', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-        fig7,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True, longitudinal_mode="markers+lines");
-
-    except Exception as e:
-        df = None
-
-    
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig7),
-        ]
-    else:
-        ret_val = dhc.Div([])
-
-    return ret_val
-
+    task = eval(f"query_mt_30").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, task-id={}'.format(task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-3-display-value-2-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    Output(f'task-id-3-1', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-1', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-
-        fig2,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", linear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
-
-    
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig2),
-        ]
-    else:
-        ret_val = dhc.Div([])
-
-    return ret_val
-
-
+    task = eval(f"query_mt_31").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-3-display-value-3-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    Output(f'task-id-3-2', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-2', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-        fig3,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start,  time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
-
-    
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig3),
-        ]
-    else:
-        ret_val = dhc.Div([])
-
-    return ret_val
-
-
+    task = eval(f"query_mt_32").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-3-display-value-4-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    Output(f'task-id-3-3', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-3', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-
-        fig4,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=other, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
-
-    
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig4),
-        ]
-    else:
-        ret_val = dhc.Div([])
-
-    return ret_val
-
-
+    task = eval(f"query_mt_33").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-3-display-value-5-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    Output(f'task-id-3-4', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-4', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-        fig5 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=True, nonlinear_pval=False, img_file_name=None, website=True)
-    except Exception as e:
-        df = None
-
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig5),
-        ]
-    else:
-        ret_val = dhc.Div([])
-
-    return ret_val
-
-
+    task = eval(f"query_mt_34").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+    return str(task.id)
 
 @app.callback(
-    Output('page-3-display-value-6-hidden', 'children'),
-    Input('session-id', 'children'))
-def display_value(session_id):
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    Output(f'task-id-3-5', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-5', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
+    task = eval(f"query_mt_35").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+    return str(task.id)
 
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
+@app.callback(
+    Output(f'task-id-3-6', 'children'),
+    [Input(f'session-id', 'children')],
+    [State(f'task-id-3-6', 'children')])
+def start_task_callback(session_id, task_id):
+    # Don't touch this:
+    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-
-        fig6 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=False, nonlinear_pval=True, img_file_name=None, website=True)
-    except Exception as e:
-        df = None
-
+    # Put search function in the queue and return task id
+    # (arguments must always be passed as a list)
+    slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig6),
-        ]
-    else:
-        ret_val = dhc.Div([])
+    task = eval(f"query_mt_36").apply_async([session_id])
+    # don't touch this:
+    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+    return str(task.id)
 
-    return ret_val
