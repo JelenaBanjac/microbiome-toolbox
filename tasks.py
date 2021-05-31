@@ -40,7 +40,7 @@ def slogger(origin, message):
 # Initialize Celery - you don't need to change anything here:
 from celery import Celery
 #redis_url = "redis://0.0.0.0:6379" # os.environ['REDIS_URL']
-local = True
+local = False
 if local:
     redis_url = os.getenv('REDIS_URL', 'redis://0.0.0.0:6379') 
 else:
