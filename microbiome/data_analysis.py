@@ -13,6 +13,7 @@ import plotly.express as px
 from itertools import combinations 
 from microbiome.statistical_analysis import regliner
 from ipywidgets import FloatSlider, ColorPicker, VBox, jslink
+import gc
 
 ### PLOTLY ###
 def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size=1, time_unit_name="days", nice_name=lambda x: x, file_name=None, height=1900, width=1500, website=False):
@@ -65,6 +66,10 @@ def dataset_bacteria_abundances(df_all, bacteria_names, num_cols, time_unit_size
 
     if not website:
         fig.show()
+
+    plt.clf()
+    del df, df_all
+    gc.collect()
 
     return fig
 
@@ -190,6 +195,10 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
     if file_name:
         fig.write_html(file_name)
 
+    plt.clf()
+    del df, df1, df_all
+    gc.collect()
+
     return fig
 
 
@@ -302,6 +311,10 @@ def plot_bacteria_abundance_heatmaps(df, bacteria_names, short_bacteria_name=lam
     if not website:
         fig.show()
         fig2.show()
+
+    plt.clf()
+    del df, df_heatmap, df_heatmap_pivot, _df
+    gc.collect()
     
     return fig, fig2
 
@@ -374,6 +387,10 @@ def plot_ultradense_longitudinal_data(df, infants_to_plot, cols_num, min_days, m
 
     if not website:
         fig.show()
+
+    plt.clf()
+    del df, df1
+    gc.collect()
         
     return fig
 

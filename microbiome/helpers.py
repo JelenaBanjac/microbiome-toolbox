@@ -5,6 +5,7 @@ from shap.plots._force_matplotlib import draw_additive_plot
 import shap
 import pandas as pd
 import plotly.graph_objects as go
+import gc
 
 
 def df2vectors(_df, feature_cols=None):
@@ -237,7 +238,8 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
 
         output = dict(top_features_list=list(X_train.columns[np.argsort(np.abs(shap_values[0]).mean(0))])[::-1],
                       accuracy=acc)
-
+        del df
+        gc.collect()
         return output
     else:
         if style == "dot":
@@ -260,7 +262,9 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
             
 
             img_src = plot_confusion_matrix(cm_test, ['other', 'reference'], "Confusion matrix")
-
+            plt.clf()
+            del df
+            gc.collect()
             return fig, img_src, ret_val
 
         elif style == "hist":
@@ -282,5 +286,7 @@ def two_groups_analysis(df_all, feature_cols, references_we_compare, test_size=0
                             title_text="Classification Important Features")
 
             img_src = plot_confusion_matrix(cm_test, ['other', 'reference'], "Confusion matrix")
-
+            plt.clf()
+            del df
+            gc.collect()
             return fig, img_src, ret_val

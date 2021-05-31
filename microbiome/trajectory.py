@@ -25,6 +25,7 @@ import plotly.express as px
 from itertools import combinations 
 from plotly.subplots import make_subplots
 from sklearn.model_selection import GridSearchCV
+import gc
 
 
 def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_for_fit, save=False, file_name=None):
@@ -181,7 +182,9 @@ def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_
 
             for line in filecontents:
                 important_features.append(line[:-1])
-                
+    plt.clf()
+    del df
+    gc.collect()
     return important_features
 
 def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_thresholds=None):
@@ -300,7 +303,9 @@ def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_threshol
     constant_columns = [column for column in feature_cols if column not in feature_cols[np.where(constant_filter.get_support())[0]]]
     feature_cols_new = list(set(feature_cols) - set(constant_columns))
     print(f"Number of features left after removing features with variance {nzv_threshold} or smaller: {len(feature_cols_new)}/{len(feature_cols)}")
-
+    plt.clf()
+    del df
+    gc.collect()
     return feature_cols_new
 
 def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, correlation_thresholds=None):
@@ -427,7 +432,9 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
     feature_cols_new = list(set(feature_cols)-correlated_features)
     
     print(f"Number of features left after removing features with correlation {correlation_threshold}: {len(feature_cols_new)}/{len(feature_cols)}")
-
+    plt.clf()
+    del df
+    gc.collect()
     return feature_cols_new
 
 def train(df, feature_cols, Regressor, parameters, param_grid, n_splits, file_name=None):
@@ -446,6 +453,8 @@ def train(df, feature_cols, Regressor, parameters, param_grid, n_splits, file_na
     if file_name:
         estimator.save_model(file_name)
 
+    del df
+    gc.collect()
     return estimator
 
 def get_pvalue_regliner(df, group):
@@ -857,6 +866,10 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
     
     if not website:
         fig.show()
+
+    plt.clf()
+    del df
+    gc.collect()
     
     return fig, mae, r2, pi_median
 
@@ -1072,7 +1085,9 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                     hoveron="points"
                 ))
     
-    
+    plt.clf()
+    del df
+    gc.collect()
     return fig, ret_val, mae, r2, pi_median, x2, pi, y2
 
 def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", 
@@ -1241,6 +1256,9 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
     if not website:
         fig.show()
     
+    plt.clf()
+    del df
+    gc.collect()
     return fig
 
 

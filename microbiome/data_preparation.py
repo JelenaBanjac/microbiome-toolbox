@@ -97,7 +97,9 @@ def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2, plot=True):
 
     if plot:
         plt.show()
-    
+    plt.clf()
+    del df
+    gc.collect()
     return outliers_below, outliers_above
 
 
@@ -135,6 +137,9 @@ def find_best_reference_with_least_crossings(df, feature_columns, nice_name=lamb
     
     file_name = f"{file_directory}/crossings.xls" or "crossings.xls"
     results.to_csv(file_name, sep="\t", index=False)
+    plt.clf()
+    del df
+    gc.collect()
     return results
     
 
@@ -287,6 +292,9 @@ def plot_shap_abundances_and_ratio(df, important_features, bacteria_name, nice_n
     plt.clf()
     plt.close()
 
+    del df
+    gc.collect()
+
     return total_num_of_crossings1, total_num_of_crossings2, mae, r2
 
 
@@ -310,6 +318,9 @@ def update_reference_group_with_novelty_detection(df_all, feature_columns, local
     
     df.loc[df["reference_group"]==False, "reference_group"] = y_test==1
     
+    plt.clf()
+    del df, df_all
+    gc.collect()
     return df["reference_group"].values
 
 
@@ -387,5 +398,9 @@ def gridsearch_novelty_detection_parameters(df_all, parameter_name, parameter_va
     fig.update_layout()
     if not website:
         fig.show()
+
+    plt.clf()
+    del df, df_all
+    gc.collect()
         
     return df_stats, fig
