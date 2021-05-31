@@ -23,6 +23,7 @@ import numpy as np
 import pickle
 from sklearn.model_selection import GroupShuffleSplit
 from microbiome.data_preparation import *
+import gc
 
 from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
@@ -308,7 +309,8 @@ def check_dataframe_validity(df):
         ret_val_err += "group\n"
     if "reference_group" not in df.columns.tolist():
         ret_val_err += "reference_group\n"
-
+    del df
+    gc.collect()
     return ret_val_err
 
 
@@ -322,6 +324,9 @@ def write_dataframe(session_id, df):
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.pickle")
     print('\nCalling write_dataframe', filename)
     df.to_pickle(filename)
+
+    del df
+    gc.collect()
 
 def write_dataset_settings(session_id, settings):
     filename = os.path.join(UPLOAD_FOLDER_ROOT, f"{session_id}.txt")
@@ -464,7 +469,7 @@ def classification_split(dfa, test_size):
     return df
 
 def reference_group_definition(dfa, ref_group_choice):
-    df = dfa.copy(deep=True)
+    df = dfa.copy()
     df.sampleID = df.sampleID.astype(str)
     df.subjectID = df.subjectID.astype(str)
 
@@ -732,6 +737,8 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
 
     print("filename", filename)
     print("upload_infobox", upload_infobox)
+    del df
+    gc.collect()
     return upload_infobox, dataset_settings, methods, filename
 
 

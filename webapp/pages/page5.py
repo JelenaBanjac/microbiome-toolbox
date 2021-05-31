@@ -137,7 +137,8 @@ def display_value(session_id):
     
     if df is None:
         return dhc.Div(dbc.Alert(["You refreshed the page or were idle for too long so data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
-
+    del df
+    gc.collect()
     return page_content
 
 

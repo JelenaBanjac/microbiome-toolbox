@@ -22,6 +22,7 @@ from microbiome.helpers import get_bacteria_names
 from microbiome.data_analysis import *
 from sklearn import decomposition
 import dash_table
+import gc
 
 # This is a very simple function for logging messages in a Terminal in near-realtime from a web application
 
@@ -39,7 +40,11 @@ def slogger(origin, message):
 # Initialize Celery - you don't need to change anything here:
 from celery import Celery
 #redis_url = "redis://0.0.0.0:6379" # os.environ['REDIS_URL']
-redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')  #os.getenv('REDIS_URL', 'redis://localhost:6379')
+local = True
+if local:
+    redis_url = os.getenv('REDIS_URL', 'redis://0.0.0.0:6379') 
+else:
+    redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379') 
 
 slogger('tasks.py', 'declare celery_app: redis_url={}'.format(redis_url))
 celery_app = Celery('query', backend=redis_url, broker=redis_url, 
@@ -126,6 +131,8 @@ def query_mt_30(self, session_id):
         ret_val = dhc.Div([])
     
     print(ret_val)
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 3.0.')
     return ret_val
@@ -190,6 +197,8 @@ def query_mt_31(self, session_id):
     else:
         ret_val = dhc.Div([])
     
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results  3.1.')
     return ret_val
@@ -253,6 +262,9 @@ def query_mt_32(self, session_id):
     else:
         ret_val = dhc.Div([])
     
+    del df
+    gc.collect()
+
     # Return results for display
     slogger('query', 'return results  3.2.')
     return ret_val
@@ -314,7 +326,8 @@ def query_mt_33(self, session_id):
         ]
     else:
         ret_val = dhc.Div([])
-
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 3.3.')
     return ret_val
@@ -378,6 +391,9 @@ def query_mt_34(self, session_id):
     else:
         ret_val = dhc.Div([])
 
+    del df
+    gc.collect()
+
     # Return results for display
     slogger('query', 'return results 3.4.')
     return ret_val
@@ -439,6 +455,8 @@ def query_mt_35(self, session_id):
     else:
         ret_val = dhc.Div([])
 
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 3.5.')
     return ret_val
@@ -500,6 +518,8 @@ def query_mt_36(self, session_id):
     else:
         ret_val = dhc.Div([])
 
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 3.6.')
     return ret_val
@@ -563,7 +583,8 @@ def query_mt_60(self, session_id):
                     dhc.Br(),dhc.Br(),
                     dhc.Div(id="graph2-info"),
                     ]
-
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 6.0.')
     return ret_val
@@ -670,7 +691,8 @@ def query_mt_20(self, session_id):
         ]
     else:
         ret_val = dhc.Div([])
-    
+    del df
+    gc.collect()
     print(ret_val)
     # Return results for display
     slogger('query', 'return results 3.0.')
@@ -717,6 +739,8 @@ def query_mt_21(self, session_id):
             dcc.Graph(figure=fig),
             dhc.Br(),
         ]
+    del df
+    gc.collect()
 
     # Return results for display
     slogger('query', 'return results query_mt_21')
@@ -755,6 +779,8 @@ def query_mt_22(self, session_id):
             dcc.Graph(figure=fig),
             dhc.Br(),
         ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results query_mt_22')
     return ret_val
@@ -794,6 +820,8 @@ def query_mt_23(self, session_id):
             dhc.Div([dcc.Graph(figure=fig1), dcc.Graph(figure=fig2)]),
             dhc.Br(),
         ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results query_mt_23')
     return ret_val
@@ -869,6 +897,8 @@ def query_mt_24(self, session_id):
             dcc.Graph(figure=fig),
             dhc.Br(),
         ]
+    del df
+    gc.collect()
 
     # Return results for display
     slogger('query', 'return results query_mt_25')
@@ -904,7 +934,8 @@ def query_mt_25(self, session_id):
             dcc.Graph(figure=fig),
             dhc.Br(),
         ]
-
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results query_mt_26')
     return ret_val
@@ -940,7 +971,8 @@ def query_mt_26(self, session_id):
             dcc.Graph(figure=fig),
             dhc.Br(),
         ]
-
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results query_mt_27')
     return ret_val
@@ -979,7 +1011,8 @@ def query_mt_27(self, session_id):
             dhc.Div(id="graph-info"),
             dhc.Br(),
         ]
-
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results query_mt_28')
     return ret_val
@@ -1039,6 +1072,8 @@ def query_mt_40(self, session_id):
                     dcc.Graph(figure=fig),
                     dhc.Br(),
                     ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 6.0.')
     return ret_val
@@ -1096,6 +1131,8 @@ def query_mt_50(self, session_id):
         ret_val =  [
                     dcc.Graph(figure=fig),
                     ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 6.0.')
     return ret_val
@@ -1162,6 +1199,8 @@ def query_mt_51(self, session_id):
         ret_val =  [
                     dcc.Graph(figure=fig),
                     ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 6.0.')
     return ret_val
@@ -1226,6 +1265,8 @@ def query_mt_52(self, session_id):
         ret_val =  [
                     dcc.Graph(figure=fig),
                     ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 6.0.')
     return ret_val
@@ -1334,6 +1375,8 @@ def query_mt_53(self, session_id):
         statistics_part,
         dhc.Br(),dhc.Br(),
     ]
+    del df
+    gc.collect()
     # Return results for display
     slogger('query', 'return results 6.0.')
     return ret_val

@@ -14,6 +14,7 @@ import sys
 from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names, two_groups_analysis
 import dash_table
+import gc
 
 from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
@@ -137,6 +138,8 @@ def display_value(session_id):
     if df is None:
         return dhc.Div(dbc.Alert(["You refreshed the page or were idle for too long so data got lost. Please go ", dcc.Link('back', href='/'), " and upload again."], color="warning"))
 
+    del df
+    gc.collect()
     return page_content
 
 
@@ -168,6 +171,8 @@ def display_value(session_id):
                     ),
             dhc.Br()
             ]
+    del df
+    gc.collect()
     return ret_val
 
 
@@ -236,6 +241,8 @@ def display_value(session_id):
             ]
     except:
         ret_val = dhc.Div("Error in processing, please try again... (return back to main page and enter this one again)")
+    del df
+    gc.collect()
     return ret_val
 
 
@@ -307,5 +314,6 @@ def display_value(session_id):
                     statistics_part,
                     dhc.Br(),dhc.Br(),
                     ]
-
+    del df
+    gc.collect()
     return ret_val
