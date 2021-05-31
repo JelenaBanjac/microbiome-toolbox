@@ -39,7 +39,7 @@ def slogger(origin, message):
 # Initialize Celery - you don't need to change anything here:
 from celery import Celery
 #redis_url = "redis://0.0.0.0:6379" # os.environ['REDIS_URL']
-redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
+redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
 
 slogger('tasks.py', 'declare celery_app: redis_url={}'.format(redis_url))
 celery_app = Celery('query', backend=redis_url, broker=redis_url, 
