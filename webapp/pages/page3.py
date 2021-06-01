@@ -31,7 +31,7 @@ layout = dhc.Div([
 
                         dhc.H3("Microbiome Trajectory"),
                         dhc.Br(),
-                        dcc.Markdown('''
+                        dcc.Markdown(''' 
                         * Data handling (hunting for the plateau of performance reached, so we can use less number of features):  
                             - top K important features selection based on the smallest MAE error (i.e. how does trajectory performance looks like when only working with top 5 or top 10 bacteria used for the model)  
                             - remove near zero variance features  
