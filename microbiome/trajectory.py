@@ -4,22 +4,16 @@ from pickle import FALSE
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
-from matplotlib.lines import Line2D
-import seaborn as sns
 from catboost import Pool
 from sklearn.model_selection import cross_val_score,cross_val_predict
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import r2_score
 from sklearn.feature_selection import VarianceThreshold
-import statsmodels.api as sm
 import scipy.stats as stats
 import scipy as sp
 import pathlib
-import shap
-from microbiome.variables import *
 from microbiome.helpers import df2vectors
-from microbiome.statistical_analysis import *
+from microbiome.statistical_analysis import regliner, permuspliner
 import plotly.graph_objects as go
 import plotly.express as px
 from itertools import combinations 
@@ -183,6 +177,7 @@ def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_
             for line in filecontents:
                 important_features.append(line[:-1])
     plt.clf()
+    plt.close('all')
     del df
     gc.collect()
     return important_features
@@ -304,6 +299,7 @@ def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_threshol
     feature_cols_new = list(set(feature_cols) - set(constant_columns))
     print(f"Number of features left after removing features with variance {nzv_threshold} or smaller: {len(feature_cols_new)}/{len(feature_cols)}")
     plt.clf()
+    plt.close('all')
     del df
     gc.collect()
     return feature_cols_new
@@ -433,6 +429,7 @@ def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, corre
     
     print(f"Number of features left after removing features with correlation {correlation_threshold}: {len(feature_cols_new)}/{len(feature_cols)}")
     plt.clf()
+    plt.close('all')
     del df
     gc.collect()
     return feature_cols_new
@@ -868,6 +865,7 @@ def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, line
         fig.show()
 
     plt.clf()
+    plt.close('all')
     del df
     gc.collect()
     
@@ -1086,6 +1084,7 @@ def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_s
                 ))
     
     plt.clf()
+    plt.close('all')
     del df
     gc.collect()
     return fig, ret_val, mae, r2, pi_median, x2, pi, y2
@@ -1257,6 +1256,7 @@ def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plate
         fig.show()
     
     plt.clf()
+    plt.close('all')
     del df
     gc.collect()
     return fig

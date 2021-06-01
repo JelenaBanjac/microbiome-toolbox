@@ -1,7 +1,4 @@
-import io
 import base64
-import html
-from shap.plots._force_matplotlib import draw_additive_plot
 import shap
 import pandas as pd
 import plotly.graph_objects as go
@@ -58,7 +55,6 @@ import itertools
 from io import BytesIO
 
 def fig_to_uri(in_fig, close_all=True, **save_args):
-    # type: (plt.Figure) -> str
     """
     Save a figure as a URI
     :param in_fig:

@@ -8,17 +8,26 @@ import pandas as pd
 import os
 import numpy as np
 import sys
-import dash_table
-from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names
-from microbiome.postprocessing import *
-from microbiome.longitudinal_anomaly_detection import *
-from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
-import dash_dangerously_set_inner_html
+from microbiome.postprocessing import outlier_intervention, plot_importance_boxplots_over_age
+from microbiome.trajectory import train
+from microbiome.variables import Regressor, param_grid, parameters
 from celery.result import AsyncResult
-from tasks import *
+from tasks import query_mt_60, celery_app
+from index import app, UPLOAD_FOLDER_ROOT, loading_img
+import gc
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+
+def slogger(origin, message):
+    """Log a message in the Terminal
+    Args:
+        str: The origin of the message, e.g. the name of a function
+        str: The message itself, e.g. 'Query the database'
+    Returns:
+        None
+    """
+    print('\033[94m[SLOG] \u001b[36m|  \033[1m\u001b[33m{} \u001b[0m{}'.format(origin.upper(), message))
+    sys.stdout.flush()
 
 
 layout = dhc.Div([

@@ -2,18 +2,11 @@ import matplotlib
 matplotlib.use('agg')
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score,cross_val_predict
+from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import GroupKFold
-from scipy.stats import pearsonr
 import seaborn as sns
-from microbiome.helpers import *
+from microbiome.helpers import two_groups_analysis, df2vectors
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D 
@@ -23,14 +16,11 @@ from sklearn.model_selection import GroupKFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import r2_score
 from sklearn.model_selection import GroupKFold
-from sklearn.model_selection import GroupShuffleSplit
 from catboost import CatBoostRegressor
 import pandas as pd
-import scipy as sp
-import scipy.stats as stats
 import seaborn as sns
+import gc
 
-from sklearn.neighbors import KNeighborsClassifier
 
 def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2, plot=True):
     df = df_all.copy()

@@ -6,10 +6,9 @@ from scipy.stats import ttest_ind, sem
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-from scipy.stats import ttest_rel, wilcoxon, ttest_ind, spearmanr, pearsonr, t
+from scipy.stats import ttest_ind
 from skbio.stats.composition import multiplicative_replacement
 from scipy.stats import ttest_ind
-import plotly.express as px
 
 
 def plot_abundances_and_log(b1, b2, rmp_data, nice_name):

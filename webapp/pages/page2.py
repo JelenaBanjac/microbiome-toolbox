@@ -1,7 +1,4 @@
 import sys
-from dash_core_components.Markdown import Markdown
-
-from dash_html_components.Mark import Mark
 sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -12,15 +9,13 @@ import plotly.graph_objects as go
 import pandas as pd
 import os
 import numpy as np
-from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names
-from microbiome.data_analysis import *
-from ipywidgets import widgets
-
+from microbiome.data_analysis import (plot_bacteria_abundance_heatmaps, 
+dataset_bacteria_abundances, sampling_statistics, plot_ultradense_longitudinal_data, embedding,
+embeddings_interactive_selection_notebook, two_groups_analysis)
 import dash
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img #, INTERVAL, MAX_INTERVALS
-from sklearn import (manifold, datasets, decomposition, ensemble,
-                     discriminant_analysis, random_projection, neighbors)
+from index import app, UPLOAD_FOLDER_ROOT, loading_img 
+from sklearn import decomposition
 
 INTERVAL = 1000
 MAX_INTERVALS = 5
@@ -37,7 +32,7 @@ layout = dhc.Div([
                         dcc.Markdown('''
                         Some of the methods for data analysis and exploration provided are:
                         - Sampling statistics
-                        - Heatmap of taxa abundances w.r.t. time
+                        # - Heatmap of taxa abundances w.r.t. time
                         - Taxa abundance errorbars
                         - Dense longitudinal data
                         - Shannon diversity index and Simpson dominance index

@@ -1,22 +1,18 @@
 import sys
-
-from dash_core_components.Markdown import Markdown
-sys.path.append("/home/jelena/Desktop/microbiome-toolbox")
-
+sys.path.append("../..")
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import pandas as pd
 import os
 import numpy as np
 import sys
-from microbiome.data_preparation import *
-from microbiome.helpers import get_bacteria_names, two_groups_analysis
+from microbiome.data_preparation import gridsearch_novelty_detection_parameters, update_reference_group_with_novelty_detection
+from microbiome.helpers import two_groups_analysis
 import dash_table
 import gc
-
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, UPLOAD_FOLDER_ROOT, loading_img
 
 
 layout = dhc.Div([

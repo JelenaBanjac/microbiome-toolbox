@@ -6,16 +6,12 @@ import numpy as np
 import pandas as pd 
 import itertools
 import seaborn as sns
-import scipy.stats as stats
-import math 
 import pathlib
-from matplotlib.patches import Patch
-import scipy as sp
 from microbiome.helpers import df2vectors
 from microbiome.trajectory import plot_1_trajectory
-from matplotlib.ticker import MaxNLocator
 import plotly.graph_objects as go
 from plotly.tools import mpl_to_plotly
+
 
 def get_top_bacteria_in_time(estimator, df_all, top_bacteria, days_start, days_number_1unit, num_top_bacteria, average=np.median, std=np.std, time_unit_size=1, time_unit_name="days"):  # scipy.stats.hmean
     """

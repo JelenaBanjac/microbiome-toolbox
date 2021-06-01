@@ -4,15 +4,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from microbiome.variables import *
-from microbiome.helpers import *
+from microbiome.variables import col_est, col_fin, col_rus
+from microbiome.helpers import two_groups_analysis
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-
-from itertools import combinations 
-from microbiome.statistical_analysis import regliner
-from ipywidgets import FloatSlider, ColorPicker, VBox, jslink
+from ipywidgets import VBox
 import gc
 
 ### PLOTLY ###
@@ -767,7 +764,6 @@ def embedding(embedding, df_all, feature_columns, embedding_dimension, layout_se
                             mode="markers", 
                             text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs, subjectIDs)],
                             hovertemplate = '%{text}'+
-                                            f'<b>Group ({color_column_name}): {g}</b><br>'+
                                             '<b>x</b>: %{x:.2f}<br>'+
                                             '<b>y</b>: %{y:.2f}<br>'
             ))
@@ -805,7 +801,6 @@ def embedding(embedding, df_all, feature_columns, embedding_dimension, layout_se
                             ), 
                             text=[f'<b>SampleID</b> {i}<br><b>SubjectID</b> {j}<br>' for i,j in zip(sampleIDs, subjectIDs)],
                             hovertemplate = '%{text}'+
-                                            f'<b>Group ({color_column_name}): {g}</b><br>'+
                                             '<b>x</b>: %{x:.2f}<br>'+
                                             '<b>y</b>: %{y:.2f}<br>'
             ))

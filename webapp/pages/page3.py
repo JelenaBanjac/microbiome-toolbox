@@ -8,9 +8,9 @@ import pandas as pd
 import os
 import sys
 from celery.result import AsyncResult
-from tasks import *
-
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from tasks import query_mt_30, query_mt_31, query_mt_35, query_mt_36, celery_app
+from index import app, UPLOAD_FOLDER_ROOT, loading_img
+import gc
 
 def slogger(origin, message):
     """Log a message in the Terminal

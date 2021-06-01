@@ -1,28 +1,22 @@
 import sys
 sys.path.append("../..")
-from microbiome.data_preparation import *
 import time
 import os
-import config
 from index import UPLOAD_FOLDER_ROOT
 import pandas as pd
 
-from microbiome.data_preparation import *
 from microbiome.helpers import get_bacteria_names
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as dhc
 import sys
-from microbiome.postprocessing import *
-from microbiome.data_preparation import *
-from microbiome.longitudinal_anomaly_detection import *
-from microbiome.data_preparation import *
+from microbiome.postprocessing import plot_importance_boxplots_over_age
+from microbiome.longitudinal_anomaly_detection import pi_anomaly_detection, lpf_anomaly_detection, if_anomaly_detection
 from microbiome.helpers import get_bacteria_names
-from microbiome.data_analysis import *
-from sklearn import decomposition
-import dash_table
+from microbiome.helpers import two_groups_analysis
 import gc
+from microbiome.variables import Regressor, param_grid, parameters
 
 # This is a very simple function for logging messages in a Terminal in near-realtime from a web application
 
