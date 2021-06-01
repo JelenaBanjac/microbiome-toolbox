@@ -193,7 +193,7 @@ def sampling_statistics(df_all, group, start_age=0, limit_age=1200, time_unit_si
         fig.write_html(file_name)
 
     plt.clf()
-    plt.clear('all')
+    plt.close('all')
     del df, df1, df_all
     gc.collect()
 
@@ -311,7 +311,7 @@ def plot_bacteria_abundance_heatmaps(df, bacteria_names, short_bacteria_name=lam
         fig2.show()
 
     plt.clf()
-    plt.clear('all')
+    plt.close('all')
     del df, df_heatmap, df_heatmap_pivot, _df
     gc.collect()
     
@@ -388,7 +388,7 @@ def plot_ultradense_longitudinal_data(df, infants_to_plot, cols_num, min_days, m
         fig.show()
 
     plt.clf()
-    plt.clear('all')
+    plt.close('all')
     del df, df1
     gc.collect()
         
@@ -585,7 +585,7 @@ def sampling_statistics_matplotlib(df, train_subjectIDs, val_subjectIDs, test_su
         plt.tight_layout()
         plt.savefig(file_name)
         plt.show()
-        plt.clear('all')
+        plt.close('all')
     else:      
         df1 = df[["subjectID", "age_at_collection", "sampleID"]].sort_values(by=["subjectID", "age_at_collection"])
         df1 = df1.apply(lambda row: fill_in_data_type(row), axis=1)
@@ -636,7 +636,7 @@ def sampling_statistics_matplotlib(df, train_subjectIDs, val_subjectIDs, test_su
         plt.tight_layout()
         plt.savefig(file_name)
         plt.show()
-        plt.clear('all')
+        plt.close('all')
 
 
 def plot_ultradense_longitudinal_data_matplotlib(df, infants_to_plot, cols_num, min_days, max_days, bacteria_names, nice_name=lambda x: x, legend_kw=dict(bbox_to_anchor=(2., 1.05), ncol=2, loc='upper center', fancybox=True, shadow=True)):
@@ -694,7 +694,7 @@ def plot_ultradense_longitudinal_data_matplotlib(df, infants_to_plot, cols_num, 
             _colors_dict[nice_name(k)] = v
 
         plt.legend(_colors_dict, **legend_kw)
-    plt.clear('all')
+    plt.close('all')
 
 
 import plotly.graph_objects as go
@@ -824,7 +824,7 @@ def embedding(embedding, df_all, feature_columns, embedding_dimension, layout_se
     if not website:
         fig.show()
     
-    plt.clear('all')
+    plt.close('all')
     
     return fig
 
@@ -928,7 +928,7 @@ def embeddings_interactive_selection_notebook(df_all, feature_columns, emb, layo
 
     f.data[0].on_selection(selection_fn)
 
-    plt.clear('all')
+    plt.close('all')
 
     # Put everything together
     return VBox((f,t))

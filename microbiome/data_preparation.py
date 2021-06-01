@@ -120,7 +120,7 @@ def find_best_reference_with_least_crossings(df, feature_columns, nice_name=lamb
     results.to_csv(file_name, sep="\t", index=False)
     plt.clf()
 
-    plt.clear('all')
+    plt.close('all')
 
     del df
     gc.collect()
@@ -380,7 +380,7 @@ def gridsearch_novelty_detection_parameters(df_all, parameter_name, parameter_va
 
     plt.clf()
 
-    plt.clear('all')
+    plt.close('all')
 
     del df, df_all
     gc.collect()
