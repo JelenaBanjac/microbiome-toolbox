@@ -32,7 +32,7 @@ layout = dhc.Div([
                         dcc.Markdown('''
                         Some of the methods for data analysis and exploration provided are:
                         - Sampling statistics
-                        # - Heatmap of taxa abundances w.r.t. time
+                        - Heatmap of taxa abundances w.r.t. time
                         - Taxa abundance errorbars
                         - Dense longitudinal data
                         - Shannon diversity index and Simpson dominance index

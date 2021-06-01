@@ -1,8 +1,21 @@
+import matplotlib
+matplotlib.use('agg')
 import base64
 import shap
 import pandas as pd
 import plotly.graph_objects as go
 import gc
+import shap
+from sklearn.ensemble import RandomForestClassifier
+import seaborn as sns
+import matplotlib.pyplot as plt
+from plotly.tools import mpl_to_plotly
+import numpy as np
+from sklearn.model_selection import GroupShuffleSplit
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import confusion_matrix
+import itertools
+from io import BytesIO
 
 
 def df2vectors(_df, feature_cols=None):
@@ -42,17 +55,7 @@ def get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("k__")):
     return list(df.columns[df.columns.map(bacteria_fun)])
 
 
-import shap
-from sklearn.ensemble import RandomForestClassifier
-import seaborn as sns
-import matplotlib.pyplot as plt
-from plotly.tools import mpl_to_plotly
-import numpy as np
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.metrics import plot_confusion_matrix
-from sklearn.metrics import confusion_matrix
-import itertools
-from io import BytesIO
+
 
 def fig_to_uri(in_fig, close_all=True, **save_args):
     """

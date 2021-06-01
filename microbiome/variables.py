@@ -8,10 +8,15 @@ col_fin = "#00A24A"
 alpha   = 0.7
 
 Regressor = RandomForestRegressor
-parameters = {"loss_function": "MAE",
-              "random_state": 42,
-             "verbose":False}
-param_grid = { 'learning_rate': [0.5, 0.1],
-               #"depth": [5, 10],
-               #"iterations": [100, 500, 1000]
-             }
+parameters = {#"loss_function": "MAE",
+                "random_state": 42,}
+param_grid = { 'n_estimators': [50, 100] }
+
+# Regressor = CatBoostRegressor
+# parameters = {"loss_function": "MAE",
+#               "random_state": 42,
+#              "verbose":False}
+# param_grid = { 'learning_rate': [0.5, 0.1],
+#                #"depth": [5, 10],
+#                #"iterations": [100, 500, 1000]
+#              }

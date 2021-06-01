@@ -309,7 +309,7 @@ def update_reference_group_with_novelty_detection(df_all, feature_columns, local
     df.loc[df["reference_group"]==False, "reference_group"] = y_test==1
     
     plt.clf()
-    del df, df_all
+    del df_all
     gc.collect()
     return df["reference_group"].values
 

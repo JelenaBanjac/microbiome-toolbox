@@ -4,7 +4,6 @@ import time
 import os
 from index import UPLOAD_FOLDER_ROOT
 import pandas as pd
-
 from microbiome.helpers import get_bacteria_names
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 import dash_core_components as dcc
@@ -19,7 +18,6 @@ import gc
 from microbiome.variables import Regressor, param_grid, parameters
 
 # This is a very simple function for logging messages in a Terminal in near-realtime from a web application
-
 def slogger(origin, message):
     """Log a message in the Terminal
     Args:
@@ -116,6 +114,7 @@ def query_mt_30(self, session_id):
                                                     start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True)
     except Exception as e:
         df = None
+        raise e
 
     if df is not None:
         ret_val = [
@@ -181,6 +180,7 @@ def query_mt_31(self, session_id):
         fig7,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True, longitudinal_mode="markers+lines");
 
     except Exception as e:
+        raise e
         df = None
 
     
@@ -441,6 +441,7 @@ def query_mt_35(self, session_id):
         fig5 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=True, nonlinear_pval=False, img_file_name=None, website=True)
     except Exception as e:
         df = None
+        raise e
 
     if df is not None:
         ret_val =  [
@@ -503,6 +504,7 @@ def query_mt_36(self, session_id):
         fig6 = plot_2_trajectories(estimator, val1, other, feature_cols=bacteria_names, degree=2, plateau_area_start=plateau_area_start, limit_age=limit_age, start_age=0, time_unit_size=time_unit_size, time_unit_name=time_unit_name, linear_pval=False, nonlinear_pval=True, img_file_name=None, website=True)
     except Exception as e:
         df = None
+        raise e
 
     
     if df is not None:
