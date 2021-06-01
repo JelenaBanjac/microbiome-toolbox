@@ -16,6 +16,7 @@ import pathlib
 
 app_dir = os.getcwd()
 UPLOAD_FOLDER_ROOT = os.path.join(app_dir, 'cached_files')
+LOADING_TYPE = "default"
 pathlib.Path(UPLOAD_FOLDER_ROOT).mkdir(parents=True, exist_ok=True)
 
 external_stylesheets = [dbc.themes.COSMO]  #dbc.themes.COSMO

@@ -14,7 +14,7 @@ from microbiome.data_analysis import (plot_bacteria_abundance_heatmaps,
 dataset_bacteria_abundances, sampling_statistics, plot_ultradense_longitudinal_data, embedding,
 embeddings_interactive_selection_notebook, two_groups_analysis)
 import dash
-from index import app, UPLOAD_FOLDER_ROOT, loading_img 
+from index import app, UPLOAD_FOLDER_ROOT, loading_img, LOADING_TYPE 
 from sklearn import decomposition
 
 INTERVAL = 1000
@@ -40,12 +40,12 @@ layout = dhc.Div([
                         ''', style={'textAlign': 'left',}),
 
                         dhc.Div(id="page-2-main"),
-                        dcc.Interval(
-                            id='page-2-main-interval-component',
-                            interval=INTERVAL, # in milliseconds
-                            n_intervals=0,
-                            max_intervals=MAX_INTERVALS
-                        )
+                        # dcc.Interval(
+                        #     id='page-2-main-interval-component',
+                        #     interval=INTERVAL, # in milliseconds
+                        #     n_intervals=0,
+                        #     max_intervals=MAX_INTERVALS
+                        # )
                         
                         
                     ], className="md-4")
@@ -69,26 +69,54 @@ page_content = [
     # Loaded table
     dhc.Hr(),
     dhc.H4("Loaded data table"),
-    dhc.Div(id='page-2-display-value-0', children=loading_img),
-    dhc.Div(id='page-2-display-value-0-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-0', children=loading_img),
+    # dhc.Div(id='page-2-display-value-0-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-0",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-0'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 
     # Abundance plot in general
     dhc.Hr(),
     dhc.H4("Taxa Abundances"),
-    dhc.Div(id='page-2-display-value-1', children=loading_img),
-    dhc.Div(id='page-2-display-value-1-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-1', children=loading_img),
+    # dhc.Div(id='page-2-display-value-1-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-1",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-1'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
     
     # Sampling statistics
     dhc.Hr(),
     dhc.H4("Sampling Statistics"),
-    dhc.Div(id='page-2-display-value-2', children=loading_img),
-    dhc.Div(id='page-2-display-value-2-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-2', children=loading_img),
+    # dhc.Div(id='page-2-display-value-2-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-2",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-2'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
     
     # Heatmap
     dhc.Hr(),
     dhc.H4("Taxa Abundances Heatmap"),
-    dhc.Div(id='page-2-display-value-3', children=loading_img),
-    dhc.Div(id='page-2-display-value-3-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-3', children=loading_img),
+    # dhc.Div(id='page-2-display-value-3-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-3",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-3'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 
     # # Shannon's diversity index and Simpson's dominace
     # dhc.Hr(),
@@ -98,31 +126,60 @@ page_content = [
     # Dense longitudinal data
     dhc.Hr(),
     dhc.H4("Dense Longitudinal Data"),
-    dhc.Div(id='page-2-display-value-5', children=loading_img),
-    dhc.Div(id='page-2-display-value-5-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-5', children=loading_img),
+    # dhc.Div(id='page-2-display-value-5-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-5",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-5'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 
     # Embedding in 2D
     dhc.Hr(),
     dhc.H4("Embedding in 2D space"),
-    dhc.Div(id='page-2-display-value-6', children=loading_img),
-    dhc.Div(id='page-2-display-value-6-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-6', children=loading_img),
+    # dhc.Div(id='page-2-display-value-6-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-6",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-6'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 
     # Embedding in 3D
     dhc.Hr(),
     dhc.H4("Embedding in 3D space"),
-    dhc.Div(id='page-2-display-value-7', children=loading_img),
-    dhc.Div(id='page-2-display-value-7-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-7', children=loading_img),
+    # dhc.Div(id='page-2-display-value-7-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-7",
+        children=[dhc.Div([dhc.Div(id='page-2-display-value-7'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 
     # Embedding in 2D, interactive
     dhc.Hr(),
     dhc.H4("Embedding in 2D space - Interactive Analysis"),
-    dcc.Markdown('''To use an interactive option:   
-    - click on `Lasso Select` on the plot toolbox,  
-    - select the samples you want to group,  
-    - wait for the explainatory information to load (with confusion matrix).  
-    ''', style={'textAlign': 'left',}),
-    dhc.Div(id='page-2-display-value-8', children=loading_img),
-    dhc.Div(id='page-2-display-value-8-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-2-display-value-8', children=loading_img),
+    # dhc.Div(id='page-2-display-value-8-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-2-8",
+        children=[dhc.Div([
+            dcc.Markdown('''To use an interactive option:   
+            - click on `Lasso Select` on the plot toolbox,  
+            - select the samples you want to group,  
+            - wait for the explainatory information to load (with confusion matrix).  
+            ''', style={'textAlign': 'left',}),
+            dhc.Div(id='page-2-display-value-8'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 ]
 
 # cache memoize this and add timestamp as input!
@@ -156,30 +213,30 @@ def display_value(session_id):
 
     return page_content
 
-@app.callback(
-   [Output('page-2-display-value-0', 'children'),
-    Output('page-2-display-value-1', 'children'),
-    Output('page-2-display-value-2', 'children'),
-    Output('page-2-display-value-3', 'children'),
-    Output('page-2-display-value-5', 'children'),
-    Output('page-2-display-value-6', 'children'),
-    Output('page-2-display-value-7', 'children'),
-    Output('page-2-display-value-8', 'children')],
-   [Input('page-2-main-interval-component', 'children'),
-    Input('page-2-display-value-0-hidden', 'children'),
-    Input('page-2-display-value-1-hidden', 'children'),
-    Input('page-2-display-value-2-hidden', 'children'),
-    Input('page-2-display-value-3-hidden', 'children'),
-    Input('page-2-display-value-5-hidden', 'children'),
-    Input('page-2-display-value-6-hidden', 'children'),
-    Input('page-2-display-value-7-hidden', 'children'),
-    Input('page-2-display-value-8-hidden', 'children')])
-def display_value(n, c0, c1, c2, c3, c5, c6, c7, c8):
-    return c0, c1, c2, c3, c5, c6, c7, c8
+# @app.callback(
+#    [Output('page-2-display-value-0', 'children'),
+#     Output('page-2-display-value-1', 'children'),
+#     Output('page-2-display-value-2', 'children'),
+#     Output('page-2-display-value-3', 'children'),
+#     Output('page-2-display-value-5', 'children'),
+#     Output('page-2-display-value-6', 'children'),
+#     Output('page-2-display-value-7', 'children'),
+#     Output('page-2-display-value-8', 'children')],
+#    [Input('page-2-main-interval-component', 'children'),
+#     Input('page-2-display-value-0-hidden', 'children'),
+#     Input('page-2-display-value-1-hidden', 'children'),
+#     Input('page-2-display-value-2-hidden', 'children'),
+#     Input('page-2-display-value-3-hidden', 'children'),
+#     Input('page-2-display-value-5-hidden', 'children'),
+#     Input('page-2-display-value-6-hidden', 'children'),
+#     Input('page-2-display-value-7-hidden', 'children'),
+#     Input('page-2-display-value-8-hidden', 'children')])
+# def display_value(n, c0, c1, c2, c3, c5, c6, c7, c8):
+#     return c0, c1, c2, c3, c5, c6, c7, c8
 
 
 @app.callback(
-    Output('page-2-display-value-0-hidden', 'children'),
+    Output('page-2-display-value-0', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -208,7 +265,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-2-display-value-1-hidden', 'children'),
+    Output('page-2-display-value-1', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -241,7 +298,7 @@ def display_value(session_id):
     return ret_val
 
 @app.callback(
-    Output('page-2-display-value-2-hidden', 'children'),
+    Output('page-2-display-value-2', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -268,7 +325,7 @@ def display_value(session_id):
 
     
 @app.callback(
-    Output('page-2-display-value-3-hidden', 'children'),
+    Output('page-2-display-value-3', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -327,7 +384,7 @@ def display_value(session_id):
 #     return ret_val
 
 @app.callback(
-    Output('page-2-display-value-5-hidden', 'children'),
+    Output('page-2-display-value-5', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -350,7 +407,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-2-display-value-6-hidden', 'children'),
+    Output('page-2-display-value-6', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -374,7 +431,7 @@ def display_value(session_id):
     return ret_val
 
 @app.callback(
-    Output('page-2-display-value-7-hidden', 'children'),
+    Output('page-2-display-value-7', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -400,7 +457,7 @@ def display_value(session_id):
 from IPython.display import display
 
 @app.callback(
-    Output('page-2-display-value-8-hidden', 'children'),
+    Output('page-2-display-value-8', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)

@@ -12,7 +12,7 @@ from microbiome.data_preparation import gridsearch_novelty_detection_parameters,
 from microbiome.helpers import two_groups_analysis
 import dash_table
 import gc
-from index import app, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, UPLOAD_FOLDER_ROOT, loading_img, LOADING_TYPE
 
 
 layout = dhc.Div([
@@ -63,17 +63,33 @@ page_content = [
     # Important features
     dhc.Hr(),
     dhc.H4("Table of Reference Group Samples"),
-    dhc.Div(id='page-1-display-value-0', children=loading_img),
+    dhc.Br(),
+    dcc.Loading(
+        id="loading-1-0",
+        children=[dhc.Div([dhc.Div(id='page-1-display-value-0'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
     
-
     dhc.Hr(),
     dhc.H4("(1) Rest of the samples put into Non-Reference Group"),
-    dhc.Div(id='page-1-display-value-1', children=loading_img),
-    
+    dhc.Br(),
+    dcc.Loading(
+        id="loading-1-1",
+        children=[dhc.Div([dhc.Div(id='page-1-display-value-1'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
+
     dhc.Hr(),
     dhc.H4("(2) Novelty detection with respect to defined Reference Group"),
-    dhc.Div(id='page-1-display-value-2', children=loading_img),
-
+    dhc.Br(),
+    dcc.Loading(
+        id="loading-1-2",
+        children=[dhc.Div([dhc.Div(id='page-1-display-value-2'),])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 ]
 
 # cache memoize this and add timestamp as input!
@@ -235,8 +251,9 @@ def display_value(session_id):
                 statistics_part,
                 dhc.Br(),dhc.Br(),
             ]
-    except:
-        ret_val = dhc.Div("Error in processing, please try again... (return back to main page and enter this one again)")
+    except Exception as e:
+        ret_val = dhc.Div("Error in processing, please try again... (return back to main page and enter this one again). Also try different train-val-test split sizes.")
+        raise e
     del df
     gc.collect()
     return ret_val

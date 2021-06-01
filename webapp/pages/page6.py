@@ -16,7 +16,7 @@ from microbiome.longitudinal_anomaly_detection import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 import dash_dangerously_set_inner_html
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, LOADING_TYPE
 
 
 layout = dhc.Div([
@@ -61,8 +61,15 @@ page_content = [
     # Loaded table
     dhc.Hr(),
     dhc.H4("Select Outlier"),
-    dhc.Div(id='page-6-display-value-0', children=loading_img),
-    # dhc.Div(id='page-6-display-value-0-hidden', hidden=True),
+    # dhc.Div(id='page-6-display-value-0', children=loading_img),
+    # # dhc.Div(id='page-6-display-value-0-hidden', hidden=True),
+    dhc.Br(),
+    dcc.Loading(
+        id="loading-6-0",
+        children=[dhc.Div([dhc.Div(id="page-6-display-value-0")])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 ]
 
 # cache memoize this and add timestamp as input!

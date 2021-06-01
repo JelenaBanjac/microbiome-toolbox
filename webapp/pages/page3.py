@@ -14,7 +14,7 @@ from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 
 from microbiome.variables import *
 
-from index import app, cache, UPLOAD_FOLDER_ROOT
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, LOADING_TYPE
 
 
 layout = dhc.Div([
@@ -50,12 +50,12 @@ layout = dhc.Div([
                         ''', style={'textAlign': 'left',}),
 
                         dhc.Div(id="page-3-main"),
-                        dcc.Interval(
-                            id='page-3-main-interval-component',
-                            interval=10000, # in milliseconds
-                            n_intervals=0,  # start counter
-                            max_intervals=30  #MAX_INTERVALS
-                        ),
+                        # dcc.Interval(
+                        #     id='page-3-main-interval-component',
+                        #     interval=10000, # in milliseconds
+                        #     n_intervals=0,  # start counter
+                        #     max_intervals=30  #MAX_INTERVALS
+                        # ),
                         dhc.Div(id="test"),
                         
                     ], className="md-4")
@@ -84,9 +84,10 @@ page_content = [
     #dhc.Div(id='page-3-display-value-0-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-0",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-0-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-0")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
     dhc.Hr(),
@@ -96,9 +97,10 @@ page_content = [
     # dhc.Div(id='page-3-display-value-1-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-1",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-1-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-1")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
     dhc.Hr(),
@@ -108,9 +110,10 @@ page_content = [
     # dhc.Div(id='page-3-display-value-2-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-2",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-2-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-2")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
     dhc.Hr(),
@@ -120,9 +123,10 @@ page_content = [
     # dhc.Div(id='page-3-display-value-3-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-3",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-3-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-3")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
     dhc.Hr(),
@@ -132,9 +136,10 @@ page_content = [
     # dhc.Div(id='page-3-display-value-4-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-4",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-4-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-4")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
     dhc.Hr(),
@@ -144,9 +149,10 @@ page_content = [
     # dhc.Div(id='page-3-display-value-5-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-5",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-5-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-5")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
     dhc.Hr(),
@@ -156,9 +162,10 @@ page_content = [
     # dhc.Div(id='page-3-display-value-6-hidden', hidden=True),
     dcc.Loading(
         id="loading-3-6",
-        children=[dhc.Div([dhc.Div(id="page-3-display-value-6-hidden")])],
-        type="circle",
+        children=[dhc.Div([dhc.Div(id="page-3-display-value-6")])],
+        type=LOADING_TYPE,
     ),
+    dhc.Br(),
 
     dhc.Br(),
 ]
@@ -216,16 +223,16 @@ def display_value(session_id):
 #     return c0, c1, c2, c3, c4, c5, c6
 
 
-@app.callback(
-    Output('test', 'children'),
-    Input('page-3-main-interval-component', 'n_intervals'))
-def display_value(n_intervals):
-    print("n_intervals", n_intervals)
-    return ""
+# @app.callback(
+#     Output('test', 'children'),
+#     Input('page-3-main-interval-component', 'n_intervals'))
+# def display_value(n_intervals):
+#     print("n_intervals", n_intervals)
+#     return ""
 
 
 @app.callback(
-    Output('page-3-display-value-0-hidden', 'children'),
+    Output('page-3-display-value-0', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -274,7 +281,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-3-display-value-1-hidden', 'children'),
+    Output('page-3-display-value-1', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -324,7 +331,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-3-display-value-2-hidden', 'children'),
+    Output('page-3-display-value-2', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -375,7 +382,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-3-display-value-3-hidden', 'children'),
+    Output('page-3-display-value-3', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -425,7 +432,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-3-display-value-4-hidden', 'children'),
+    Output('page-3-display-value-4', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -476,7 +483,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-3-display-value-5-hidden', 'children'),
+    Output('page-3-display-value-5', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
@@ -525,7 +532,7 @@ def display_value(session_id):
 
 
 @app.callback(
-    Output('page-3-display-value-6-hidden', 'children'),
+    Output('page-3-display-value-6', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)

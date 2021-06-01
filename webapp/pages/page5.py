@@ -13,7 +13,7 @@ from microbiome.postprocessing import *
 from microbiome.trajectory import train
 from microbiome.longitudinal_anomaly_detection import if_anomaly_detection, pi_anomaly_detection, lpf_anomaly_detection
 
-from index import app, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, UPLOAD_FOLDER_ROOT, loading_img, LOADING_TYPE
 
 
 layout = dhc.Div([
@@ -70,30 +70,54 @@ page_content = [
     # Outside Prediction Interval
     dhc.Hr(),dhc.Br(),
     dhc.H4("Outside Prediction Interval"),
-    dhc.Div(id='page-5-display-value-0', children=loading_img),
-    # dhc.Div(id='page-5-display-value-0-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-5-display-value-0', children=loading_img),
+    # # dhc.Div(id='page-5-display-value-0-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-5-0",
+        children=[dhc.Div([dhc.Div(id="page-5-display-value-0")])],
+        type=LOADING_TYPE,
+    ),
     dhc.Br(),
 
     # Low Pass Filter Longitudinal Anomaly Detection
     dhc.Hr(),dhc.Br(),
     dhc.H4("Low Pass Filter Longitudinal Anomaly Detection"),
-    dhc.Div(id='page-5-display-value-1', children=loading_img),
-    # dhc.Div(id='page-5-display-value-1-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-5-display-value-1', children=loading_img),
+    # # dhc.Div(id='page-5-display-value-1-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-5-1",
+        children=[dhc.Div([dhc.Div(id="page-5-display-value-1")])],
+        type=LOADING_TYPE,
+    ),
     dhc.Br(),
     
     # Isolation Forest Longitudinal Anomaly Detection
     dhc.Hr(),dhc.Br(),
     dhc.H4("Isolation Forest Longitudinal Anomaly Detection"),
-    dhc.Div(id='page-5-display-value-2', children=loading_img),
-    # dhc.Div(id='page-5-display-value-2-hidden', hidden=True),
+    dhc.Br(),
+    # dhc.Div(id='page-5-display-value-2', children=loading_img),
+    # # dhc.Div(id='page-5-display-value-2-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-5-2",
+        children=[dhc.Div([dhc.Div(id="page-5-display-value-2")])],
+        type=LOADING_TYPE,
+    ),
     dhc.Br(),
     
     # # All outliers analysis
     dhc.Hr(),dhc.Br(),
     dhc.H4("Outliers analysis"),
-    dhc.Div(id='page-5-display-value-3', children=loading_img),
-    # dhc.Div(id='page-5-display-value-3-hidden', hidden=True),
-    # dhc.Br(),
+    dhc.Br(),
+    # dhc.Div(id='page-5-display-value-3', children=loading_img),
+    # # dhc.Div(id='page-5-display-value-3-hidden', hidden=True),
+    dcc.Loading(
+        id="loading-5-3",
+        children=[dhc.Div([dhc.Div(id="page-5-display-value-3")])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 ]
 
 # cache memoize this and add timestamp as input!

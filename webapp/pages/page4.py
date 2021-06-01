@@ -14,7 +14,7 @@ from microbiome.variables import *
 from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 from microbiome.postprocessing import plot_importance_boxplots_over_age
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, LOADING_TYPE
 
 
 layout = dhc.Div([
@@ -37,12 +37,12 @@ layout = dhc.Div([
                         
                         dhc.Br(),
                         dhc.Div(id="page-4-main"),
-                        dcc.Interval(
-                            id='page-4-main-interval-component',
-                            interval=10000, # in milliseconds
-                            n_intervals=0,  # start counter
-                            max_intervals=5
-                        )
+                        # dcc.Interval(
+                        #     id='page-4-main-interval-component',
+                        #     interval=10000, # in milliseconds
+                        #     n_intervals=0,  # start counter
+                        #     max_intervals=5
+                        # )
                         
 
                     ], className="md-4")
@@ -64,8 +64,15 @@ layout = dhc.Div([
 
 page_content = [
     # Abundance plot in general
-    dhc.Div(id='page-4-display-value-0', children=loading_img),
-    dhc.Div(id='page-4-display-value-0-hidden', hidden=True),
+    # dhc.Div(id='page-4-display-value-0', children=loading_img),
+    # dhc.Div(id='page-4-display-value-0-hidden', hidden=True),
+    dhc.Br(),
+    dcc.Loading(
+        id="loading-4-0",
+        children=[dhc.Div([dhc.Div(id="page-4-display-value-0")])],
+        type=LOADING_TYPE,
+    ),
+    dhc.Br(),
 ]
 
 # cache memoize this and add timestamp as input!
@@ -101,17 +108,17 @@ def display_value(session_id):
     return page_content
 
 
-@app.callback(
-   Output('page-4-display-value-0', 'children'),
-   [Input('page-4-main-interval-component', 'children'),
-    Input('page-4-display-value-0-hidden', 'children')])
-def display_value(n, c0):
-    print("Interval: ", n)
-    return c0
+# @app.callback(
+#    Output('page-4-display-value-0', 'children'),
+#    [Input('page-4-main-interval-component', 'children'),
+#     Input('page-4-display-value-0-hidden', 'children')])
+# def display_value(n, c0):
+#     print("Interval: ", n)
+#     return c0
 
 
 @app.callback(
-    Output('page-4-display-value-0-hidden', 'children'),
+    Output('page-4-display-value-0', 'children'),
     Input('session-id', 'children'))
 def display_value(session_id):
     df = read_dataframe(session_id, None)
