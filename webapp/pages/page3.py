@@ -96,36 +96,36 @@ page_content = [
     dhc.Div(id='page-3-display-value-1'),
     
 
-    dhc.Br(),
-    dhc.Hr(),
-    dhc.H4("Universality: Linear Difference between Group Trajectories"),
-    dhc.Br(),
-    dhc.Div(id='task-id-3-2', children='none', hidden=True),                
-    dhc.Div(id='task-status-3-2', children='task-status-3-2', hidden=True),                
-    dcc.Interval(id='task-interval-3-2', interval=250, n_intervals=0),
-    dhc.Div(id='spinner-3-2', children=loading_img),
-    dhc.Div(id='page-3-display-value-2'),
+    # dhc.Br(),
+    # dhc.Hr(),
+    # dhc.H4("Universality: Linear Difference between Group Trajectories"),
+    # dhc.Br(),
+    # dhc.Div(id='task-id-3-2', children='none', hidden=True),                
+    # dhc.Div(id='task-status-3-2', children='task-status-3-2', hidden=True),                
+    # dcc.Interval(id='task-interval-3-2', interval=250, n_intervals=0),
+    # dhc.Div(id='spinner-3-2', children=loading_img),
+    # dhc.Div(id='page-3-display-value-2'),
     
 
-    dhc.Br(),
-    dhc.Hr(),
-    dhc.H4("Universality: Nonlinear Difference between Group Trajectories"),
-    dhc.Br(),
-    dhc.Div(id='task-id-3-3', children='none', hidden=True),                
-    dhc.Div(id='task-status-3-3', children='task-status-3-3', hidden=True),                
-    dcc.Interval(id='task-interval-3-3', interval=250, n_intervals=0),
-    dhc.Div(id='spinner-3-3', children=loading_img),
-    dhc.Div(id='page-3-display-value-3'),
+    # dhc.Br(),
+    # dhc.Hr(),
+    # dhc.H4("Universality: Nonlinear Difference between Group Trajectories"),
+    # dhc.Br(),
+    # dhc.Div(id='task-id-3-3', children='none', hidden=True),                
+    # dhc.Div(id='task-status-3-3', children='task-status-3-3', hidden=True),                
+    # dcc.Interval(id='task-interval-3-3', interval=250, n_intervals=0),
+    # dhc.Div(id='spinner-3-3', children=loading_img),
+    # dhc.Div(id='page-3-display-value-3'),
     
-    dhc.Br(),
-    dhc.Hr(),
-    dhc.H4("Reference vs. Non-reference Longitudinal Trajectories"),
-    dhc.Br(),
-    dhc.Div(id='task-id-3-4', children='none', hidden=True),                
-    dhc.Div(id='task-status-3-4', children='task-status-3-4', hidden=True),                
-    dcc.Interval(id='task-interval-3-4', interval=250, n_intervals=0),
-    dhc.Div(id='spinner-3-4', children=loading_img),
-    dhc.Div(id='page-3-display-value-4'),
+    # dhc.Br(),
+    # dhc.Hr(),
+    # dhc.H4("Reference vs. Non-reference Longitudinal Trajectories"),
+    # dhc.Br(),
+    # dhc.Div(id='task-id-3-4', children='none', hidden=True),                
+    # dhc.Div(id='task-status-3-4', children='task-status-3-4', hidden=True),                
+    # dcc.Interval(id='task-interval-3-4', interval=250, n_intervals=0),
+    # dhc.Div(id='spinner-3-4', children=loading_img),
+    # dhc.Div(id='page-3-display-value-4'),
     
 
     dhc.Br(),
@@ -184,70 +184,71 @@ def display_value(session_id):
 
 
 for idx in range(7):
-    # Don't touch this:
-    @app.callback(Output(f'task-interval-3-{idx}', 'interval'),
-                [Input(f'task-id-3-{idx}', 'children'),
-                Input(f'task-status-3-{idx}', 'children')])
-    def toggle_interval_speed(task_id, task_status):
-        """This callback is triggered by changes in task-id and task-status divs.  It switches the 
-        page refresh interval to fast (1 sec) if a task is running, or slow (24 hours) if a task is 
-        pending or complete."""
-        if task_id == 'none':
-            slogger('toggle_interval_speed', 'no task-id --> slow refresh')
-            return 24*60*60*1000
-        if task_id != 'none' and (task_status in ['SUCCESS', 'FAILURE']):
-            slogger('toggle_interval_speed', 'task-id is {} and status is {} --> slow refresh'.format(task_id, task_status))
-            return 24*60*60*1000
-        else:
-            slogger('toggle_interval_speed', 'task-id is {} and status is {} --> fast refresh'.format(task_id, task_status))
-            return 1000
+    if idx not in [2, 3, 4]:
+        # Don't touch this:
+        @app.callback(Output(f'task-interval-3-{idx}', 'interval'),
+                    [Input(f'task-id-3-{idx}', 'children'),
+                    Input(f'task-status-3-{idx}', 'children')])
+        def toggle_interval_speed(task_id, task_status):
+            """This callback is triggered by changes in task-id and task-status divs.  It switches the 
+            page refresh interval to fast (1 sec) if a task is running, or slow (24 hours) if a task is 
+            pending or complete."""
+            if task_id == 'none':
+                slogger('toggle_interval_speed', 'no task-id --> slow refresh')
+                return 24*60*60*1000
+            if task_id != 'none' and (task_status in ['SUCCESS', 'FAILURE']):
+                slogger('toggle_interval_speed', 'task-id is {} and status is {} --> slow refresh'.format(task_id, task_status))
+                return 24*60*60*1000
+            else:
+                slogger('toggle_interval_speed', 'task-id is {} and status is {} --> fast refresh'.format(task_id, task_status))
+                return 1000
 
 
-    # Don't touch this:
-    @app.callback(Output(f'spinner-3-{idx}', 'hidden'),
-                [Input(f'task-interval-3-{idx}', 'n_intervals'),
-                Input(f'task-status-3-{idx}', 'children')])
-    def show_hide_spinner(n_intervals, task_status):
-        """This callback is triggered by then Interval clock and checks the task progress
-        via the invisible div 'task-status'.  If a task is running it will show the spinner,
-        otherwise it will be hidden."""
-        if task_status == 'PROGRESS':
-            slogger('show_hide_spinner', 'show spinner')
-            return False
-        else:
-            slogger('show_hide_spinner', 'hide spinner because task_status={}'.format(task_status))
-            return True
+        # Don't touch this:
+        @app.callback(Output(f'spinner-3-{idx}', 'hidden'),
+                    [Input(f'task-interval-3-{idx}', 'n_intervals'),
+                    Input(f'task-status-3-{idx}', 'children')])
+        def show_hide_spinner(n_intervals, task_status):
+            """This callback is triggered by then Interval clock and checks the task progress
+            via the invisible div 'task-status'.  If a task is running it will show the spinner,
+            otherwise it will be hidden."""
+            if task_status == 'PROGRESS':
+                slogger('show_hide_spinner', 'show spinner')
+                return False
+            else:
+                slogger('show_hide_spinner', 'hide spinner because task_status={}'.format(task_status))
+                return True
 
 
-    # Don't touch this:
-    @app.callback(Output(f'task-status-3-{idx}', 'children'),
-                [Input(f'task-interval-3-{idx}', 'n_intervals'),
-                Input(f'task-id-3-{idx}', 'children')])
-    def update_task_status(n_intervals, task_id):
-        """This callback is triggered by the Interval clock and task-id .  It checks the task
-        status in Celery and returns the status to an invisible div"""
-        return str(AsyncResult(task_id, app=celery_app).state)
+        # Don't touch this:
+        @app.callback(Output(f'task-status-3-{idx}', 'children'),
+                    [Input(f'task-interval-3-{idx}', 'n_intervals'),
+                    Input(f'task-id-3-{idx}', 'children')])
+        def update_task_status(n_intervals, task_id):
+            """This callback is triggered by the Interval clock and task-id .  It checks the task
+            status in Celery and returns the status to an invisible div"""
+            return str(AsyncResult(task_id, app=celery_app).state)
 
 
-    @app.callback(
-        Output(f'page-3-display-value-{idx}', 'children'),
-        [Input(f'task-status-3-{idx}', 'children')],
-        [State(f'task-id-3-{idx}', 'children')])
-    def display_value(task_status, task_id):
-        if task_status == 'SUCCESS':
-            # Fetch results from Celery and forget the task
-            slogger('get_results', 'retrieve results for task-id {} from Celery'.format(task_id))
-            result = AsyncResult(task_id, app=celery_app).result    # fetch results
-            forget = AsyncResult(task_id, app=celery_app).forget()  # delete from Celery
-            # Display a message if their were no hits
-            if result == [{}]:
-                return ["We couldn\'t find any results.  Try broadening your search."]
-            # Otherwise return the populated DataTable
-            return result
+        @app.callback(
+            Output(f'page-3-display-value-{idx}', 'children'),
+            [Input(f'task-status-3-{idx}', 'children')],
+            [State(f'task-id-3-{idx}', 'children')])
+        def display_value(task_status, task_id):
+            if task_status == 'SUCCESS':
+                # Fetch results from Celery and forget the task
+                slogger('get_results', 'retrieve results for task-id {} from Celery'.format(task_id))
+                result = AsyncResult(task_id, app=celery_app).result    # fetch results
+                forget = AsyncResult(task_id, app=celery_app).forget()  # delete from Celery
+                # Display a message if their were no hits
+                if result == [{}]:
+                    return ["We couldn\'t find any results.  Try broadening your search."]
+                # Otherwise return the populated DataTable
+                return result
 
-        else:
-            # don't display any results
-            return []
+            else:
+                # don't display any results
+                return []
 
 @app.callback(
     Output(f'task-id-3-0', 'children'),
@@ -283,56 +284,56 @@ def start_task_callback(session_id, task_id):
     slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
     return str(task.id)
 
-@app.callback(
-    Output(f'task-id-3-2', 'children'),
-    [Input(f'session-id', 'children')],
-    [State(f'task-id-3-2', 'children')])
-def start_task_callback(session_id, task_id):
-    # Don't touch this:
-    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+# @app.callback(
+#     Output(f'task-id-3-2', 'children'),
+#     [Input(f'session-id', 'children')],
+#     [State(f'task-id-3-2', 'children')])
+# def start_task_callback(session_id, task_id):
+#     # Don't touch this:
+#     slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    # Put search function in the queue and return task id
-    # (arguments must always be passed as a list)
-    slogger('start_task_callback', 'query accepted and applying to Celery')
+#     # Put search function in the queue and return task id
+#     # (arguments must always be passed as a list)
+#     slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    task = eval(f"query_mt_32").apply_async([session_id])
-    # don't touch this:
-    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
-    return str(task.id)
+#     task = eval(f"query_mt_32").apply_async([session_id])
+#     # don't touch this:
+#     slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+#     return str(task.id)
 
-@app.callback(
-    Output(f'task-id-3-3', 'children'),
-    [Input(f'session-id', 'children')],
-    [State(f'task-id-3-3', 'children')])
-def start_task_callback(session_id, task_id):
-    # Don't touch this:
-    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+# @app.callback(
+#     Output(f'task-id-3-3', 'children'),
+#     [Input(f'session-id', 'children')],
+#     [State(f'task-id-3-3', 'children')])
+# def start_task_callback(session_id, task_id):
+#     # Don't touch this:
+#     slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    # Put search function in the queue and return task id
-    # (arguments must always be passed as a list)
-    slogger('start_task_callback', 'query accepted and applying to Celery')
+#     # Put search function in the queue and return task id
+#     # (arguments must always be passed as a list)
+#     slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    task = eval(f"query_mt_33").apply_async([session_id])
-    # don't touch this:
-    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
-    return str(task.id)
+#     task = eval(f"query_mt_33").apply_async([session_id])
+#     # don't touch this:
+#     slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+#     return str(task.id)
 
-@app.callback(
-    Output(f'task-id-3-4', 'children'),
-    [Input(f'session-id', 'children')],
-    [State(f'task-id-3-4', 'children')])
-def start_task_callback(session_id, task_id):
-    # Don't touch this:
-    slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
+# @app.callback(
+#     Output(f'task-id-3-4', 'children'),
+#     [Input(f'session-id', 'children')],
+#     [State(f'task-id-3-4', 'children')])
+# def start_task_callback(session_id, task_id):
+#     # Don't touch this:
+#     slogger('start_task_callback', 'task_id={}, session_id={}'.format(task_id, session_id))
 
-    # Put search function in the queue and return task id
-    # (arguments must always be passed as a list)
-    slogger('start_task_callback', 'query accepted and applying to Celery')
+#     # Put search function in the queue and return task id
+#     # (arguments must always be passed as a list)
+#     slogger('start_task_callback', 'query accepted and applying to Celery')
     
-    task = eval(f"query_mt_34").apply_async([session_id])
-    # don't touch this:
-    slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
-    return str(task.id)
+#     task = eval(f"query_mt_34").apply_async([session_id])
+#     # don't touch this:
+#     slogger('start_Task_callback', 'query is on Celery, plot=3{} task-id={}'.format(idx, task.id))
+#     return str(task.id)
 
 @app.callback(
     Output(f'task-id-3-5', 'children'),

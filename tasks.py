@@ -204,199 +204,199 @@ def query_mt_31(self, session_id):
     return ret_val
 
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_32(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_32(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
 
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
-    print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
 
-    # Change all of this to whatever you want:
+#     # Change all of this to whatever you want:
 
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#     df = read_dataframe(session_id, None)
+#     bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
+#     if max(df.age_at_collection.values) < 100:
+#         plateau_area_start=None #45
+#         time_unit_size=1
+#         time_unit_name="days"
+#         limit_age = 60
+#     else:
+#         plateau_area_start=None  #700
+#         time_unit_size=30
+#         time_unit_name="months"
+#         limit_age = 750
 
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
+#     try:
+#         estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
 
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-
-        fig2,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", linear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
-
-    
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig2),
-        ]
-    else:
-        ret_val = dhc.Div([])
-    
-    del df
-    gc.collect()
-
-    # Return results for display
-    slogger('query', 'return results  3.2.')
-    return ret_val
+#         # # healthy unseen data - Test-1
+#         # val1 = df[df.classification_dataset_type=="Test-1"]
+#         # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+#         # # unhealthy unseen data - Test2
+#         # val2 =  df[df.classification_dataset_type=="Test-2"]
+#         # healthy unseen data - Test-1
+#         val1 = df[df.dataset_type=="Validation"]
+#         # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         other = df[df.dataset_type=="Test"]
+#         # unhealthy unseen data - Test2
+#         #val2 =  df[df.classification_dataset_type=="Test-2"]
 
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_33(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
-
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
-    print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
-
-    # Change all of this to whatever you want:
-
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-    
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-        fig3,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start,  time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
+#         fig2,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", linear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+#     except Exception as e:
+#         df = None
 
     
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig3),
-        ]
-    else:
-        ret_val = dhc.Div([])
-    del df
-    gc.collect()
-    # Return results for display
-    slogger('query', 'return results 3.3.')
-    return ret_val
-
-
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_34(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
-
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
-    print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
-
-    # Change all of this to whatever you want:
-
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#     if df is not None:
+#         ret_val =  [
+#             dcc.Graph(figure=fig2),
+#         ]
+#     else:
+#         ret_val = dhc.Div([])
     
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start=None #45
-        time_unit_size=1
-        time_unit_name="days"
-        limit_age = 60
-    else:
-        plateau_area_start=None  #700
-        time_unit_size=30
-        time_unit_name="months"
-        limit_age = 750
+#     del df
+#     gc.collect()
 
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type=="Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type=="Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
+#     # Return results for display
+#     slogger('query', 'return results  3.2.')
+#     return ret_val
 
 
-        fig4,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=other, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
-    except Exception as e:
-        df = None
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_33(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
+
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
+
+#     # Change all of this to whatever you want:
+
+#     df = read_dataframe(session_id, None)
+#     bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    
+#     if max(df.age_at_collection.values) < 100:
+#         plateau_area_start=None #45
+#         time_unit_size=1
+#         time_unit_name="days"
+#         limit_age = 60
+#     else:
+#         plateau_area_start=None  #700
+#         time_unit_size=30
+#         time_unit_name="months"
+#         limit_age = 750
+
+#     try:
+#         estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
+
+#         # # healthy unseen data - Test-1
+#         # val1 = df[df.classification_dataset_type=="Test-1"]
+#         # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+#         # # unhealthy unseen data - Test2
+#         # val2 =  df[df.classification_dataset_type=="Test-2"]
+#         # healthy unseen data - Test-1
+#         val1 = df[df.dataset_type=="Validation"]
+#         # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         other = df[df.dataset_type=="Test"]
+#         # unhealthy unseen data - Test2
+#         #val2 =  df[df.classification_dataset_type=="Test-2"]
+
+#         fig3,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group="group", nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start,  time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+#     except Exception as e:
+#         df = None
 
     
-    if df is not None:
-        ret_val =  [
-            dcc.Graph(figure=fig4),
-        ]
-    else:
-        ret_val = dhc.Div([])
+#     if df is not None:
+#         ret_val =  [
+#             dcc.Graph(figure=fig3),
+#         ]
+#     else:
+#         ret_val = dhc.Div([])
+#     del df
+#     gc.collect()
+#     # Return results for display
+#     slogger('query', 'return results 3.3.')
+#     return ret_val
 
-    del df
-    gc.collect()
 
-    # Return results for display
-    slogger('query', 'return results 3.4.')
-    return ret_val
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_34(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
+
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
+
+#     # Change all of this to whatever you want:
+
+#     df = read_dataframe(session_id, None)
+#     bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+    
+#     if max(df.age_at_collection.values) < 100:
+#         plateau_area_start=None #45
+#         time_unit_size=1
+#         time_unit_name="days"
+#         limit_age = 60
+#     else:
+#         plateau_area_start=None  #700
+#         time_unit_size=30
+#         time_unit_name="months"
+#         limit_age = 750
+
+#     try:
+#         estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor, parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
+
+#         # # healthy unseen data - Test-1
+#         # val1 = df[df.classification_dataset_type=="Test-1"]
+#         # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+#         # # unhealthy unseen data - Test2
+#         # val2 =  df[df.classification_dataset_type=="Test-2"]
+#         # healthy unseen data - Test-1
+#         val1 = df[df.dataset_type=="Validation"]
+#         # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         other = df[df.dataset_type=="Test"]
+#         # unhealthy unseen data - Test2
+#         #val2 =  df[df.classification_dataset_type=="Test-2"]
+
+
+#         fig4,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=other, group=None, nonlinear_difference=True, start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True);
+#     except Exception as e:
+#         df = None
+
+    
+#     if df is not None:
+#         ret_val =  [
+#             dcc.Graph(figure=fig4),
+#         ]
+#     else:
+#         ret_val = dhc.Div([])
+
+#     del df
+#     gc.collect()
+
+#     # Return results for display
+#     slogger('query', 'return results 3.4.')
+#     return ret_val
 
 
 @celery_app.task(bind=True, serializer='pickle')
@@ -592,8 +592,115 @@ def query_mt_60(self, session_id):
 ########################################
 
 
+# # @celery_app.task(bind=True, serializer='pickle')
+# # def query_mt_20(self, session_id):
+# #     task_id = self.request.id
+# #     slogger('query', 'query in progress, task_id={}'.format(task_id))
+# #     # Don't touch this:
+# #     self.update_state(state='PROGRESS')
+# #     # a short dwell is necessary for other async processes to catch-up
+# #     time.sleep(1.5)
+
+# #     # read arguments
+# #     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+   
+# #     # Change all of this to whatever you want:
+# #     df = read_dataframe(session_id, None)
+
+# #     ret_val = dhc.Div([])
+# #     if df is not None:
+# #         ret_val =  [
+            
+# #             dash_table.DataTable(
+# #                         id='upload-datatable',
+# #                         columns=[{"name": i, "id": i} for i in df.columns],
+# #                         data=df.to_dict('records'),
+# #                         style_data={
+# #                             'width': '{}%'.format(max(df.columns, key=len)),
+# #                             'minWidth': '50px',
+# #                             'maxWidth': '500px',
+# #                         },
+# #                         style_table={
+# #                             'height': 300, 
+# #                             'overflowX': 'auto'
+# #                         }  
+# #                     ),
+# #             dhc.Br()
+# #             ]
+
+# #     # Return results for display
+# #     slogger('query', 'return results query_mt_20')
+# #     return ret_val
+
+
 # @celery_app.task(bind=True, serializer='pickle')
 # def query_mt_20(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
+
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
+
+#     # Change all of this to whatever you want:
+
+#     df = read_dataframe(session_id, None)
+#     bacteria_names = get_bacteria_names(
+#         df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+
+#     if max(df.age_at_collection.values) < 100:
+#         plateau_area_start = None  # 45
+#         time_unit_size = 1
+#         time_unit_name = "days"
+#         limit_age = 60
+#     else:
+#         plateau_area_start = None  # 700
+#         time_unit_size = 30
+#         time_unit_name = "months"
+#         limit_age = 750
+
+#     try:
+#         estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor,
+#                           parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
+
+#         # # healthy unseen data - Test-1
+#         # val1 = df[df.classification_dataset_type=="Test-1"]
+#         # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
+#         # # unhealthy unseen data - Test2
+#         # val2 =  df[df.classification_dataset_type=="Test-2"]
+#         # healthy unseen data - Test-1
+#         val1 = df[df.dataset_type == "Validation"]
+#         # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
+#         other = df[df.dataset_type == "Test"]
+#         # unhealthy unseen data - Test2
+#         #val2 =  df[df.classification_dataset_type=="Test-2"]
+
+#         fig1,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True,
+#                                                     start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True)
+#     except Exception as e:
+#         df = None
+
+#     if df is not None:
+#         ret_val = [
+#             dcc.Graph(figure=fig1),
+#         ]
+#     else:
+#         ret_val = dhc.Div([])
+#     del df
+#     gc.collect()
+#     print(ret_val)
+#     # Return results for display
+#     slogger('query', 'return results 3.0.')
+#     return ret_val
+
+
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_21(self, session_id):
 #     task_id = self.request.id
 #     slogger('query', 'query in progress, task_id={}'.format(task_id))
 #     # Don't touch this:
@@ -609,224 +716,159 @@ def query_mt_60(self, session_id):
 
 #     ret_val = dhc.Div([])
 #     if df is not None:
-#         ret_val =  [
+        
+        
+#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         print("BACTERIA", bacteria_names)
+#         nice_name = lambda x: x[9:].replace("_", " ")
+
+#         if max(df.age_at_collection.values) < 100:
+#             time_unit_name="days"
+#             time_unit_size=1
+#         else:
+#             time_unit_name="months"
+#             time_unit_size=30
+        
+#         num_cols = 3
+#         total_num_rows = len(bacteria_names)//num_cols+1
+
+#         fig = dataset_bacteria_abundances(df, bacteria_names, time_unit_size=time_unit_size, time_unit_name=time_unit_name, num_cols=num_cols, nice_name=nice_name, file_name=None, width=1200, height=200*total_num_rows, website=True)
+        
+#         ret_val = [
             
-#             dash_table.DataTable(
-#                         id='upload-datatable',
-#                         columns=[{"name": i, "id": i} for i in df.columns],
-#                         data=df.to_dict('records'),
-#                         style_data={
-#                             'width': '{}%'.format(max(df.columns, key=len)),
-#                             'minWidth': '50px',
-#                             'maxWidth': '500px',
-#                         },
-#                         style_table={
-#                             'height': 300, 
-#                             'overflowX': 'auto'
-#                         }  
-#                     ),
-#             dhc.Br()
-#             ]
+#             dcc.Graph(figure=fig),
+#             dhc.Br(),
+#         ]
+#     del df
+#     gc.collect()
 
 #     # Return results for display
-#     slogger('query', 'return results query_mt_20')
+#     slogger('query', 'return results query_mt_21')
 #     return ret_val
 
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_22(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_20(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
-
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
-    print(f"session_id --- cekery app {session_id} {UPLOAD_FOLDER_ROOT}")
-
-    # Change all of this to whatever you want:
-
-    df = read_dataframe(session_id, None)
-    bacteria_names = get_bacteria_names(
-        df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-
-    if max(df.age_at_collection.values) < 100:
-        plateau_area_start = None  # 45
-        time_unit_size = 1
-        time_unit_name = "days"
-        limit_age = 60
-    else:
-        plateau_area_start = None  # 700
-        time_unit_size = 30
-        time_unit_name = "months"
-        limit_age = 750
-
-    try:
-        estimator = train(df, feature_cols=bacteria_names, Regressor=Regressor,
-                          parameters=parameters, param_grid=param_grid, n_splits=2, file_name=None)
-
-        # # healthy unseen data - Test-1
-        # val1 = df[df.classification_dataset_type=="Test-1"]
-        # # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        # other = df[df.classification_dataset_type.isin(["Train-2","Test-2"])]
-        # # unhealthy unseen data - Test2
-        # val2 =  df[df.classification_dataset_type=="Test-2"]
-        # healthy unseen data - Test-1
-        val1 = df[df.dataset_type == "Validation"]
-        # unhealthy unseen data - Test2 & unhealthy seen data - Train-2
-        other = df[df.dataset_type == "Test"]
-        # unhealthy unseen data - Test2
-        #val2 =  df[df.classification_dataset_type=="Test-2"]
-
-        fig1,  mae, r2, pi_median = plot_trajectory(estimator=estimator, df=val1, feature_cols=bacteria_names, df_other=None, group=None, nonlinear_difference=True,
-                                                    start_age=0, limit_age=limit_age, plateau_area_start=plateau_area_start, time_unit_size=time_unit_size, time_unit_name=time_unit_name, website=True)
-    except Exception as e:
-        df = None
-
-    if df is not None:
-        ret_val = [
-            dcc.Graph(figure=fig1),
-        ]
-    else:
-        ret_val = dhc.Div([])
-    del df
-    gc.collect()
-    print(ret_val)
-    # Return results for display
-    slogger('query', 'return results 3.0.')
-    return ret_val
-
-
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_21(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
-
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
+#     # Change all of this to whatever you want:
+#     df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
-        
-        
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        print("BACTERIA", bacteria_names)
-        nice_name = lambda x: x[9:].replace("_", " ")
+#     ret_val = dhc.Div([])
+#     if df is not None:
 
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
-        else:
-            time_unit_name="months"
-            time_unit_size=30
-        
-        num_cols = 3
-        total_num_rows = len(bacteria_names)//num_cols+1
+#         if max(df.age_at_collection.values) < 100:
+#             time_unit_name="days"
+#             time_unit_size=1
+#         else:
+#             time_unit_name="months"
+#             time_unit_size=30
 
-        fig = dataset_bacteria_abundances(df, bacteria_names, time_unit_size=time_unit_size, time_unit_name=time_unit_name, num_cols=num_cols, nice_name=nice_name, file_name=None, width=1200, height=200*total_num_rows, website=True)
-        
-        ret_val = [
+#         num_sids = len(df.subjectID.unique())
+#         fig = sampling_statistics(df, group="group", start_age=0, limit_age=max(df.age_at_collection.values), time_unit_size=time_unit_size, time_unit_name=time_unit_name, file_name=None, height=300+5*num_sids, width=1200, website=True)
+
+#         ret_val = [
             
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
+#             dcc.Graph(figure=fig),
+#             dhc.Br(),
+#         ]
+#     del df
+#     gc.collect()
+#     # Return results for display
+#     slogger('query', 'return results query_mt_22')
+#     return ret_val
 
-    # Return results for display
-    slogger('query', 'return results query_mt_21')
-    return ret_val
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_23(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_22(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
-
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
+#     # Change all of this to whatever you want:
+#     df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
+#     ret_val = dhc.Div([])
+#     if df is not None:
 
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
-        else:
-            time_unit_name="months"
-            time_unit_size=30
+#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         nice_name = lambda x: x[9:].replace("_", " ")
 
-        num_sids = len(df.subjectID.unique())
-        fig = sampling_statistics(df, group="group", start_age=0, limit_age=max(df.age_at_collection.values), time_unit_size=time_unit_size, time_unit_name=time_unit_name, file_name=None, height=300+5*num_sids, width=1200, website=True)
+#         if max(df.age_at_collection.values) < 100:
+#             time_unit_name="days"
+#             time_unit_size=1
+#         else:
+#             time_unit_name="months"
+#             time_unit_size=30
 
-        ret_val = [
+#         fig1, fig2 = plot_bacteria_abundance_heatmaps(df, bacteria_names=bacteria_names, short_bacteria_name=nice_name, time_unit_name=time_unit_name, time_unit_size=time_unit_size, avg_fn=np.median, fillna=False, website=True, width=1200)
+
+#         ret_val = [
             
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
-    # Return results for display
-    slogger('query', 'return results query_mt_22')
-    return ret_val
+#             dhc.Div([dcc.Graph(figure=fig1), dcc.Graph(figure=fig2)]),
+#             dhc.Br(),
+#         ]
+#     del df
+#     gc.collect()
+#     # Return results for display
+#     slogger('query', 'return results query_mt_23')
+#     return ret_val
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_23(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
+# # sklearn bio is not supported on Heroku
+# # @celery_app.task(bind=True, serializer='pickle')
+# # def query_mt_24(self, session_id):
+# #     task_id = self.request.id
+# #     slogger('query', 'query in progress, task_id={}'.format(task_id))
+# #     # Don't touch this:
+# #     self.update_state(state='PROGRESS')
+# #     # a short dwell is necessary for other async processes to catch-up
+# #     time.sleep(1.5)
 
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+# #     # read arguments
+# #     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
+# #     # Change all of this to whatever you want:
+# #      df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
+# #     ret_val = dhc.Div([])
+# #     if df is not None:
 
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
+# #         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
 
-        if max(df.age_at_collection.values) < 100:
-            time_unit_name="days"
-            time_unit_size=1
-        else:
-            time_unit_name="months"
-            time_unit_size=30
+# #         if max(df.age_at_collection.values) < 100:
+# #             time_unit_name="days"
+# #             time_unit_size=1
+# #         else:
+# #             time_unit_name="months"
+# #             time_unit_size=30
+        
+# #         fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
+# #         fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
 
-        fig1, fig2 = plot_bacteria_abundance_heatmaps(df, bacteria_names=bacteria_names, short_bacteria_name=nice_name, time_unit_name=time_unit_name, time_unit_size=time_unit_size, avg_fn=np.median, fillna=False, website=True, width=1200)
-
-        ret_val = [
+# #         ret_val = [
             
-            dhc.Div([dcc.Graph(figure=fig1), dcc.Graph(figure=fig2)]),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
-    # Return results for display
-    slogger('query', 'return results query_mt_23')
-    return ret_val
+# #             dcc.Graph(figure=fig1),
+# #             dhc.Br(),
+# #             dcc.Graph(figure=fig2),
+# #             dhc.Br(),
+# #         ]
 
-# sklearn bio is not supported on Heroku
+# #     # Return results for display
+# #     slogger('query', 'return results 6.0.')
+# #     return ret_val
+
 # @celery_app.task(bind=True, serializer='pickle')
 # def query_mt_24(self, session_id):
 #     task_id = self.request.id
@@ -840,182 +882,140 @@ def query_mt_23(self, session_id):
 #     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
 #     # Change all of this to whatever you want:
-#      df = read_dataframe(session_id, None)
+#     df = read_dataframe(session_id, None)
 
 #     ret_val = dhc.Div([])
 #     if df is not None:
 
 #         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         nice_name = lambda x: x[9:].replace("_", " ")
 
-#         if max(df.age_at_collection.values) < 100:
-#             time_unit_name="days"
-#             time_unit_size=1
-#         else:
-#             time_unit_name="months"
-#             time_unit_size=30
-        
-#         fig1 = plot_diversity(df, bacteria_names, diversity="shannon", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
-#         fig2 = plot_diversity(df, bacteria_names, diversity="simpson", group="group", time_unit_name=time_unit_name, time_unit_size=time_unit_size, layout_height=800, layout_width=1000, website=True)
+#         fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
 
 #         ret_val = [
             
-#             dcc.Graph(figure=fig1),
-#             dhc.Br(),
-#             dcc.Graph(figure=fig2),
+#             dcc.Graph(figure=fig),
 #             dhc.Br(),
 #         ]
+#     del df
+#     gc.collect()
 
 #     # Return results for display
-#     slogger('query', 'return results 6.0.')
+#     slogger('query', 'return results query_mt_25')
 #     return ret_val
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_24(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_25(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
 
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
+#     # Change all of this to whatever you want:
+#     df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
+#     ret_val = dhc.Div([])
+#     if df is not None:
 
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
+#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         nice_name = lambda x: x[9:].replace("_", " ")
 
-        fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
+#         emb = decomposition.PCA(n_components=3)
+#         fig = embedding(emb, df_all=df, feature_columns=bacteria_names, embedding_dimension=2, layout_settings=dict(height=600, width=600), color_column_name="group", website=True);
 
-        ret_val = [
-            
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
+#         #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
 
-    # Return results for display
-    slogger('query', 'return results query_mt_25')
-    return ret_val
+#         ret_val = [
+#             dcc.Graph(figure=fig),
+#             dhc.Br(),
+#         ]
+#     del df
+#     gc.collect()
+#     # Return results for display
+#     slogger('query', 'return results query_mt_26')
+#     return ret_val
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_25(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
 
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_26(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
+
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
+#     # Change all of this to whatever you want:
+#     df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
+#     ret_val = dhc.Div([])
+#     if df is not None:
 
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
+#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         nice_name = lambda x: x[9:].replace("_", " ")
 
-        emb = decomposition.PCA(n_components=3)
-        fig = embedding(emb, df_all=df, feature_columns=bacteria_names, embedding_dimension=2, layout_settings=dict(height=600, width=600), color_column_name="group", website=True);
+#         emb = decomposition.PCA(n_components=3)
+#         fig = embedding(emb, df_all=df, feature_columns=bacteria_names, embedding_dimension=3, layout_settings=dict(height=1000, width=1000), color_column_name="group", website=True);
 
-        #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
+#         #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
 
-        ret_val = [
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
-    # Return results for display
-    slogger('query', 'return results query_mt_26')
-    return ret_val
+#         ret_val = [
+#             dcc.Graph(figure=fig),
+#             dhc.Br(),
+#         ]
+#     del df
+#     gc.collect()
+#     # Return results for display
+#     slogger('query', 'return results query_mt_27')
+#     return ret_val
 
 
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_26(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
+# @celery_app.task(bind=True, serializer='pickle')
+# def query_mt_27(self, session_id):
+#     task_id = self.request.id
+#     slogger('query', 'query in progress, task_id={}'.format(task_id))
+#     # Don't touch this:
+#     self.update_state(state='PROGRESS')
+#     # a short dwell is necessary for other async processes to catch-up
+#     time.sleep(1.5)
 
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
+#     # read arguments
+#     slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
    
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
+#     # Change all of this to whatever you want:
+#     df = read_dataframe(session_id, None)
 
-    ret_val = dhc.Div([])
-    if df is not None:
+#     ret_val = dhc.Div([])
+#     if df is not None:
 
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
+#         bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
+#         nice_name = lambda x: x[9:].replace("_", " ")
 
-        emb = decomposition.PCA(n_components=3)
-        fig = embedding(emb, df_all=df, feature_columns=bacteria_names, embedding_dimension=3, layout_settings=dict(height=1000, width=1000), color_column_name="group", website=True);
+#         emb = decomposition.PCA(n_components=3)
+#         vbox = embeddings_interactive_selection_notebook(df_all=df, feature_columns=bacteria_names, emb=emb, layout_settings=dict(height=1000, width=1000));
 
-        #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
-
-        ret_val = [
-            dcc.Graph(figure=fig),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
-    # Return results for display
-    slogger('query', 'return results query_mt_27')
-    return ret_val
-
-
-@celery_app.task(bind=True, serializer='pickle')
-def query_mt_27(self, session_id):
-    task_id = self.request.id
-    slogger('query', 'query in progress, task_id={}'.format(task_id))
-    # Don't touch this:
-    self.update_state(state='PROGRESS')
-    # a short dwell is necessary for other async processes to catch-up
-    time.sleep(1.5)
-
-    # read arguments
-    slogger('query', 'query in progress, task_id={}, session_id={}'.format(task_id, session_id))
-   
-    # Change all of this to whatever you want:
-    df = read_dataframe(session_id, None)
-
-    ret_val = dhc.Div([])
-    if df is not None:
-
-        bacteria_names = get_bacteria_names(df, bacteria_fun=lambda x: x.startswith("bacteria_"))
-        nice_name = lambda x: x[9:].replace("_", " ")
-
-        emb = decomposition.PCA(n_components=3)
-        vbox = embeddings_interactive_selection_notebook(df_all=df, feature_columns=bacteria_names, emb=emb, layout_settings=dict(height=1000, width=1000));
-
-        #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
+#         #fig = plot_ultradense_longitudinal_data(df, infants_to_plot=df.subjectID.unique(), nice_name=nice_name, cols_num=15, min_days=0, max_days=max(df.age_at_collection.values), bacteria_names=bacteria_names, file_name = None, h=600, website=True)
         
-        ret_val = [
-            dcc.Graph(figure=vbox.children[0], id="graph"),
-            #dcc.Graph(figure=vbox.children[1]),
-            #fig,
-            dhc.Div(id="graph-info"),
-            dhc.Br(),
-        ]
-    del df
-    gc.collect()
-    # Return results for display
-    slogger('query', 'return results query_mt_28')
-    return ret_val
+#         ret_val = [
+#             dcc.Graph(figure=vbox.children[0], id="graph"),
+#             #dcc.Graph(figure=vbox.children[1]),
+#             #fig,
+#             dhc.Div(id="graph-info"),
+#             dhc.Br(),
+#         ]
+#     del df
+#     gc.collect()
+#     # Return results for display
+#     slogger('query', 'return results query_mt_28')
+#     return ret_val
 
 
 
