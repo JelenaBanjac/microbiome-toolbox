@@ -14,7 +14,7 @@ from microbiome.trajectory import plot_trajectory, train, plot_2_trajectories
 
 from microbiome.variables import *
 
-from index import app, cache, UPLOAD_FOLDER_ROOT, loading_img, INTERVAL, MAX_INTERVALS
+from index import app, cache, UPLOAD_FOLDER_ROOT
 
 
 layout = dhc.Div([
