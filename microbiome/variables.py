@@ -7,6 +7,9 @@ col_est = "#0095C8"
 col_fin = "#00A24A"
 alpha   = 0.7
 
+n_splits = 5
+test_size = 0.5
+
 Regressor = RandomForestRegressor
 parameters = {#"loss_function": "MAE",
                 "random_state": 42,}

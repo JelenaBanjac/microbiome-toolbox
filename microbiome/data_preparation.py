@@ -16,10 +16,14 @@ from sklearn.model_selection import GroupKFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import r2_score
 from sklearn.model_selection import GroupKFold
-from catboost import CatBoostRegressor
 import pandas as pd
 import seaborn as sns
 import gc
+from microbiome.variables import Regressor, parameters, param_grid, n_splits
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+from sklearn.neighbors import LocalOutlierFactor
+
 
 
 def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2, plot=True):
@@ -93,19 +97,6 @@ def zscore_analysis(df_all, z_col_name, hue_col, cross_limit=2, plot=True):
     return outliers_below, outliers_above
 
 
-n_splits = 5
-test_size = 0.5
-
-Regressor = CatBoostRegressor
-parameters = {"loss_function": "MAE",
-              "random_state": 42,
-              "allow_writing_files": True,
-             "verbose":False}
-param_grid = { 'learning_rate': [0.5, 0.1],
-               #"depth": [5, 10],
-               #"iterations": [100, 500, 1000]
-             }
-
 def find_best_reference_with_least_crossings(df, feature_columns, nice_name=lambda x: x, file_directory=None):
     results = pd.DataFrame({
         "bacteria_name":[], 
@@ -128,6 +119,9 @@ def find_best_reference_with_least_crossings(df, feature_columns, nice_name=lamb
     file_name = f"{file_directory}/crossings.xls" or "crossings.xls"
     results.to_csv(file_name, sep="\t", index=False)
     plt.clf()
+
+    plt.clear('all')
+
     del df
     gc.collect()
     return results
@@ -288,8 +282,6 @@ def plot_shap_abundances_and_ratio(df, important_features, bacteria_name, nice_n
     return total_num_of_crossings1, total_num_of_crossings2, mae, r2
 
 
-from sklearn.neighbors import LocalOutlierFactor
-
 def update_reference_group_with_novelty_detection(df_all, feature_columns, local_outlier_factor_settings=dict(metric='braycurtis', n_neighbors=2)):
     """
     Features with bacteria only and Bray-Curtis distance as a metric.
@@ -313,9 +305,6 @@ def update_reference_group_with_novelty_detection(df_all, feature_columns, local
     gc.collect()
     return df["reference_group"].values
 
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
 
 def gridsearch_novelty_detection_parameters(df_all, parameter_name, parameter_vals, feature_columns, metadata_columns, meta_and_feature_columns, num_runs=5, website=False, layout_settings=None):
     df = df_all.copy()
@@ -390,6 +379,9 @@ def gridsearch_novelty_detection_parameters(df_all, parameter_name, parameter_va
         fig.show()
 
     plt.clf()
+
+    plt.clear('all')
+
     del df, df_all
     gc.collect()
         
