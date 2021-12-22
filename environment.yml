@@ -1,4 +1,4 @@
-name: microbiome
+name: microbiome_toolbox
 channels:
   - anaconda
   - defaults
@@ -79,4 +79,3 @@ dependencies:
     - redis
     # - scikit-bio
     - shap
-

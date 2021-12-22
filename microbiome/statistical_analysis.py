@@ -310,7 +310,7 @@ def regliner(df2countries_stats, mapping):
     Returns
     -------
     : float, float
-        p-values of k and n respectivelly, representing whether the two coefficients are significantly different or not
+        p-values of k and n respectively, representing whether the two coefficients are significantly different or not
 
     Examples
     --------
@@ -334,4 +334,10 @@ def regliner(df2countries_stats, mapping):
     est = sm.OLS(outp, X2)
     est2 = est.fit()
 
-    return est2.pvalues["x3"], est2.pvalues["x2"]   #est2.pvalues["const"]
+    result = {
+        "k": est2.pvalues["x3"],
+        "n": est2.pvalues["x2"],
+        "const": est2.pvalues["const"]
+    }
+
+    return result

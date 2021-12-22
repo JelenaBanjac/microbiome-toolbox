@@ -2,6 +2,13 @@ later.py
 #notebooks/
 notebooks_to_delete_when_merged/
 cached_files/
+notebooks/Human_Subramanian/INPUT_FILES/RAW_DATA/
+notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2.csv
+notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l3.csv
+notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l4.csv
+notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l5.csv
+notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l6.csv
+notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l7.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

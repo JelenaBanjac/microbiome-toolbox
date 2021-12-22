@@ -1,1264 +1,2135 @@
-import matplotlib
-matplotlib.use('agg')
-from pickle import FALSE
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from os import name
+import re
 from catboost import Pool
-from sklearn.model_selection import cross_val_score,cross_val_predict
-from sklearn.model_selection import GroupKFold
-from sklearn.metrics import r2_score
+from numpy.core.numeric import indices
+from numpy.lib.function_base import select
+from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.ensemble import RandomForestRegressor
+import pandas as pd
+import numpy as np
+from collections import defaultdict
+from sklearn.model_selection import GroupShuffleSplit, GroupKFold, GridSearchCV
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 from sklearn.feature_selection import VarianceThreshold
+import copy
 import scipy.stats as stats
 import scipy as sp
-import pathlib
-from microbiome.helpers import df2vectors
-from microbiome.statistical_analysis import regliner, permuspliner
-import plotly.graph_objects as go
 import plotly.express as px
-from itertools import combinations 
-from plotly.subplots import make_subplots
-from sklearn.model_selection import GridSearchCV
-import gc
+from statsmodels.base.model import Results
+from microbiome.statistical_analysis import regliner, permuspliner
+from itertools import combinations
+from sklearn.metrics import mean_absolute_error, r2_score
+from microbiome.enumerations import AnomalyType, FeatureExtraction, TimeUnit
+from natsort import natsorted
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
+import shap
+import itertools
+
+RANDOM_STATE = 42
 
 
-def topK_important_features(k, estimator, df, feature_cols, n_splits, estimator_for_fit, save=False, file_name=None):
-    """Get top k important features for the estimator
+class MicrobiomeTrajectory:
+    def __init__(
+        self, dataset, feature_columns, feature_extraction=FeatureExtraction.NONE, time_unit=TimeUnit.DAY, train_indices=None
+    ):
+        self.dataset = copy.deepcopy(dataset)
+        self.__feature_columns = list(feature_columns)
+        results = self.get_less_feature_columns(plot=True, technique=feature_extraction)
+        self.feature_columns = results["feature_columns"]
+        self.feature_columns_plot = results["fig"]
+        self.feature_columns_plot_config = results["config"]
 
-    k: int
-        Number of important features we want to have in the model.
-    estimator:
-        Model for the trajectory.
-    df: pd.DataFrame
-        Dataset on which we want to find the top important features.
-    feature_cols: list
-        List of bacteria for the estimator.
-    n_splits: int
-        Number of split for the group cross validation.
-    estimator_for_fit:
-        Object to use to fit the data (same as the estimator)
-    save: bool
-        If True, the search for the important features will be performed and sabed in the end. Otherwise, it will read the important features from some 
-        of the previous runs from a file.
-    file_name: str
-        Name of the file to save data in or read from.
+        self.dataset.time_unit = time_unit
 
-    Returns
-    -------
-    important_features: list
-        List of important features.
-    """
-    if file_name is None:
-        raise Exception("You should specify a file you wish to save the list of important features")
+        # TODO: handle less features here too!
+        if train_indices is None:
+            train_indices = (self.dataset.df.reference_group == True).values
 
-    # f'OUTPUT_FILES/important_features_{DATASET_LEVEL}_{SAVE_IDENTIFIER}.txt'
-    if save:
-        X, y = df2vectors(df, feature_cols)
-        
-        shap_values = estimator.get_feature_importance(Pool(X, y), type="ShapValues")
-        feature_importance = pd.DataFrame(list(zip(feature_cols, np.abs(shap_values).mean(0))), columns=['bacteria_name','feature_importance_vals'])
-        feature_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
-        important_features = list(feature_importance.bacteria_name.values)
+        # df_train = self.dataset.df[self.dataset.df.reference_group == True]
+        # df_test = self.dataset.df[self.dataset.df.reference_group == False]
+        df_train = self.dataset.df.iloc[train_indices]
+        df_test = self.dataset.df.iloc[~train_indices]
 
-        features_num = []
-        accuracy_means = []
-        accuracy_stds = []
-        maes = []
-        r2s = []
+        X_train = df_train[self.feature_columns].values
+        X_test = df_test[self.feature_columns].values
+        y_train = df_train.age_at_collection.values
+        y_test = df_test.age_at_collection.values
 
-        i = 1
-        while i <  len(important_features[:k])+1:
-            done = 0
-            X, y = df2vectors(df, important_features[:i])
-            while done < 3:
-                try:
-                    scores = cross_val_score(estimator_for_fit, X, y, groups=df.subjectID.values, cv=GroupKFold(n_splits), verbose=0)
-                    y_pred = cross_val_predict(estimator_for_fit, X, y, groups=df.subjectID.values, cv=GroupKFold(n_splits), verbose=0)
-                    accuracy_means.append(scores.mean())
-                    accuracy_stds.append(scores.std())
-                    maes.append(np.mean(abs(y_pred - y)))
-                    r2s.append(r2_score(y, y_pred))
-                    features_num.append(i)
-                    i+=2
-                    done = 4
-                except Exception as e:
-                    print(e)
-                    done += 1
+        groups_train = list(df_train.subjectID.values)
 
+        # estimator = RandomForestRegressor(random_state=RANDOM_STATE)
+        # estimator.fit(X, y)
+        parameters_gridsearch = {"n_estimators": [50, 100, 150]}
+        rfr = RandomForestRegressor(random_state=RANDOM_STATE)
+        gkf = list(GroupKFold(n_splits=5).split(X_train, y_train, groups=groups_train))
+        search = GridSearchCV(rfr, parameters_gridsearch, cv=gkf)
+        search.fit(X_train, y_train)
+        self.estimator = search.best_estimator_
 
-        fig = make_subplots(rows=1, cols=3)
-        
-        i = np.argmin(maes)
-        fig.add_trace(go.Scatter(
-                x=features_num,
-                y=maes,
-                name="MAE",
-                hovertemplate =None),
-                row=1, col=1)
-        fig.add_trace(go.Scatter(
-                x=[features_num[i]],
-                y=[maes[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=False,
-                hovertemplate =None),
-                row=1, col=1)
-        fig.update_xaxes(title="Number of important features", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
-        fig.update_yaxes(title="MAEs", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1)
-                
-        j = np.argmax(accuracy_means)
-        fig.add_trace(go.Scatter(
-                x=features_num,
-                y=accuracy_means,
-                name="Accuracy",
-                hovertemplate = None,
-                error_y=dict(
-                        type='data', 
-                        array=accuracy_stds,
-                        visible=True)),
-                row=1, col=2)
-        fig.add_trace(go.Scatter(
-                x=[features_num[i]],
-                y=[accuracy_means[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=False,
-                hovertemplate =None),
-                row=1, col=2)
-        fig.update_xaxes(title="Number of important features", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
-        fig.update_yaxes(title="Accuracy", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2)
-        
-        fig.add_trace(go.Scatter(
-                x=features_num,
-                y=r2s,
-                name="R-square",
-                hovertemplate = None),
-                row=1, col=3)
-        fig.add_trace(go.Scatter(
-                x=[features_num[i]],
-                y=[r2s[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=True,
-                hovertemplate =None),
-                row=1, col=3)
-        fig.update_xaxes(title="Number of important features", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3)  
-        fig.update_yaxes(title="R-squared", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3)  
+        y_train_pred = self.estimator.predict(X_train).astype(float)
+        y_test_pred = self.estimator.predict(X_test).astype(float)
+        self.dataset.df.loc[df_train.index, "MMI"] = y_train_pred
+        self.dataset.df.loc[df_test.index, "MMI"] = y_test_pred
 
-        fig.update_layout(height=500, width=1200, 
-                        #paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                        plot_bgcolor='rgba(0,0,0,0)', 
-                        margin=dict(l=0, r=0, b=0, pad=0),
-                        title_text="Top Important Features",
-                        hovermode="x")
-        fig.show()
-        
-        # excract only top important features
-        important_features = important_features[:features_num[i]]
+        self.reference_groups = self.dataset.df.reference_group.values.astype(bool)
+        # indices = reference_groups == True
+        # df_indices = self.dataset.df.iloc[indices]
+        self.X = self.dataset.df[self.feature_columns]
+        self.y = self.dataset.df.age_at_collection.values.astype(float)
+        self.y_pred = self.dataset.df.MMI.values.astype(float)
+        self.sample_ids = self.dataset.df.sampleID.values.astype(str)
+        self.subject_ids = self.dataset.df.subjectID.values.astype(str)
+        self.groups = self.dataset.df.group.values.astype(str)
+        # reference_groups = df_indices.reference_group.values.astype(bool)
+        self.x = np.linspace(np.min(self.y), np.max(self.y), 100)
 
-        with open(file_name, 'w') as f:
-            f.writelines(f"{feature}\n" for feature in important_features)
+        self.layout_settings_default = dict(
+            height=900,
+            width=1200,
+            plot_bgcolor="rgba(255,255,255,255)",
+            paper_bgcolor="rgba(255,255,255,255)",
+            margin=dict(l=70, r=70, t=70, b=70),
+            font=dict(size=17),
+            hoverdistance=-1,
+            legend=dict(
+                x=1.01,
+                y=1,
+                # traceorder='normal',
+            ),
+            # annotations=[go.layout.Annotation(
+            #     text=ret_val,
+            #     align='left',
+            #     showarrow=False,
+            #     xref='paper',
+            #     yref='paper',
+            #     x=1.53,
+            #     y=1,
+            #     width=330,
+            #     bordercolor='black',
+            #     bgcolor='white',
+            #     borderwidth=0.5,
+            #     borderpad=8,
+            # )]
+        )
 
-    else:
-        important_features = []
+        self.axis_settings_default = dict(
+            tick0=0,
+            mirror=True,
+            # dtick=2,
+            showline=True,
+            linecolor="lightgrey",
+            gridcolor="lightgrey",
+            zeroline=True,
+            zerolinecolor="lightgrey",
+            showspikes=True,
+            spikecolor="gray",
+        )
 
-        with open(file_name, 'r') as f:
-            filecontents = f.readlines()
-
-            for line in filecontents:
-                important_features.append(line[:-1])
-    plt.clf()
-    plt.close('all')
-    del df
-    gc.collect()
-    return important_features
-
-def remove_nzv(save, df, feature_cols, n_splits, estimator_for_fit, nzv_thresholds=None):
-    feature_cols = np.array(feature_cols)
-    """Remove features with near-zero-variance"""
-    if save:
-        accuracy_means = []
-        accuracy_stds = []
-        maes = []
-        r2s = []
-        features_num = []
-        
-        for threshold in nzv_thresholds:
-            # filter near zero variance features
-            constant_filter = VarianceThreshold(threshold=threshold)
-            constant_filter.fit(df[feature_cols])
-            idx = np.where(constant_filter.get_support())[0]
-            constant_columns = [column for column in feature_cols if column not in feature_cols[idx]]
-            features_num.append(len(feature_cols)-len([x for x in constant_columns if x.startswith('k__')] ))
-            feature_cols_new = list(set(feature_cols) - set(constant_columns))
-
-            X, y = df2vectors(df, feature_cols_new)
-
-            scores = cross_val_score(estimator_for_fit, X, y, groups=df.subjectID.values, cv=GroupKFold(n_splits), verbose=0)
-            accuracy_means.append(scores.mean())
-            accuracy_stds.append(scores.std())
-
-            y_pred = cross_val_predict(estimator_for_fit, X, y, groups=df.subjectID.values, cv=GroupKFold(n_splits), verbose=0)
-            maes.append(np.mean(abs(y_pred - y)))
-            r2s.append(r2_score(y, y_pred))
-
-        fig = make_subplots(rows=1, cols=3)
-        
-        i = np.argmin(maes)
-        fig.add_trace(go.Scatter(
-                x=nzv_thresholds,
-                y=maes,
-                name="MAE",
-                hovertemplate =None),
-                row=1, col=1)
-        fig.add_trace(go.Scatter(
-                x=[nzv_thresholds[i]],
-                y=[maes[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=False,
-                hovertemplate =None),
-                row=1, col=1)
-        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
-        fig.update_yaxes(title="MAEs", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
-                
-        j = np.argmax(accuracy_means)
-        fig.add_trace(go.Scatter(
-                x=nzv_thresholds,
-                y=accuracy_means,
-                name="Accuracy",
-                hovertemplate = None,
-                error_y=dict(
-                        type='data', 
-                        array=accuracy_stds,
-                        visible=True)),
-                row=1, col=2)
-        fig.add_trace(go.Scatter(
-                x=[nzv_thresholds[i]],
-                y=[accuracy_means[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=False,
-                hovertemplate =None),
-                row=1, col=2)
-        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
-        fig.update_yaxes(title="Accuracy", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2)  
-        
-        fig.add_trace(go.Scatter(
-                x=nzv_thresholds,
-                y=r2s,
-                name="R-square",
-                hovertemplate = None),
-                row=1, col=3)
-        fig.add_trace(go.Scatter(
-                x=[nzv_thresholds[i]],
-                y=[r2s[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=True,
-                hovertemplate =None),
-                row=1, col=3)
-        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3) 
-        fig.update_yaxes(title="R-squared", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3) 
-
-        fig.update_layout(height=500, width=1200, 
-                        #paper_bgcolor="white",
-                        plot_bgcolor='rgba(0,0,0,0)', 
-                        margin=dict(l=0, r=0, b=0, pad=0),
-                        title_text="Near Zero Variance",
-                        hovermode="x")
-        fig.show()
-
-        nzv_threshold = nzv_thresholds[j]
-    else:
-        # 26-Nov-2020
-        nzv_threshold = 0.01
-        
-    constant_filter = VarianceThreshold(threshold=nzv_threshold)
-    constant_filter.fit(df[feature_cols])
-    feature_cols = np.array(feature_cols)
-    constant_columns = [column for column in feature_cols if column not in feature_cols[np.where(constant_filter.get_support())[0]]]
-    feature_cols_new = list(set(feature_cols) - set(constant_columns))
-    print(f"Number of features left after removing features with variance {nzv_threshold} or smaller: {len(feature_cols_new)}/{len(feature_cols)}")
-    plt.clf()
-    plt.close('all')
-    del df
-    gc.collect()
-    return feature_cols_new
-
-def remove_correlated(save, df, feature_cols, n_splits, estimator_for_fit, correlation_thresholds=None):
-    """"Remove correlated values"""
-    # the higher the number the less it is removing
-    if save:
-        #correlation_thresholds = [0.0, 0.1, 0.3, 0.8]
-        accuracy_means = []
-        accuracy_stds = []
-        maes = []
-        r2s = []
-        features_num = []
-
-        for threshold in correlation_thresholds:
-            correlated_features = set()
-            correlation_matrix = df[feature_cols].corr()
-            for i in range(len(correlation_matrix.columns)):
-                for j in range(i):
-                    if abs(correlation_matrix.iloc[i, j]) > threshold:
-                        colname = correlation_matrix.columns[i]
-                        correlated_features.add(colname)
-                        
-            feature_cols_ncorr = list(set(feature_cols)-correlated_features)
-            features_num.append(len(feature_cols_ncorr))
-
-            X_healthy, y_healthy = df2vectors(df, feature_cols_ncorr)
-            
-            scores = cross_val_score(estimator_for_fit, X_healthy, y_healthy, groups=df.subjectID.values, cv=GroupKFold(n_splits), verbose=0)
-            accuracy_means.append(scores.mean())
-            accuracy_stds.append(scores.std())
-
-            y_healthy_pred = cross_val_predict(estimator_for_fit, X_healthy, y_healthy, groups=df.subjectID.values, cv=GroupKFold(n_splits), verbose=0)
-            maes.append(np.mean(abs(y_healthy_pred - y_healthy)))
-            r2s.append(r2_score(y_healthy, y_healthy_pred))
-
-        fig = make_subplots(rows=1, cols=3)
-        
-        i = np.argmin(maes)
-        fig.add_trace(go.Scatter(
-                x=correlation_thresholds,
-                y=maes,
-                name="MAE",
-                hovertemplate =None),
-                row=1, col=1)
-        fig.add_trace(go.Scatter(
-                x=[correlation_thresholds[i]],
-                y=[maes[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=False,
-                hovertemplate =None),
-                row=1, col=1)
-        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1) 
-        fig.update_yaxes(title="MAEs", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=1)  
-                
-        j = np.argmax(accuracy_means)
-        fig.add_trace(go.Scatter(
-                x=correlation_thresholds,
-                y=accuracy_means,
-                name="Accuracy",
-                hovertemplate = None,
-                error_y=dict(
-                        type='data',
-                        array=accuracy_stds,
-                        visible=True)),
-                row=1, col=2)
-        fig.add_trace(go.Scatter(
-                x=[correlation_thresholds[i]],
-                y=[accuracy_means[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=False,
-                hovertemplate =None),
-                row=1, col=2)
-        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
-        fig.update_yaxes(title="Accuracy", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=2) 
-        
-        fig.add_trace(go.Scatter(
-                x=correlation_thresholds,
-                y=r2s,
-                name="R-square",
-                hovertemplate = None),
-                row=1, col=3)
-        fig.add_trace(go.Scatter(
-                x=[correlation_thresholds[i]],
-                y=[r2s[i]],
-                mode="markers",
-                marker_symbol="star",
-                marker_size=15,
-                marker_color="green",
-                name="optimal MAE",
-                showlegend=True,
-                hovertemplate =None),
-                row=1, col=3)
-        fig.update_xaxes(title="NZV thresholds", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3) 
-        fig.update_yaxes(title="R-squared", showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', row=1, col=3)  
-
-        fig.update_layout(height=500, width=1200, 
-                        #paper_bgcolor="white",#'rgba(0,0,0,0)', 
-                        plot_bgcolor='rgba(0,0,0,0)', 
-                        margin=dict(l=0, r=0, b=0, pad=0),
-                        title_text="Correlation",
-                        hovermode="x")
-        fig.show()
-
-        correlation_threshold = correlation_thresholds[j]
-    else:
-        correlation_threshold = 1.0
-
-    correlated_features = set()
-    correlation_matrix = df[feature_cols].corr()
-    for i in range(len(correlation_matrix.columns)):
-        for j in range(i):
-            if abs(correlation_matrix.iloc[i, j]) > correlation_threshold:
-                colname = correlation_matrix.columns[i]
-                correlated_features.add(colname)
-
-    feature_cols_new = list(set(feature_cols)-correlated_features)
-    
-    print(f"Number of features left after removing features with correlation {correlation_threshold}: {len(feature_cols_new)}/{len(feature_cols)}")
-    plt.clf()
-    plt.close('all')
-    del df
-    gc.collect()
-    return feature_cols_new
-
-def train(df, feature_cols, Regressor, parameters, param_grid, n_splits, file_name=None):
-    """f"{PIPELINE_DIRECTORY}/model_NoTopImportant"""
-    train1 = df[(df.reference_group==True)&(df.dataset_type=="Train")]
-
-    X_train1, y_train1 = df2vectors(train1, feature_cols)
-
-    rfr = Regressor(**parameters)
-    gkf = list(GroupKFold(n_splits=n_splits).split(X_train1, y_train1, groups=train1["subjectID"].values))
-
-    search = GridSearchCV(rfr, param_grid, cv=gkf)
-    search.fit(X_train1, y_train1)
-
-    estimator = search.best_estimator_
-    if file_name:
-        estimator.save_model(file_name)
-
-    del df
-    gc.collect()
-    return estimator
-
-def get_pvalue_regliner(df, group):
-    _df = df.copy(deep=False)
-
-    group_values = _df[group].unique()
-
-    assert len(group_values) == 2, "the dataframe in statistical analysis needs to have only 2 unique groups to compare"
-
-    df_stats = pd.DataFrame(data={"Input": list(_df.y.values),
-                                  "Output": list(_df.y_pred.values),
-                                  "Condition": list(_df[group].values)})
-
-    return regliner(df_stats, {group_values[0]: 0, group_values[1]: 1})
-
-def get_pvalue_permuspliner(df, group, degree=2):
-    _df = df.copy(deep=False)
-
-    group_values = _df[group].unique()
-
-    assert len(group_values) == 2, "the dataframe in statistical analysis needs to have only 2 unique groups to compare"
-
-    df_stats = pd.DataFrame(data={"Input": list(_df.y.values),
-                                  "Output": list(_df.y_pred.values),
-                                  "Condition":list(_df[group].values),
-                                  "sampleID": list(_df["sampleID"].values)})
-
-    result = permuspliner(df_stats, xvar="Input", yvar="Output", category="Condition", degree = degree, cases="sampleID", groups = group_values, perms = 500, test_direction = 'more', ints = 1000, quiet = True)
-
-    return result["pval"]
-
-def plot_trajectory(estimator, df, feature_cols, df_other=None, group=None, linear_difference=None, nonlinear_difference=None, 
-                    plateau_area_start=None, limit_age=1200, start_age=0, 
-                    time_unit_size=1, time_unit_name="days", img_file_name=None, 
-                    degree=2, longitudinal_mode=None, longitudinal_showlegend=True,
-                    patent=False, layout_settings=None, website=False, highlight_outliers=None, df_new=None,
-                    plot_CI=False, plot_PI=True, dtick=2, stats_table=True, PI_percentage=95):
-    """Trajectory line with performance stats and many other settings
-
-    estimator: sklearn models, CatBoostRegressor, etc.
-        Model for the trajectory line.
-    df: pd.DataFrame
-        Reference dataset, validation data.
-    feature_cols: list
-        Feature columns needed for the estimator of the trajectory.
-    df_other: pd.DataFrame
-        Other dataset (not the reference)
-    degree: int
-        The degree for the polyfit line (trajectory).
-    traj_color: str
-        Color for the trajectory line. Usually green, but if it is a plot for IP, we need gray.
-    group: bool
-        To plot the colors based on the group.
-    linear_difference: bool
-        If True, plot the linear lines for each of the countries and calculate the significant difference between
-        these linear lines.
-    nonlinear_difference: bool
-        If True, plot the spline lines for each of the countries and calculate the significant difference between
-        these splines.
-    plateau_area_start: int
-        The day when the plateau starts (shade that area gray then). Usuallyafter 2-3 year, i.e. 720+ days.
-    limit_age: int
-        Days when to end the trajectory (used to cut the first few days and last days for infants)
-    start_age: int
-        Days when to start the trajectory (used to cut the first few days and last days for infants)
-    time_unit_name: str
-        Name of the time unit (e.g. month, year, etc.)
-    time_unit_size: int
-        Number of days in a new time definition (e.g. if we want to deal with months, then time_unit_in_days=30, for the year, time_unit_in_days=365)
-    img_file_name: str
-        Name of the file where to save the plot of trajectory.
-    nboot: int
-        Number of bootstrap samples from the data.
-
-    Returns
-    -------
-    fig: plotly object
-        To continue furhter plots in case needed.
-    outliers: list
-        List of outliers.
-    mae: float
-        The MAE error.
-    r2: float
-        The R^2 metric.
-    pi_median: float
-        Prediction interval median value across the ages.
-    """
-    df = df.sort_values(by="age_at_collection")
-    
-    fig = go.Figure()
-
-    limit_age_max = int(max(df["age_at_collection"]))+1
-
-    layout_settings_default = dict(
-        height=900, 
-        width=1000,
-        barmode='stack', 
-        uniformtext=dict(mode="hide", minsize=10),
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',  
-        margin=dict(l=0, r=0, b=0, pad=0),
-        title_text="Microbiome Trajectory"
-    )
-
-    if patent:
-        traj_color = "0,0,0"
-        colors = px.colors.sequential.Greys
-        outlier_color = '0,0,0'
-        outlier_size = 15
-        marker_outlier=dict(size=25, color=f'rgba({outlier_color},0.95)', symbol="star-open", line_width=4)
-        layout_settings_default["height"]=900
-        layout_settings_default["width"]=1100
-        layout_settings_default["font"] = dict(
-                #family="Courier New, monospace",
-                size=20,
-                #color="RebeccaPurple"
-            )
-    else:
-        traj_color = "26,150,65"
+        self.color_reference = "26,150,65"
+        self.color_non_reference = "255,150,65"
+        self.color_anomaly = "255,0,0"
+        # colors = px.colors.sequential.Greys
         colors = px.colors.qualitative.Plotly
-        outlier_color = '255,0,0'
-        outlier_size = 15  
-        marker_outlier=dict(size=20, color=f'rgba({outlier_color},0.95)', symbol="star-open", line_width=4)  
-        
-    if layout_settings is None:
-        layout_settings = {}
-    layout_settings_final = {**layout_settings_default, **layout_settings}
-    
-    if plateau_area_start is not None:
-        # shaded area where plateau is expected
-        if plateau_area_start/time_unit_size < limit_age/time_unit_size:
-            _x = np.linspace(plateau_area_start, limit_age_max, 10)/time_unit_size
-            fig.add_trace(go.Scatter(
-                x=list(_x)+list(_x[::-1]),
-                y=list(np.zeros(10))+list(np.ones(10)*limit_age/time_unit_size+1),
-                fill='toself',
-                fillcolor='rgba(220,220,220,0.5)',
-                line_color='rgba(220,220,220,0.5)',
-                showlegend=True,
-                name=f"sample at time > {plateau_area_start} days",
-            ))
-    
-    if group is not None:
-        longitudinal_showlegend = False
+        # colors = sns.color_palette("Paired").as_hex()
+        colors_rgb = [
+            tuple(int(h.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)) for h in colors
+        ]
+        self.colors_rgb = [str(x)[1:-1] for x in colors_rgb]
 
-    fig, ret_val, mae, r2, pi_median, _, _, _ = plot_1_trajectory(fig, estimator, df, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color=traj_color, traj_label="reference", 
-                                                                            plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, 
-                                                                            longitudinal_showlegend=longitudinal_showlegend, highlight_outliers=highlight_outliers, marker_outlier=marker_outlier, df_new=df_new,
-                                                                            plot_CI=plot_CI, plot_PI=plot_PI, PI_percentage=PI_percentage)
-    
-    X, y = df2vectors(df, feature_cols)
-    y_pred = estimator.predict(X)
+        self.bacteria_colors = {}
+        self.group_colors = {}
+        self.subject_colors = {}
+        self.palette = itertools.cycle(self.colors_rgb)
 
-    if PI_percentage == 95:
-        percent = 0.975   
-    elif  PI_percentage == 90:
-        percent = 0.95
-    elif PI_percentage == 80:
-        percent = 0.9
-    else:
-        raise NotImplemented("The percentage not implemented!")
-    
-    y = np.array(y)/time_unit_size
-    y_pred = np.array(y_pred)/time_unit_size
-    
-    df["y"] = y
-    df["y_pred"] = y_pred
-    
-    equation = lambda a, b: np.polyval(a, b) 
-        
-    # Data
-    if group is not None:
-        colors_rgb = [tuple(int(h.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) for h in colors]
-        
-        # linear difference between the groups
-        if linear_difference:
-            
-            for i, group_trace in enumerate(df[group].unique()):
-                idx = np.where(df[group]==group_trace)[0]
-                _df = df[df[group]==group_trace]
-                #xdata = np.linspace(0, limit_age_max//time_unit_size+1, limit_age_max//time_unit_size+1)
-                xdata = np.linspace(y[idx].min()/time_unit_size-dtick, y[idx].max()/time_unit_size+dtick, limit_age_max+1)
+    def get_less_feature_columns(
+        self, plot=False, technique=FeatureExtraction.NONE, thresholds=None, layout_settings=None
+    ):
+        """Extract just few feature columns to reduce the number of features wlog.
 
-                # lines
-                _p, _cov = np.polyfit(y[idx], y_pred[idx], 1, cov=True)    
-                fig.add_trace(go.Scatter(
-                    x=xdata,
-                    y=equation(_p, xdata),
-                    mode="lines",
-                    line = dict(width=3, dash='dash', color=colors[i]),
-                    marker=dict(size=10, color=colors[i]),
-                    showlegend=True,
-                    legendgroup=group_trace,
-                    name=f"{group}={group_trace}",
-                    text=list(_df["sampleID"].values), 
-                    hovertemplate = f'<b>Group ({group}): {group_trace}</b><br>',
-                    hoveron="points"
-                ))
-                # points    
-                fig.add_trace(go.Scatter(
-                    x=y[idx],
-                    y= y_pred[idx],
-                    mode="markers",
-                    line = dict(width=3, dash='dash', color=colors[i]),
-                    marker=dict(size=10, color=colors[i]),
-                    showlegend=True,
-                    legendgroup=group_trace,
-                    name=f"sample with {group}={group_trace}",
-                    text=list(_df["sampleID"].values), 
-                    hovertemplate = '<b>Healthy reference sample</b><br><br>'+
-                                    f'<b>Group ({group}): {group_trace}</b><br>'+
-                                    '<b>SampleID</b>: %{text}<br>'+
-                                    '<b>Age</b>: %{x:.2f}'+
-                                    '<br><b>MMI</b>: %{y}<br>',
-                    hoveron="points"
-                ))
-            
-            group_vals = df[group].unique()
-            comb = combinations(group_vals, 2)
-            ret_val += "<b>Linear p-value (k, n)</b>:"
-            for c in list(comb):
-                _df = df[(df[group].isin(c))&(df.age_at_collection<limit_age)]
-                pval_k, pval_n = get_pvalue_regliner(_df, group)
-                ret_val += f"<br>{group} {c[0]} vs. {c[1]}: ({pval_k:.3f}, {pval_n:.3f})"
-        
-        # non-linear difference between the groups (splines)
-        elif nonlinear_difference:
-            for i, group_trace in enumerate(df[group].unique()):
-                idx = np.where(df[group]==group_trace)[0]
-                _df = df[df[group]==group_trace]
-                
-                xdata = y[idx]
-                ydata = y_pred[idx]
-                _p, _cov = np.polyfit(xdata, ydata, degree, cov=True)    
-                _y_model = equation(_p, ydata)                             # model using the fit parameters; NOTE: parameters here are coefficients
+        Parameters
+        ----------
+        plot : bool, optional
+            Whether to plot the performance statistics, by default False.
+            If True, the plot with MAEs and R2s w.r.t. the number of features used is returned.
+        technique : FeatureExtraction, str, optional
+            Technique used to reduce number of features, by default FeatureExtraction.NONE.
+            Possible values: NONE, NEAR_ZERO_VARIANCE, CORRELATION, TOP_K_IMPORTANT
+        thresholds : list, optional
+            Threshold values to be tested for performance, by default None.
+        layout_settings : dict, optional
+            Layout settings fot the plotly, by default None.
 
-                # Statistics
-                n = ydata.size                                             # number of observations
-                m = _p.size                                                # number of parameters
-                dof = n - m                                                # degrees of freedom
-                t = stats.t.ppf(percent, n - m)                              # used for CI and PI bands
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+            - feature_columns: list of feature columns found used 3 reduction techniques.
+            - fig : figure object of performances with different number of feature columns.
+            - config : plotly config object.
+        """
+        fig = None
+        config = None
 
-                # Estimates of Error in Data/Model
-                resid = ydata - _y_model                           
-                chi2 = np.sum((resid / _y_model)**2)                       # chi-squared; estimates error in data
-                chi2_red = chi2 / dof                                      # reduced chi-squared; measures goodness of fit
-                s_err = np.sqrt(np.sum(resid**2) / dof)                    # standard deviation of the error
-
-                #x2 = np.linspace(0, limit_age_max/time_unit_size, limit_age_max+1) #np.linspace(np.min(x), np.max(x), 100)
-                x2 = np.linspace(xdata.min()/time_unit_size-dtick, xdata.max()/time_unit_size+dtick, limit_age_max+1)
-                y2 = equation(_p, x2)
-                pi = t * s_err * np.sqrt(1 + 1/n + (x2 - np.mean(y))**2 / np.sum((y - np.mean(y))**2))   
-                
-                # mean prediction
-                fig.add_trace(go.Scatter(
-                    x=x2, y=y2,
-                    line_color=colors[i],
-                    name=f"trajectory for {group}={group_trace}",
-                    legendgroup=group_trace,
-                ))
-                # prediction interval
-                fig.add_trace(go.Scatter(
-                    x=list(x2)+list(x2[::-1]),
-                    y=list(y2-pi)+list(y2+pi)[::-1],
-                    fill='toself',
-                    fillcolor=f'rgba{tuple(list(colors_rgb[i])+[0.15])}',
-                    line_color=f'rgba{tuple(list(colors_rgb[i])+[0.25])}',
-                    legendgroup=group_trace, 
-                    showlegend=False,
-                    name="95% Prediction Interval"
-                ))
-                # points    
-                fig.add_trace(go.Scatter(
-                    x=y[idx],
-                    y= y_pred[idx],
-                    mode="markers",
-                    line = dict(width=3, dash='dash', color=colors[i]),
-                    marker=dict(size=10, color=colors[i]),
-                    showlegend=True,
-                    legendgroup=group_trace,
-                    name=f"sample with {group}={group_trace}",
-                    text=list(_df["sampleID"].values), 
-                    hovertemplate = '<b>Healthy reference sample</b><br><br>'+
-                                    f'<b>Group ({group}): {group_trace}</b><br>'+
-                                    '<b>SampleID</b>: %{text}<br>'+
-                                    '<b>Age</b>: %{x:.2f}'+
-                                    '<br><b>MMI</b>: %{y}<br>',
-                    hoveron="points"
-                )) 
-            
-            group_vals = df[group].unique()
-            comb = combinations(group_vals, 2)
-            ret_val += "<b>Nonlinear p-value</b>:"
-            for c in list(comb):
-                _df = df[(df[group].isin(c))]  #&(df.age_at_collection<limit_age)&(df.age_at_collection>start_age)
-                error_cnt = 3
-                while error_cnt > 0:
-                    try:
-                        pval = get_pvalue_permuspliner(_df, group, degree=degree)
-                        error_cnt = -1
-                    except:
-                        error_cnt -= 1
-                if error_cnt == -1:
-                    ret_val += f"<br>{group} {c[0]} vs. {c[1]}: {pval:.3f}"
-                else:
-                    ret_val += f"<br>{group} {c[0]} vs. {c[1]}: not available"
-
-                    
+        if technique == FeatureExtraction.NONE:
+            feature_columns = self.__feature_columns
         else:
-            # longitudinal, but color based on the group
-            for i, group_trace in enumerate(df[group].unique()):
-                idx = np.where(df[group]==group_trace)[0]
-                _df = df[df[group]==group_trace]
-                color = colors[i]
-                for j, trace in enumerate(_df["subjectID"].unique()):
-                    idx2 = np.where(_df["subjectID"]==trace)[0]
-                    fig.add_trace(go.Scatter(
-                        x=y[idx][idx2],
-                        y=y_pred[idx][idx2],
-                        mode="lines+markers",
-                        line = dict(width=3, dash='dash', color=color),
-                        marker=dict(size=10, color=color),
-                        showlegend=True if j == 0 else False,
-                        legendgroup=group_trace,
-                        name=group_trace,
-                        text=list(_df["sampleID"].values[idx2]), 
-                        hovertemplate = '<b>Healthy reference sample</b><br><br>'+
-                                        f'<b>Group ({group}): {group_trace}</b><br>'+
-                                        '<b>SampleID</b>: %{text}<br>'+
-                                        '<b>Age</b>: %{x:.2f}'+
-                                        '<br><b>MMI</b>: %{y}<br>',
-                        hoveron="points"
-                    ))
-      
-    ###########################################################################
-    X_other, y_other, y_other_pred = None, None, None
-    if df_other is not None:
-        
-        df_other = df_other.sort_values(by="age_at_collection")
+            X = self.dataset.df[self.__feature_columns].values
+            y = self.dataset.df.age_at_collection.values
+            groups = self.dataset.df.subjectID.values
 
-        X_other, y_other = df2vectors(df_other, feature_cols)
-        y_other_pred = estimator.predict(X_other)
-        
-        y_other = np.array(y_other)/time_unit_size
-        y_other_pred = np.array(y_other_pred)/time_unit_size
-        
-        for trace in df_other["subjectID"].unique():
-            idx = np.where(df_other["subjectID"].values==trace)[0]
+            estimator = RandomForestRegressor(random_state=RANDOM_STATE)
+            estimator.fit(X, y)
 
-            fig.add_trace(go.Scatter(
-                x=y_other[idx],
-                y=y_other_pred[idx],
-                mode=longitudinal_mode,
-                line=dict(width=3, dash='dash'),
-                marker=dict(size=outlier_size, color=f'rgba({outlier_color},0.95)'),
-                showlegend=longitudinal_showlegend,
-                name=trace,
-                text=list(df_other["sampleID"].values[idx]), 
-                hovertemplate = '<b>Other sample</b><br><br>'+
-                                '<b>SampleID</b>: %{text}<br>'+
-                                '<b>Age</b>: %{x:.2f}<br>'+
-                                '<b>MMI</b>: %{y}<br>',
-                hoveron="points"
-            ))
+            scorer_list = ["r2", "neg_mean_squared_error"]
+            scores = defaultdict(list)
 
+            # get thresholds
+            if thresholds is None:
+                if technique == "topK":
+                    feature_importances = np.array(estimator.feature_importances_)
+                    feature_importance = pd.DataFrame(
+                        list(zip(self.__feature_columns, feature_importances)),
+                        columns=["feature_name", "feature_importance"],
+                    )
+                    feature_importance.sort_values(
+                        by=["feature_importance"], ascending=False, inplace=True
+                    )
+                    important_features = feature_importance.feature_name.values
+                    thresholds = np.linspace(1, 50, num=10, dtype=int)
+                elif technique == "nzv":
+                    variances_ = np.nanvar(X, axis=0)
+                    thresholds = np.linspace(
+                        0, np.max(variances_), num=10, endpoint=False
+                    )
+                elif technique == "corr":
+                    thresholds = np.linspace(0, 1, num=10, endpoint=False)
 
-    fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age//time_unit_size, limit_age//time_unit_size), 
-                    tick0=start_age//time_unit_size, dtick=dtick, 
-                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
-    fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]", range=(start_age//time_unit_size, limit_age//time_unit_size), 
-                    tick0=start_age//time_unit_size, dtick=dtick, 
-                    showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
-    
-    fig.update_layout(**layout_settings_final)
-    
-    if not patent:
-        if stats_table:
-            fig.update_layout(go.Layout(
-                annotations=[
-                    go.layout.Annotation(
-                        text=ret_val,
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=.99,
-                        y=.01,
-                        bordercolor='black',
-                        bgcolor='white',
-                        borderwidth=0.5,
-                        borderpad=8
+            estimator = RandomForestRegressor(random_state=RANDOM_STATE)
+            for threshold in thresholds:
+                if technique == "topK":
+                    feature_columns = important_features[:threshold]
+                elif technique == "nzv":
+                    X = self.dataset.df[self.__feature_columns].values
+                    constant_filter = VarianceThreshold(threshold=threshold)
+                    constant_filter.fit(X)
+                    idx = np.where(constant_filter.get_support())[0]
+                    feature_columns = self.__feature_columns[idx]
+                elif technique == "corr":
+                    correlation_matrix = (
+                        self.dataset.df[self.__feature_columns].corr().abs()
+                    )
+                    upper = correlation_matrix.where(
+                        np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool)
+                    )
+                    correlated_features = [
+                        column
+                        for column in upper.columns
+                        if any(upper[column] > threshold)
+                    ]
+                    idx = np.isin(
+                        self.__feature_columns, correlated_features, invert=True
+                    )
+                    feature_columns = self.__feature_columns[idx]
+
+                X = self.dataset.df[feature_columns].values
+                for scorer in scorer_list:
+                    cv_scores = cross_val_score(
+                        estimator,
+                        X,
+                        y,
+                        scoring=scorer,
+                        groups=groups,
+                        cv=GroupShuffleSplit(random_state=RANDOM_STATE),
+                    )
+                    scores["score"].extend(cv_scores)
+                    scores["scorer"].extend([scorer] * len(cv_scores))
+                    scores["features_number"].extend(
+                        [len(feature_columns)] * len(cv_scores)
+                    )
+
+                    scores["threshold"].extend([threshold] * len(cv_scores))
+
+            df_scores = pd.DataFrame(data=scores)
+            r2_mean = (
+                df_scores[df_scores.scorer == "r2"]
+                .groupby(by="features_number")
+                .mean()["score"]
+            )
+            i = np.argmax(r2_mean.values)
+
+            # excract only top important features
+            thresholds = (
+                df_scores[df_scores.scorer == "r2"]
+                .groupby(by="features_number")
+                .first()["threshold"]
+                .values
+            )
+            threshold = thresholds[i]
+
+            # get feature_columns
+            if technique == "topK":
+                feature_columns = important_features[:threshold]
+            elif technique == "nzv":
+                X = self.dataset.df[self.__feature_columns].values
+                constant_filter = VarianceThreshold(threshold=threshold)
+                constant_filter.fit(X)
+                idx = np.where(constant_filter.get_support())[0]
+                feature_columns = self.__feature_columns[idx]
+            elif technique == "corr":
+                correlation_matrix = self.dataset.df[self.__feature_columns].corr().abs()
+                upper = correlation_matrix.where(
+                    np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool)
+                )
+                correlated_features = [
+                    column for column in upper.columns if any(upper[column] > threshold)
+                ]
+                idx = np.isin(self.__feature_columns, correlated_features, invert=True)
+                feature_columns = self.__feature_columns[idx]
+
+            if plot:
+                layout_settings_default = dict(
+                    height=500,
+                    width=400 * len(scorer_list),
+                    plot_bgcolor="rgba(255,255,255,255)",
+                    paper_bgcolor="rgba(255,255,255,255)",
+                    margin=dict(l=0, r=0, b=0, pad=0),
+                    title_text=f"{technique.title()} features",
+                    font=dict(size=12),
+                    hovermode="x",
+                )
+                if layout_settings is None:
+                    layout_settings = {}
+                layout_settings_final = {**layout_settings_default, **layout_settings}
+
+                fig = make_subplots(
+                    rows=1, cols=len(scorer_list), horizontal_spacing=0.2
+                )
+                for col, scorer in enumerate(scorer_list, start=1):
+                    df_scorer = df_scores[df_scores.scorer == scorer]
+                    scorer_mean = df_scorer.groupby(by="features_number").mean()[
+                        "score"
+                    ]
+                    scorer_std = df_scorer.groupby(by="features_number").std()["score"]
+                    thresholds = df_scorer.groupby(by="features_number").first()[
+                        "threshold"
+                    ]
+                    hovertemplate = (
+                        "Features number: %{x}<br>R2 Score: %{y}<br>"
+                        + "Threshold: %{text}"
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=scorer_mean.index,
+                            y=scorer_mean.values,
+                            error_y=dict(
+                                type="data",
+                                array=scorer_std.values,
+                                visible=True,
+                            ),
+                            name=scorer,
+                            hovertemplate=hovertemplate,
+                            text=thresholds,
+                        ),
+                        row=1,
+                        col=col,
+                    )
+
+                    rangey = (0, 1) if scorer == "r2" else None
+                    showlegend = scorer == "r2"
+
+                    fig.add_trace(
+                        go.Scatter(
+                            x=[scorer_mean.index[i]],
+                            y=[scorer_mean.values[i]],
+                            mode="markers",
+                            marker_symbol="star",
+                            marker_size=15,
+                            marker_color="green",
+                            name="optimal r2",
+                            showlegend=showlegend,
+                            hovertemplate="%{y:.0%}",
+                        ),
+                        row=1,
+                        col=col,
+                    )
+                    fig.update_xaxes(
+                        title="Number of features",
+                        showline=True,
+                        linecolor="lightgrey",
+                        gridcolor="lightgrey",
+                        zeroline=True,
+                        zerolinecolor="lightgrey",
+                        row=1,
+                        col=col,
+                    )
+                    fig.update_yaxes(
+                        title=scorer,
+                        range=rangey,
+                        showline=True,
+                        linecolor="lightgrey",
+                        gridcolor="lightgrey",
+                        zeroline=True,
+                        zerolinecolor="lightgrey",
+                        row=1,
+                        col=col,
+                    )
+
+                fig.update_layout(**layout_settings_final)
+                config = {
+                    "toImageButtonOptions": {
+                        "format": "svg",  # one of png, svg, jpeg, webp
+                        "filename": "bacteria_abundances",
+                        "height": layout_settings_final["height"],
+                        "width": layout_settings_final["width"],
+                        "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+                    }
+                }
+
+        results = {
+            "fig": fig,
+            "config": config,
+            "feature_columns": list(feature_columns),
+        }
+
+        return results
+
+    def get_prediction_and_confidence_interval(self, indices, x=None, degree=2):
+        """Get prediction and confidence interval for samples indicated by indices.
+
+        Parameters
+        ----------
+        indices : list
+            Indices of samples that will be used to get the prediction and confidence interval.
+        x : numpy.array
+            Different sampling points for the age_at_collection values. By default it is None and
+            the give age_at_collection values are used (vector y).
+        degree : int
+            Degree of the polynomial used to fit the data. By default it is 2.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - 'prediction_interval' : dict
+                    Prediction interval for each sample sampled at x given by the mean and +- bounds.
+                - 'confidence_interval' : dict
+                    Confidence interval for each sample sampled at x given by the mean and +- bounds.
+
+        Attributes
+        ----------
+        q : float
+            Confidence level for the confidence interval. By default it is 0.975.
+        p : numpy.array
+            Polynomial coefficients, highest power first.
+        y_model : numpy.array
+            Model of the polynomial fit to the data.
+        n : int
+            Number of samples (observations).
+        m : int
+            Number of features (parameters).
+        dof : int
+            Degrees of freedom.
+        t : float
+            Student's t value. Used for CI and PI bands.
+        residual : numpy.array
+            Residuals of the polynomial fit. Estimates the error in the data.
+        s_err : numpy.array
+            Standard deviation of the error.
+        y2 : numpy.array
+            Prediction interval mean.
+        pi : numpy.array
+            Prediction interval bound.
+        n_boot : int
+            Number of bootstrap samples.
+        y3 : numpy.array
+            Confidence interval mean of every bootstraped version.
+        """
+        if x is None:
+            x = copy.deepcopy(self.y)
+            x = x[indices]
+        y = self.y[indices]
+        y_pred = self.y_pred[indices]
+
+        # Stats
+        p = np.polyfit(y, y_pred, degree)
+        y_model = np.polyval(p, y)
+
+        # Statistics
+        q = 0.975
+        n = y_pred.size
+        m = p.size
+        dof = n - m
+        t = stats.t.ppf(q, n - m)
+        residual = y_pred - y_model
+        # chi2 = np.sum((residual / y_model)**2)  # chi-squared; estimates error in data
+        # chi2_red = chi2 / dof                   # reduced chi-squared; measures goodness of fit
+        s_err = np.sqrt(np.sum(residual ** 2) / dof)
+
+        # Prediction Interval
+        y2 = np.polyval(p, x)
+        pi = (
+            t
+            * s_err
+            * np.sqrt(1 + 1 / n + (x - np.mean(y)) ** 2 / np.sum((y - np.mean(y)) ** 2))
+        )
+
+        # Confidence Interval
+        n_boot = 500
+        bootindex = sp.random.randint
+        y3 = np.empty((n_boot, len(x)))
+        for b in range(n_boot):
+            resamp_residual = residual[bootindex(0, len(residual) - 1, len(residual))]
+            # make coefficients of for polys
+            pc = np.polyfit(y, y_pred + resamp_residual, degree)
+            # collect bootstrap cluster
+            y3[b] = np.polyval(pc, x)
+
+        results = {
+            "prediction_interval": {
+                "x": x,
+                "mean": y2,
+                "bound": pi,
+            },
+            "confidence_interval": {
+                "x": x,
+                "mean": np.mean(y3, axis=0),
+                "bound": 1.96 * np.std(y3, axis=0),
+            },
+        }
+        return results
+
+    def get_anomalies(self, anomaly_type, indices):
+        """Get anomalies for samples indicated by indices.
+
+        Parameters
+        ----------
+        anomaly_type : str
+            Type of anomaly to be detected.
+        indices : list
+            Indices of samples that will be used to identify anomalous samples among them.
+            E.g. indices of all healthy samples where we are interested to find the anomalies.
+
+        Returns
+        -------
+        anomalies : numpy.array
+            Indices of the anomalous samples. Indices are relative to the original data.
+            Possible values are: True - anomaly, False - non-anomaly, None - other samples that were
+            not indicated with indices argument.
+
+        Notes
+        -----
+        We use three different types to detect anomalies:
+            1. Prediction interval
+            2. Low-pass filter
+            3. Isolation forest
+        """
+        y_pred = self.y_pred[indices]
+
+        if anomaly_type == AnomalyType.PREDICTION_INTERVAL:
+            degree = 3
+
+            results = self.get_prediction_and_confidence_interval(
+                indices=indices, degree=degree
+            )
+
+            # pi_x = results["prediction_interval"]["x"] == y
+            pi_mean = results["prediction_interval"]["mean"]
+            pi_bound = results["prediction_interval"]["bound"]
+
+            # highlight_outliers
+            anomaly = np.logical_or(
+                np.less(y_pred, pi_mean - pi_bound),
+                np.greater(y_pred, pi_mean + pi_bound),
+            )
+
+        elif anomaly_type == AnomalyType.LOW_PASS_FILTER:
+            window = 10
+            number_of_stds = 2
+
+            y_pred_rolling_avg = (
+                pd.Series(y_pred)
+                .rolling(window=window, min_periods=1, center=True)
+                .mean()
+            )
+            y_pred_rolling_std = (
+                pd.Series(y_pred)
+                .rolling(window=window, min_periods=1, center=True)
+                .std(skipna=True)
+            )
+            anomaly = abs(y_pred - y_pred_rolling_avg) > (
+                number_of_stds * y_pred_rolling_std
+            )
+        elif anomaly_type == AnomalyType.ISOLATION_FOREST:
+            outliers_fraction = 0.1
+            window = 5
+
+            y_pred_rolling_avg = (
+                pd.Series(y_pred)
+                .rolling(window=window, min_periods=1, center=True)
+                .mean()
+            )
+            y_pred_zscore = y_pred - y_pred_rolling_avg
+
+            # Subset the dataframe by desired columns
+            dataframe_filtered_columns = pd.DataFrame(
+                data={
+                    "y_pred": y_pred,
+                    "y_pred_zscore": y_pred_zscore,
+                }
+            )
+
+            # Scale the column that we want to flag for anomalies
+            np_scaled = StandardScaler().fit_transform(dataframe_filtered_columns)
+            scaled_time_series = pd.DataFrame(np_scaled)
+
+            # train isolation forest
+            model = IsolationForest(contamination=outliers_fraction)
+            model.fit(scaled_time_series)
+
+            # generate column for Isolation Forest-detected anomalies
+            anomaly = model.predict(scaled_time_series)
+            anomaly[anomaly == 1] = False  # inliner
+            anomaly[anomaly == -1] = True  # outliner
+            anomaly = anomaly.astype(bool)
+
+        anomalies = np.empty(len(self.y_pred))
+        anomalies[indices] = anomaly
+
+        return anomalies
+
+    def get_pvalue_linear(self, indices):
+        """Get p-value for linear lines.
+
+        Parameters
+        ----------
+        indices : list
+            Indices of samples that contain only 2 groups that will be compared.
+
+        Returns
+        -------
+        result["k"] : float
+            P-value for linear line slopes.
+        result["n"] : float
+            P-value for linear line y-intercepts.
+
+        Notes
+        -----
+        The cutoff for significance used is an alpha of 0.05.
+        If the p-value is less than 0.05, we reject the null hypothesis that
+        there's no difference between the means and conclude that a significant
+        difference does exist.
+        Below 0.05, significant. Over 0.05, not significant.
+        """
+        y = self.y[indices]
+        y_pred = self.y_pred[indices]
+        groups = self.groups[indices]
+
+        group_values = np.unique(groups)
+
+        assert len(group_values) == 2, "Needs to have only 2 unique groups to compare"
+
+        df_stats = pd.DataFrame(
+            data={
+                "Input": list(y),
+                "Output": list(y_pred),
+                "Condition": list(groups),
+            }
+        )
+
+        result = regliner(df_stats, {group_values[0]: 0, group_values[1]: 1})
+        return result["k"], result["n"]
+
+    def get_pvalue_spline(self, indices, degree=2):
+        """Get p-value for spline lines.
+
+        Parameters
+        ----------
+        indices : list
+            Indices of samples that contain only 2 groups that will be compared.
+        degree : int
+            The degree of the polynomial.
+
+        Returns
+        -------
+        result["pval"] : float
+            P-value for spline lines.
+
+        Notes
+        -----
+        The cutoff for significance used is an alpha of 0.05.
+        If the p-value is less than 0.05, we reject the null hypothesis that
+        there's no difference between the means and conclude that a significant
+        difference does exist.
+        Below 0.05, significant. Over 0.05, not significant.
+        """
+        y = self.y[indices]
+        y_pred = self.y_pred[indices]
+        groups = self.groups[indices]
+        sample_ids = self.sample_ids[indices]
+
+        group_values = np.unique(groups)
+
+        assert len(group_values) == 2, "Needs to have only 2 unique groups to compare"
+
+        df_stats = pd.DataFrame(
+            data={
+                "Input": list(y),
+                "Output": list(y_pred),
+                "Condition": list(groups),
+                "sampleID": list(sample_ids),
+            }
+        )
+
+        result = permuspliner(
+            df_stats,
+            xvar="Input",
+            yvar="Output",
+            category="Condition",
+            degree=degree,
+            cases="sampleID",
+            groups=group_values,
+            perms=500,
+            test_direction="more",
+            ints=1000,
+            quiet=True,
+        )
+
+        return result["pval"]
+
+    def get_top_bacteria_in_time(self, indices, time_current, time_delta):
+        """Get top important bacteria for indicated time block.
+
+        Time block is the time interval representing the different bacteria importance
+        with their corresponding average and stds.
+
+        Parameters
+        ----------
+        indices : list
+            Indices of samples that will be used to calculate the time block
+            averages. E.g. healthy samples without anomalies.
+        time_current : float
+            Current time point. Time point from which to collect samples into
+            time block.
+        time_delta : float
+            Time delta from current time point. Time delta during which to collect.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+            - "feature_importance" : pandas.DataFrame
+                DataFrame with bacteria in the rows, and their importance, average and std in the columns.
+            - "df_time_block" : pandas.DataFrame
+                DataFrame with all data used to calculate the time block bacterias importance and averages.
+        """
+        indices_timebox = (time_current <= self.y) & (
+            self.y < time_current + time_delta
+        )
+        i = 0
+        while len(indices_timebox) == 0:
+            indices_timebox = (time_current - (2 * i - 1) * time_delta <= self.y) & (
+                self.y < time_current + (1 + i) * time_delta
+            )
+            i += 0.1
+
+        indices = np.logical_and(indices_timebox, indices)
+
+        df_time_block = self.dataset.df.iloc[indices][
+            self.feature_columns + ["age_at_collection", "MMI"]
+        ]
+
+        # average, std, of samples in the time block for a given bacteria
+        avgs = df_time_block[self.feature_columns].mean(axis=0)
+        stds = df_time_block[self.feature_columns].std(axis=0)
+        shap_values = shap.TreeExplainer(self.estimator).shap_values(
+            pd.DataFrame([avgs])
+        )
+        feature_importance = pd.DataFrame(
+            data={
+                "importance": np.abs(shap_values).mean(0),
+                "feature_avg": avgs,
+                "feature_std": stds,
+            }
+        )
+        feature_importance.sort_values(by=["importance"], ascending=True, inplace=True)
+
+        results = {
+            "feature_importance": feature_importance,
+            "df_time_block": df_time_block,
+        }
+
+        return results
+
+    def get_bacteria_colors(self, val):
+        if not self.bacteria_colors.get(val, None):
+            self.bacteria_colors[val] = next(self.palette)
+        return self.bacteria_colors[val]
+
+    def get_subject_colors(self, val):
+        if not self.subject_colors.get(val, None):
+            self.subject_colors[val] = next(self.palette)
+        return self.subject_colors[val]
+
+    def get_group_colors(self, val):
+        if not self.group_colors.get(val, None):
+            self.group_colors[val] = next(self.palette)
+        return self.group_colors[val]
+
+    def get_intervention_point(self, X_i, y_i, units, indices, time_start):
+        """Get intervention point.
+
+        X_i : numpy.array
+            Features of i-th sample.
+        y_i : float
+            Age at collection of i-th sample.
+        units : list
+            Units or time block sizes.
+        indices : list
+            Indices of samples that will be used to calculate the time block
+            averages. E.g. healthy samples without anomalies.
+        time_start : float
+            Time point from which to collect samples into consequent time blocks.
+        """
+        normal_vals = [False]
+
+        current_time = time_start
+        for time_delta in units:
+            if current_time <= y_i < current_time + time_delta:
+                break
+
+            current_time += time_delta
+
+        shap_values = shap.TreeExplainer(self.estimator).shap_values(
+            pd.DataFrame([X_i])
+        )
+
+        feature_importance_outlier = pd.DataFrame(
+            data={
+                "importance_outlier": np.abs(shap_values).mean(0),
+                "outlier": X_i,
+            },
+            index=self.feature_columns,
+        )
+        feature_importance_outlier.sort_values(
+            by=["importance_outlier"], ascending=True, inplace=True
+        )
+
+        results = self.get_top_bacteria_in_time(
+            indices, time_current=current_time, time_delta=time_delta
+        )
+        feature_importance = results["feature_importance"]
+
+        feature_importance = feature_importance.join(feature_importance_outlier)
+        feature_importance["normal"] = feature_importance.apply(
+            lambda x: True
+            if x["feature_avg"] - x["feature_std"]
+            < x["outlier"]
+            < x["feature_avg"] + x["feature_std"]
+            else False,
+            axis=1,
+        )
+        feature_importance.sort_values(
+            by=["importance_outlier", "importance"], ascending=False, inplace=True
+        )
+        feature_importance["change"] = feature_importance.apply(
+            lambda row: row["feature_avg"] if row["normal"] in normal_vals else None,
+            axis=1,
+        )
+        feature_importance = feature_importance[feature_importance["change"].notna()]
+
+        return feature_importance
+
+    def add_timeboxes(self, fig, units, indices, time_start, num_top_bacteria=5):
+        """Add time boxes to the figure.
+
+        Parameters
+        ----------
+        fig : plotly.graph_objects.Figure
+            Figure to which the time boxes will be added.
+        units : list
+            Units or time block sizes.
+        indices : list
+            Indices of samples that will be used to calculate the time block
+            averages. E.g. healthy samples without anomalies.
+        time_start : float
+            Time point from which to collect samples into consequent time blocks.
+        num_top_bacteria : int
+            Number of top bacteria to be added to the figure per time block.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Figure with added time boxes.
+        """
+        current_time = time_start
+        box_height = self._get_axis_max_limit(fig, "y") // 3
+
+        legend_labels = []
+        first_iteration = True
+        for time_delta in units:
+            box_width = 0.9 * time_delta
+            results = self.get_top_bacteria_in_time(indices, current_time, time_delta)
+            feature_importance = results["feature_importance"]
+            df_time_block = results["df_time_block"]
+            x = current_time + time_delta / 2
+            y = df_time_block["MMI"].median()
+            number_of_samples = len(df_time_block)
+
+            if number_of_samples > 0:
+
+                ratios = feature_importance["importance"].values[-num_top_bacteria:]
+                bacteria_names = feature_importance.index.values[-num_top_bacteria:]
+                ratios /= sum(ratios)
+                if x is not None:
+                    y -= box_height / 2
+                    x -= box_width / 2
+                    y = max(y, 0)
+                    # x = max(x, 0)
+
+                    for j in range(num_top_bacteria):
+                        bacteria_name = bacteria_names[j]
+                        # text mean and std for this bacteria inside one boxplot
+                        bacteria_avg = feature_importance["feature_avg"][bacteria_name]
+                        bacteria_std = feature_importance["feature_std"][bacteria_name]
+
+                        height = ratios[j] * box_height
+                        if bacteria_name not in legend_labels:
+                            legend_labels.append(bacteria_name)
+                            showlegend = True
+                        else:
+                            showlegend = False
+
+                        bar_trace = dict(
+                            x=[x],
+                            y=[height],
+                            base=y,
+                            offset=0,
+                            width=box_width,
+                            marker_color=f"rgba({self.get_bacteria_colors(bacteria_name)},0.8)",
+                            legendgroup=bacteria_name,
+                            showlegend=showlegend,
+                            name=self.dataset.nice_name(bacteria_name),
+                            hovertemplate="<br>".join(
+                                [
+                                    f"<b>bacteria: {self.dataset.nice_name(bacteria_name)}</b>",
+                                    f"avg ± std: {bacteria_avg:.5f} ± {bacteria_std:.5f}",
+                                    f"importance: {ratios[j]*100:.2f}%",
+                                    f"# samples: {number_of_samples}",
+                                ]
+                            ),
+                        )
+                        if first_iteration:
+                            bar_trace = {
+                                "legendgroup": "<b>Important bacteria</b>",
+                                "legendgrouptitle_text": "<b>Important bacteria</b>",
+                                **bar_trace,
+                            }
+                            first_iteration = False
+                        fig.add_trace(go.Bar(bar_trace))
+
+                        y += height
+
+            current_time += time_delta
+
+        return fig
+
+    def add_intervention(self, fig, units, time_start, indices):
+        """Add intervention to the figure.
+
+        Parameters
+        ----------
+        fig : plotly.graph_objects.Figure
+            Figure to which the intervention will be added.
+        units : list
+            Units or time block sizes.
+        time_start : float
+            Time point from which to collect samples into consequent time blocks.
+        indices : list
+            Indices of samples that will be used to calculate the time block
+            averages. E.g. healthy samples without anomalies.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Figure with added intervention.
+        """
+        number_of_changes = 5
+
+        # click anomaly to intervene
+        # our custom event handler
+        def _update_trace(trace, points, selector):
+            # this list stores the points which were clicked on
+            # in all but one trace they are empty
+            if len(points.point_inds) == 0:
+                return
+
+            if points.trace_name == "Samples":
+                i = points.point_inds[0]
+
+                y = trace.x
+                y_pred = trace.y
+                subject_ids = [x[0] for x in list(trace.customdata)]
+                sample_ids = [x[1] for x in list(trace.customdata)]
+                X = pd.DataFrame(
+                    [x[2] for x in list(trace.customdata)], columns=self.feature_columns
+                )
+
+                X_i = X.iloc[i]
+                y_i = y[i]
+
+                feature_importance = self.get_intervention_point(
+                    X_i, y_i, units, indices, time_start
+                )
+
+                ret_val = "<b>Intervention bacteria"
+                ret_val += (
+                    f"for Subject {subject_ids[i]}, Sample {sample_ids[i]}</b><br><br>"
+                )
+                ret_val += "<br>".join(
+                    [
+                        f"<b>{self.dataset.nice_name(x[0])}</b>: {x[1]:.5f} → {x[2]:.5f}"
+                        for x in feature_importance[["outlier", "change"]]
+                        .reset_index()
+                        .values[:number_of_changes]
+                    ]
+                )
+
+                change = feature_importance.iloc[:number_of_changes]["change"].to_dict()
+                for feature in change:
+                    X_i[feature] = change[feature]
+                X_i = X_i.values.reshape(1, -1)
+                sample_pred_new = self.estimator.predict(X_i)
+
+                sample_ids_new = np.append(sample_ids, sample_ids[i])
+                if len(sample_ids_new) == 1 + len(set(sample_ids_new)):
+                    y_new = np.append(y, y[i])
+                    y_pred_new = np.append(y_pred, sample_pred_new[0])
+                    subject_ids_new = np.append(subject_ids, subject_ids[i])
+                    X_all = np.append(X.values, X_i, axis=0)
+
+                    colors = [trace.marker.color] * len(y) + ["gray"]
+                    # line_colors = trace.line.color
+                    widths = [trace.marker.line.width] * len(y) + [5]
+                    sizes = [trace.marker.size] * len(y) + [20]
+                    # customdata = list(trace.customdata) + [trace.customdata[i]]
+
+                else:
+                    y_new = np.append(y[:-1], y[i])
+                    y_pred_new = np.append(y_pred[:-1], sample_pred_new[0])
+                    subject_ids_new = np.append(subject_ids[:-1], subject_ids[i])
+                    X_all = np.append(X.values[:-1], X_i, axis=0)
+                    sample_ids_new = np.append(sample_ids[:-1], sample_ids[i])
+
+                    # colors = trace.marker.color
+                    colors = trace.marker.color
+                    # line_colors = trace.line.color
+                    sizes = trace.marker.size
+                    widths = trace.marker.line.width
+                    # customdata = trace.customdata
+                customdata = [
+                    (a, b, x) for a, b, x in zip(subject_ids_new, sample_ids_new, X_all)
+                ]
+
+                with fig.batch_update():
+                    # trace.line.color = line_colors
+                    trace.marker.color = colors
+                    trace.marker.size = sizes
+                    trace.marker.line.width = widths
+                    trace.marker.line.color = "black"
+                    trace.customdata = customdata
+
+                    trace.x = y_new
+                    trace.y = y_pred_new
+
+                    y_pred_delta = (y_pred_new[-1] - y_pred[i]) * 10
+
+                    fig.update_layout(
+                        annotations=[
+                            dict(
+                                x=y_new[-1],
+                                y=y_pred_new[-1],
+                                # text="Intevention",
+                                # textangle=90,
+                                # font=dict(
+                                #     color="black",
+                                #     size=15
+                                # ),
+                                ax=0,
+                                ay=y_pred_delta,
+                                arrowcolor="black",
+                                arrowsize=2,
+                                arrowwidth=2,
+                                arrowhead=1,
+                            ),
+                            dict(
+                                text=ret_val,
+                                align="left",
+                                font=dict(color="black", size=12),
+                                showarrow=False,
+                                xref="paper",
+                                yref="paper",
+                                x=0.01,
+                                y=0.99,
+                                bordercolor="black",
+                                bgcolor="white",
+                                borderwidth=0.5,
+                                borderpad=8,
+                            ),
+                        ]
+                    )
+
+        # we need to add the on_click event to each trace separately
+        for i in range(len(fig.data)):
+            fig.data[i].on_click(_update_trace)
+
+        return fig
+
+    def add_longitudinal(self, fig, indices):
+        """Add longitudinal analysis per SubjectID to figure.
+
+        Parameters
+        ----------
+        fig : plotly.graph_objects.Figure
+            Figure to which the longitudinal analysis will be added.
+        indices : list
+            Indices of samples from which the longitudinal analysis will be
+            calculated for every subjectID.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Figure with added longitudinal analysis.
+        """
+        default_linewidth = 3
+        highlighted_linewidth_delta = 5
+        number_of_figures_start = len(fig.data)
+
+        subject_ids = self.subject_ids[indices]
+        y = self.y[indices]
+        y_pred = self.y_pred[indices]
+
+        first_iteration = True
+        for subject_id in natsorted(np.unique(subject_ids)):
+            indices = subject_ids == subject_id
+            y_subject = y[indices]
+            y_pred_subject = y_pred[indices]
+
+            scatter_trace = dict(
+                x=y_subject,
+                y=y_pred_subject,
+                line_color="rgba(0,0,0,0.5)",
+                name=subject_id,
+                hoveron="points",
+                mode="lines+markers",
+                marker=dict(size=10, line=dict(width=2)),
+                marker_symbol="circle-open",
+                line={"width": default_linewidth, "dash": "dashdot"},
+                visible="legendonly",
+            )
+            if first_iteration:
+                scatter_trace = {
+                    "legendgroup": "<b>Longitudinal subjects</b>",
+                    "legendgrouptitle_text": "<b>Longitudinal subjects</b>",
+                    **scatter_trace,
+                }
+                first_iteration = False
+            fig.add_trace(scatter_trace)
+
+        number_of_figures_end = len(fig.data) - number_of_figures_start
+        # our custom event handler
+        def _update_trace(trace, points, selector):
+            # this list stores the points which were clicked on
+            # in all but one trace they are empty
+            if len(points.point_inds) == 0:
+                return
+
+            for i in range(number_of_figures_start, number_of_figures_end):
+                fig.data[i]["line"][
+                    "width"
+                ] = default_linewidth + highlighted_linewidth_delta * (
+                    i == points.trace_index
+                )
+
+        # we need to add the on_click event to each trace separately
+        for i in range(number_of_figures_start, number_of_figures_end):
+            fig.data[i].on_click(_update_trace)
+
+        return fig
+
+    def add_trajectory(self, fig, indices, name, color, degree, **kwargs):
+        """Plot trajectory mean and intervals.
+
+        Parameters
+        ----------
+        fig : plotly.graph_objects.Figure
+            Figure to which the trajectory will be added.
+        indices : list
+            Indices of samples from which the trajectory will be calculated.
+        name : str
+            Name of the trajectory.
+        color : str
+            Color of the trajectory.
+        degree : int
+            Degree of the polynomial used for the trajectory.
+        **kwargs : dict
+            Additional arguments for the plotly.graph_objects.Scatter object.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Figure with added trajectory.
+        """
+        results = self.get_prediction_and_confidence_interval(
+            indices=indices,
+            degree=degree,
+        )
+
+        pi_x = results["prediction_interval"]["x"]
+        pi_mean = results["prediction_interval"]["mean"]
+        pi_bound = results["prediction_interval"]["bound"]
+
+        ci_x = results["confidence_interval"]["x"]
+        ci_mean = results["confidence_interval"]["mean"]
+        ci_bound = results["confidence_interval"]["bound"]
+
+        # prediction interval
+        fig.add_trace(
+            go.Scatter(
+                x=list(pi_x) + list(pi_x[::-1]),
+                y=list(pi_mean - pi_bound) + list(pi_mean + pi_bound)[::-1],
+                fill="toself",
+                fillcolor=f"rgba({color},0.3)",
+                line_color=f"rgba({color},0.5)",
+                showlegend=True,
+                name="95% Prediction Interval",
+                hoveron="points",
+                legendgroup=f"<b>{name}</b>",
+                legendgrouptitle_text=f"<b>{name}</b>",
+                **kwargs,
+            )
+        )
+        # confidence interval
+        fig.add_trace(
+            go.Scatter(
+                x=list(ci_x) + list(ci_x[::-1]),
+                y=list(ci_mean - ci_bound) + list(ci_mean + ci_bound)[::-1],
+                fill="toself",
+                fillcolor=f"rgba({color},0.6)",
+                line_color=f"rgba({color},0.8)",
+                showlegend=True,
+                name="95% Confidence Interval",
+                hoveron="points",
+                **kwargs,
+            )
+        )
+        # mean prediction
+        fig.add_trace(
+            go.Scatter(
+                x=pi_x,
+                y=pi_mean,
+                line_color=f"rgba({color},1.0)",
+                name="Trajectory mean",
+                hoveron="points",
+                **kwargs,
+            )
+        )
+
+        return fig
+
+    def add_samples(self, fig, indices, color, **kwargs):
+        """Add samples to figure.
+
+        Parameters
+        ----------
+        fig : plotly.graph_objects.Figure
+            Figure to which the samples will be added.
+        indices : list
+            Indices of samples from which the samples will be calculated.
+        color : str
+            Color of the samples.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Figure with added samples.
+        """
+        y = self.y[indices]
+        y_pred = self.y_pred[indices]
+        sample_ids = self.sample_ids[indices]
+        subject_ids = self.subject_ids[indices]
+        X = self.X.values[indices]
+
+        # samples
+        fig.add_trace(
+            go.Scatter(
+                x=y,
+                y=y_pred,
+                line_color=f"rgba({color},0.8)",
+                name="Samples",
+                mode="markers",
+                marker=dict(size=8, line=dict(width=2, color="rgba(0.0,0.0,0.0,0.8)")),
+                hoveron="points",
+                customdata=[(a, b, x) for a, b, x in zip(subject_ids, sample_ids, X)],
+                hovertemplate="Age: %{x:.2f}<br>MMI: %{y:.2f}"
+                + "<br>Subject: %{customdata[0]}<br>Sample: %{customdata[1]}",
+                **kwargs,
+            )
+        )
+        return fig
+
+    def add_anomalies(self, fig, color, anomaly_type, indices):
+        """Add anomalies to figure.
+
+        Parameters
+        ----------
+        fig : plotly.graph_objects.Figure
+            Figure to which the anomalies will be added.
+        color : str
+            Color of the anomalies.
+        anomaly_type : str
+            Type of the anomalies.
+        indices : list
+            Indices of samples from which the anomalies will be calculated.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Figure with added anomalies.
+        """
+        anomalies = self.get_anomalies(anomaly_type=anomaly_type, indices=indices)
+
+        anomaly_indices = anomalies == True
+        y = self.y[anomaly_indices]
+        y_pred = self.y_pred[anomaly_indices]
+        sample_ids = self.sample_ids[anomaly_indices]
+        subject_ids = self.subject_ids[anomaly_indices]
+
+        fig.add_trace(
+            go.Scatter(
+                x=y,
+                y=y_pred,
+                line_color=f"rgba({color},0.7)",
+                name="Anomaly",
+                mode="markers",
+                marker=dict(size=20, line=dict(width=5)),
+                marker_symbol="cross-open",
+                hoveron="points",
+                customdata=[(a, b) for a, b in zip(subject_ids, sample_ids)],
+                hovertemplate="Age: %{x:.2f}<br>MMI: %{y:.2f}"
+                + "<br>Subject: %{customdata[0]}<br>Sample: %{customdata[1]}",
+            )
+        )
+
+        return fig
+
+    def _get_axis_max_limit(self, fig, axis_name):
+        maxs = []
+        for trace_data in fig.data:
+            if len(trace_data[axis_name]) > 0:
+                maxs.append(max(trace_data[axis_name]))
+        return max(maxs)
+
+    def plot_reference_trajectory(
+        self,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot reference samples, fit line, its CI and PI, and longitudinal data per subject.
+
+        Parameters
+        ----------
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+        degree : int
+            Degree of the polynomial fit.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the reference samples, fit line, its CI and PI, and longitudinal data per subject.
+                - "ret_val" : str
+                    String with the informational text on performance.
+                - "config" : dict
+                    Dictionary for the plotly export image options.
+        """
+        indices = self.reference_groups == True
+
+        ret_val = "<b>Performance Information</b><br>"
+        ret_val += (
+            f"MAE: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        )
+        ret_val += f"R^2: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        fig = go.FigureWidget()
+
+        fig = self.add_trajectory(
+            fig=fig,
+            indices=indices,
+            name="Reference",
+            color=self.color_reference,
+            degree=degree,
+        )
+        fig = self.add_samples(
+            fig=fig,
+            indices=indices,
+            color=self.color_reference,
+        )
+
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            **yaxis_settings_final,
+        )
+        fig.update_layout(
+            title_text="Microbiome trajectory - trajectory per reference group",
+            **layout_settings_final,
+        )
+
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "microbiome_reference_trajectory",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"fig": fig, "ret_val": ret_val, "config": config}
+
+        return results
+
+    def plot_reference_groups(
+        self,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot the reference vs non-reference trajectory.
+
+        Parameters
+        ----------
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+        degree : int
+            Degree of the polynomial fit.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the reference samples, fit line, its CI and PI, and longitudinal data per subject.
+                - "ret_val" : str
+                    String with the informational text on performance.
+                - "config" : dict
+                    Dictionary for the plotly export image options.
+        """
+        if len(self.dataset.df.reference_group.unique()) != 2:
+            raise ValueError(
+                "Reference groups is available, but no samples for non-reference."
+            )
+
+        ret_val = "<b>Performance Information</b><br>"
+        indices = self.reference_groups == True
+        ret_val += f"MAE reference: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        ret_val += (
+            f"R^2 reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        )
+        indices = self.reference_groups == False
+        ret_val += f"MAE non-reference: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        ret_val += f"R^2 non-reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+
+        indices = (self.reference_groups == True) | (self.reference_groups == False)
+        if degree == 1:
+            ret_val += "<b>Linear p-value (k, n)</b>:"
+            pval_k, pval_n = self.get_pvalue_linear(indices=indices)
+            ret_val += f"<br>Reference vs. Non-reference: ({pval_k:.3f}, {pval_n:.3f})"
+        else:
+            ret_val += "<b>Spline p-value</b>:"
+            pval = self.get_pvalue_spline(indices=indices, degree=degree)
+            ret_val += f"<br>Reference vs. Non-reference: {pval:.3f}"
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        fig = go.FigureWidget()
+
+        # plot reference trajectory
+        indices = self.reference_groups == True
+        fig = self.add_trajectory(
+            fig=fig,
+            indices=indices,
+            name="Reference",
+            color=self.color_reference,
+            degree=degree,
+        )
+        fig = self.add_samples(
+            fig=fig,
+            indices=indices,
+            color=self.color_reference,
+        )
+
+        # plot non-reference trajectory
+        indices = self.reference_groups == False
+        fig = self.add_trajectory(
+            fig=fig,
+            indices=indices,
+            name="Non-reference",
+            color=self.color_non_reference,
+            degree=degree,
+        )
+        fig = self.add_samples(
+            fig=fig,
+            indices=indices,
+            color=self.color_non_reference,
+        )
+        # plot longitudinal
+        fig = self.add_longitudinal(fig, indices=indices)
+
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            **yaxis_settings_final,
+        )
+
+        fig.update_layout(
+            title_text="Microbiome trajectory - trajectory per reference group",
+            **layout_settings_final,
+        )
+
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "microbiome_trajectory_per_reference_group",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"fig": fig, "ret_val": ret_val, "config": config}
+
+        return results
+
+    def plot_groups(
+        self,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot the trajectory per group.
+
+        Parameters
+        ----------
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+        degree : int
+            Degree of the polynomial fit.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the reference samples, fit line, its CI and PI, and longitudinal data per subject.
+                - "ret_val" : str
+                    String with the informational text on performance.
+                - "config" : dict
+                    Dictionary for the plotly export image options.
+        """
+        ret_val = "<b>Performance Information</b><br>"
+        for group in np.unique(self.groups):
+            indices = self.groups == group
+            ret_val += f"MAE {group}: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+            ret_val += f"R^2 {group}: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        group_vals = np.unique(self.groups)
+        comb = combinations(group_vals, 2)
+        for c in list(comb):
+            indices = (self.groups == c[0]) | (self.groups == c[1])
+            if degree == 1:
+                ret_val += "<b>Linear p-value (k, n)</b>:"
+                pval_k, pval_n = self.get_pvalue_linear(
+                    indices=indices,
+                )
+                ret_val += f"<br>{c[0]} vs. {c[1]}: ({pval_k:.3f}, {pval_n:.3f})"
+            else:
+                ret_val += "<b>Spline p-value</b>:"
+                pval = self.get_pvalue_spline(
+                    indices=indices,
+                    degree=degree,
+                )
+                ret_val += f"<br>{c[0]} vs. {c[1]}: {pval:.3f}"
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        fig = go.FigureWidget()
+
+        for i, group in enumerate(natsorted(np.unique(self.groups))):
+            indices = self.groups == group
+
+            fig = self.add_trajectory(
+                fig=fig,
+                indices=indices,
+                name=group,
+                color=self.colors_rgb[i],
+                degree=degree,
+            )
+            fig = self.add_samples(
+                fig=fig,
+                indices=indices,
+                color=self.colors_rgb[i],
+            )
+
+        indices = range(len(self.dataset.df))
+        fig = self.add_longitudinal(
+            fig=fig,
+            indices=indices,
+        )
+
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            **yaxis_settings_final,
+        )
+
+        fig.update_layout(
+            title_text="Microbiome trajectory - trajectory per group",
+            **layout_settings_final,
+        )
+
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "microbiome_trajectory_per_group",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"fig": fig, "ret_val": ret_val, "config": config}
+
+        return results
+
+    def plot_anomalies(
+        self,
+        anomaly_type=AnomalyType.PREDICTION_INTERVAL,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot anomalies.
+
+        Parameters
+        ----------
+        anomaly_type : AnomalyType
+            Type of anomaly to plot.
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+        degree : int
+            Degree of the polynomial fit.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the reference samples, fit line, its CI and PI, and longitudinal data per subject.
+                - "ret_val" : str
+                    String with the informational text on performance.
+                - "config" : dict
+                    Dictionary for the plotly export image options.
+        """
+        indices = self.reference_groups == True
+
+        ret_val = "<b>Performance Information</b><br>"
+        ret_val += (
+            f"MAE: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        )
+        ret_val += f"R^2: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        fig = go.FigureWidget()
+
+        fig = self.add_trajectory(
+            fig=fig,
+            indices=indices,
+            name="Reference",
+            color=self.color_reference,
+            degree=degree,
+        )
+        fig = self.add_samples(
+            fig=fig,
+            indices=indices,
+            color=self.color_reference,
+        )
+
+        fig = self.add_anomalies(
+            fig=fig,
+            color=self.color_anomaly,
+            anomaly_type=anomaly_type,
+            indices=indices,
+        )
+
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            **yaxis_settings_final,
+        )
+        fig.update_layout(
+            title_text="Microbiome trajectory - trajectory per reference group",
+            **layout_settings_final,
+        )
+
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "microbiome_reference_trajectory",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"fig": fig, "ret_val": ret_val, "config": config}
+
+        return results
+
+    def plot_timeboxes(
+        self,
+        units,
+        anomaly_type=AnomalyType.PREDICTION_INTERVAL,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot importance time boxes for reference non-anomalous samples.
+
+        Parameters
+        ----------
+        units : list
+            List of time units to plot.
+        anomaly_type : AnomalyType
+            Type of anomaly to plot.
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+        degree : int
+            Degree of the polynomial fit.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the reference samples, fit line, its CI and PI, and longitudinal data per subject.
+                - "ret_val" : str
+                    String with the informational text on performance.
+                - "config" : dict
+                    Dictionary for the plotly export image options.
+        """
+        indices = self.reference_groups == True  # & (self.anomaly == False)
+
+        ret_val = "<b>Performance Information</b><br>"
+        ret_val += (
+            f"MAE: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        )
+        ret_val += f"R^2: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        fig = go.FigureWidget()
+
+        fig = self.add_trajectory(
+            fig=fig,
+            indices=indices,
+            name="Reference",
+            color=self.color_reference,
+            degree=degree,
+            hoverinfo="skip",
+        )
+        fig = self.add_samples(
+            fig=fig,
+            indices=indices,
+            color=self.color_reference,
+            hoverinfo="skip",
+        )
+
+        anomalies = self.get_anomalies(anomaly_type=anomaly_type, indices=indices)
+        indices = np.logical_and(indices, anomalies == False)
+
+        fig = self.add_timeboxes(
+            fig,
+            units,
+            indices=indices,
+            time_start=0,
+            num_top_bacteria=5,
+        )
+
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            **yaxis_settings_final,
+        )
+        fig.update_layout(
+            title_text="Microbiome trajectory - importance timeboxes",
+            **layout_settings_final,
+        )
+
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "microbiome_importance_timeboxes",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"fig": fig, "ret_val": ret_val, "config": config}
+
+        return results
+
+    def plot_intervention(
+        self,
+        units,
+        anomaly_type=AnomalyType.PREDICTION_INTERVAL,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot interactive sample intervention that returns samples back to the non-anomalous referene samples.
+
+        Parameters
+        ----------
+        units : list
+            List of time units to plot.
+        anomaly_type : AnomalyType
+            Type of anomaly to plot.
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+        degree : int
+            Degree of the polynomial fit.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the reference samples, fit line, its CI and PI, and longitudinal data per subject.
+                - "ret_val" : str
+                    String with the informational text on performance.
+                - "config" : dict
+                    Dictionary for the plotly export image options.
+        """
+        indices = self.reference_groups == True  # & (self.anomaly == False)
+
+        ret_val = "<b>Performance Information</b><br>"
+        ret_val += (
+            f"MAE: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        )
+        ret_val += f"R^2: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        fig = go.FigureWidget()
+
+        fig = self.add_trajectory(
+            fig=fig,
+            indices=indices,
+            name="Reference",
+            color=self.color_reference,
+            degree=degree,
+        )
+        fig = self.add_samples(
+            fig=fig,
+            indices=indices,
+            color=self.color_reference,
+        )
+
+        anomalies = self.get_anomalies(anomaly_type=anomaly_type, indices=indices)
+        indices = np.logical_and(indices, anomalies == False)
+
+        fig = self.add_timeboxes(
+            fig,
+            units,
+            indices=indices,
+            time_start=0,
+            num_top_bacteria=5,
+        )
+
+        fig = self.add_intervention(
+            fig=fig,
+            units=units,
+            indices=indices,
+            time_start=0,
+        )
+
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            **yaxis_settings_final,
+        )
+        fig.update_layout(
+            title_text="Microbiome trajectory - trajectory per reference group",
+            **layout_settings_final,
+        )
+
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "microbiome_reference_trajectory",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"fig": fig, "ret_val": ret_val, "config": config}
+
+        return results
+
+    def plot_animated_longitudinal_information(
+        self,
+        xaxis_settings=None,
+        yaxis_settings=None,
+        layout_settings=None,
+        degree=2,
+    ):
+        """Plot animated longitudinal information of reference samples.
+
+        Parameters
+        ----------
+        xaxis_settings : dict
+            Settings for xaxis.
+        yaxis_settings : dict
+            Settings for yaxis.
+        layout_settings : dict
+            Settings for layout.
+
+        Returns
+        -------
+        results : dict
+            Dictionary with the following keys:
+                - "fig" : plotly.graph_objects.Figure
+                    Figure with the interactive longitudinal information.
+        """
+        indices = self.reference_groups == True
+
+        if layout_settings is None:
+            layout_settings = {}
+        layout_settings_final = {**self.layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
+
+        frames = []
+
+        trajectory = self.add_trajectory(
+            fig=go.FigureWidget(),
+            indices=indices,
+            name="Reference",
+            color="220,220,220",
+            degree=degree,
+        ).data
+
+        subject_ids = self.subject_ids[indices]
+        sample_ids = self.sample_ids[indices]
+        y = self.y[indices]
+        y_pred = self.y_pred[indices]
+
+        first_iteration = True
+        for age_at_collection in np.unique(y):
+            data = [*trajectory]
+            indices_time = y <= age_at_collection
+
+            for subject_id in natsorted(np.unique(subject_ids)):
+                indices_subject = list(subject_ids[indices_time] == subject_id)
+
+                y_subject = y[indices_time][indices_subject]
+                y_pred_subject = y_pred[indices_time][indices_subject]
+                sample_ids_subject = sample_ids[indices_time][indices_subject]
+
+                scatter_trace = dict(
+                    x=y_subject,
+                    y=y_pred_subject,
+                    line_color=f"rgba({self.get_subject_colors(subject_id)},0.9)",
+                    name=subject_id,
+                    mode="lines+markers",
+                    marker=dict(size=10, line=dict(width=3)),
+                    marker_symbol="circle-open",
+                    hoveron="points",
+                    customdata=sample_ids_subject,
+                    hovertemplate="Age: %{x:.2f}<br>MMI: %{y:.2f}"
+                    + f"<br>Subject: {subject_id}<br>"
+                    + "Sample: %{customdata}",
+                )
+                if first_iteration:
+                    scatter_trace = {
+                        "legendgroup": "<b>Longitudinal subjects</b>",
+                        "legendgrouptitle_text": "<b>Longitudinal subjects</b>",
+                        **scatter_trace,
+                    }
+                    first_iteration = False
+                data.append(scatter_trace)
+            frames.append(go.Frame(data=data))
+
+        fig = go.Figure(
+            data=frames[0]["data"],
+            layout=go.Layout(
+                updatemenus=[
+                    dict(
+                        type="buttons",
+                        buttons=[dict(label="Play", method="animate", args=[None])],
                     )
                 ]
-            ))
-    else:
-        print(ret_val)
-    
-    if img_file_name:
-        pathlib.Path('/'.join(img_file_name.split('/')[:-1])).mkdir(parents=True, exist_ok=True)
-    
-        if "html" in img_file_name.lower(): 
-            fig.write_html(img_file_name)
-        elif any(extension in img_file_name for extension in ["png", "jpeg", "webp", "svg", "pdf", "eps" ]):
-            fig.write_image(img_file_name)
-        else:
-            raise Exception(f"Extension {img_file_name.split('.')[-1]} is not implemented")
-    
+            ),
+            frames=frames,
+        )
 
-    
-    if not website:
-        fig.show()
+        fig.update_xaxes(
+            title=f"Age at collection [{self.dataset.time_unit.name}]",
+            range=(0.0, y.max()),
+            **xaxis_settings_final,
+        )
+        fig.update_yaxes(
+            title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
+            range=(0.0, y_pred.max()),
+            **yaxis_settings_final,
+        )
+        fig.update_layout(
+            title_text="Animated longitudinal information",
+            **layout_settings_final,
+        )
 
-    plt.clf()
-    plt.close('all')
-    del df
-    gc.collect()
-    
-    return fig, mae, r2, pi_median
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "animation_longitudinal_information",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
 
+        results = {"fig": fig, "ret_val": None, "config": config}
 
-
-
-def plot_1_trajectory(fig, estimator, df, bacteria_names, limit_age, time_unit_size, time_unit_name, traj_label, plateau_area_start, traj_color, limit_age_max, df_new=None, degree=2, longitudinal_mode=None, longitudinal_showlegend=True, 
-                    fillcolor_alpha=0.3, highlight_outliers=None, marker_outlier=None, plot_CI=False, plot_PI=True, PI_percentage=95): 
-    """
-    longitudinal_mode: str
-        How a longitudinal data is plotted: markers+lines, lines, markers, etc.
-    Reference:
-    - https://nbviewer.jupyter.org/github/demotu/BMC/blob/master/notebooks/CurveFitting.ipynb
-    """
-    if df_new is None:
-        df_new = df.copy()
-    
-    df = df.sort_values(by="age_at_collection")
-    X, y = df2vectors(df, bacteria_names)
-    y_pred = estimator.predict(X)
-    y = np.array(y)/time_unit_size
-    y_pred = np.array(y_pred)/time_unit_size
-    
-    df_new = df_new.sort_values(by="age_at_collection")
-    X_new, y_new = df2vectors(df_new, bacteria_names)
-    y_pred_new = estimator.predict(X_new)
-    y_new = np.array(y_new)/time_unit_size
-    y_pred_new = np.array(y_pred_new)/time_unit_size
-
-    mae   = round(np.mean(abs(y_pred - y)), 2)
-    r2    = r2_score(y, y_pred)
-    coeff = stats.pearsonr(y_pred, y)
-    
-    # performace calculated until limit_age
-    idx       = np.where(y < limit_age/time_unit_size)[0]
-    mae_idx   = round(np.mean(abs(y_pred[idx] - y[idx])), 2)
-    r2_idx    = r2_score(y[idx], y_pred[idx])
-    coeff_idx = stats.pearsonr(y_pred[idx], y[idx])
-    ret_val = "<b>Performance Information</b><br>"
-    ret_val += f'MAE: {mae_idx}<br>'
-    ret_val += f'R^2: {r2_idx:.3f}<br>'
-    ret_val += f"Pearson: {coeff_idx[0]:.3f}, 2-tailed p-value: {coeff_idx[1]:.2e}<br>"
-    
-    if plateau_area_start is not None:
-        idx       = np.where(y < plateau_area_start/time_unit_size)[0]
-        mae_idx   = round(np.mean(abs(y_pred[idx] - y[idx])), 2)
-        r2_idx    = r2_score(y[idx], y_pred[idx])
-        coeff_idx = stats.pearsonr(y_pred[idx], y[idx])
-    
-        ret_val += f"<b>Performance Information < {plateau_area_start} days</b><br>"
-        ret_val += f'MAE: {mae_idx}<br>'
-        ret_val += f'R^2: {r2_idx:.3f}<br>'
-        ret_val += f"Pearson: {coeff_idx[0]:.3f}, 2-tailed p-value: {coeff_idx[1]:.2e}<br>"
-
-    if PI_percentage == 95:
-        percent = 0.975   
-    elif  PI_percentage == 90:
-        percent = 0.95
-    elif PI_percentage == 80:
-        percent = 0.9
-    else:
-        raise NotImplemented("The percentage not implemented!")
-        
-    # Plot data
-    equation = lambda a, b: np.polyval(a, b) 
-
-    # Stats
-    p, cov = np.polyfit(y, y_pred, degree, cov=True)           # parameters and covariance from of the fit of 1-D polynom.
-    y_model = equation(p, y)                                   # model using the fit parameters; NOTE: parameters here are coefficients
-
-    # Statistics
-    n = y_pred.size                                            # number of observations
-    m = p.size                                                 # number of parameters
-    dof = n - m                                                # degrees of freedom
-    t = stats.t.ppf(percent, n - m)                              # used for CI and PI bands
-
-    # Estimates of Error in Data/Model
-    resid = y_pred - y_model                           
-    chi2 = np.sum((resid / y_model)**2)                        # chi-squared; estimates error in data
-    chi2_red = chi2 / dof                                      # reduced chi-squared; measures goodness of fit
-    s_err = np.sqrt(np.sum(resid**2) / dof)                    # standard deviation of the error
-
-    # Confidence Interval (select one)
-    if plot_CI:
-        nboot = 500
-        bootindex = sp.random.randint
-        
-        for b in range(nboot):
-            resamp_resid = resid[bootindex(0, len(resid) - 1, len(resid))]
-            # Make coeffs of for polys
-            pc = np.polyfit(y, y_pred + resamp_resid, degree)                   
-            # Plot bootstrap cluster
-            idx = np.argsort(y)
-            _x = y[idx]
-            _y = np.polyval(pc, _x)
-            
-            if b < nboot-1:
-                fig.add_trace(go.Scatter(
-                    x=_x,
-                    y=_y,
-                    mode="lines",
-                    line = dict(width=5),
-                    fillcolor=f'rgba({traj_color},{3.0 / float(nboot):.2f})',
-                    line_color=f'rgba({traj_color},{3.0 / float(nboot):.2f})',
-                    showlegend=False,
-                    name="Confidence Interval",
-                ))
-            else:
-                fig.add_trace(go.Scatter(
-                    x=_x,
-                    y=_y,
-                    mode="lines",
-                    line = dict(width=5),
-                    fillcolor=f'rgba({traj_color},{0.1:.2f})',
-                    line_color=f'rgba({traj_color},{0.1:.2f})',
-                    showlegend=True,
-                    name=f"{PI_percentage}% Confidence Interval",
-                    legendgroup="trajectory"
-                ))
-
-    x2 = np.linspace(0, limit_age_max/time_unit_size, limit_age_max+1) #np.linspace(np.min(x), np.max(x), 100)
-    y2 = equation(p, x2)
-
-    # Prediction Interval
-    pi = t * s_err * np.sqrt(1 + 1/n + (x2 - np.mean(y))**2 / np.sum((y - np.mean(y))**2))   
-    pi_mean       = np.mean(pi)
-    pi_median     = np.median(pi)
-    
-    ret_val += "<b>Statistics</b><br>"
-    ret_val += f"Chi^2: {chi2:.2f}<br>"
-    ret_val += f"Reduced chi^2: {chi2_red:.2f}<br>"
-    ret_val += f"Standard deviation of the error: {s_err:.2f}<br>"
-    ret_val += f"Prediction interval:<br> mean={pi_mean:.2f}, median={pi_median:.2f}<br>"
-    
-    if plateau_area_start is not None:
-        idx           = np.where(x2 < plateau_area_start)[0]
-        pi_mean_idx   = np.mean(pi[idx])
-        pi_median_idx = np.median(pi[idx])
-        ret_val += f"Prediction interval < {plateau_area_start} {time_unit_name}:<br> mean={pi_mean_idx:.2f}, median={pi_median_idx:.2f}<br>"
-
-    # mean prediction
-    fig.add_trace(go.Scatter(
-        x=x2, y=y2,
-        line_color=f'rgba({traj_color},1.)',
-        name=f"{traj_label.title()} trajectory",
-        legendgroup="trajectory"
-    ))
-    # prediction interval
-    if plot_PI:
-        fig.add_trace(go.Scatter(
-            x=list(x2)+list(x2[::-1]),
-            y=list(y2-pi)+list(y2+pi)[::-1],
-            fill='toself',
-            fillcolor=f'rgba({traj_color},{fillcolor_alpha})',
-            line_color=f'rgba({traj_color},{fillcolor_alpha+0.2})',
-            showlegend=True,
-            name=f"{PI_percentage}% Prediction Interval",
-            legendgroup="trajectory"
-        ))
-        
-
-    if highlight_outliers is not None:
-        idx = np.where(df_new["sampleID"].astype(str).isin(highlight_outliers))[0]
-        fig.add_trace(go.Scatter(
-            x=y_new[idx],
-            y=y_pred_new[idx],
-            mode="markers",
-            marker=marker_outlier,
-            showlegend=True,
-            name="Outliers",
-            text=list(df_new["sampleID"].values[idx]), 
-            hovertemplate = '<b>Healthy reference sample outside the healthy region</b><br><br>'+
-                            '<b>SampleID</b>: %{text}<br>'+
-                            '<b>Age</b>: %{x:.2f}'+
-                            '<br><b>MMI</b>: %{y}<br>',
-            hoveron="points"
-        ))
-    
-    if longitudinal_mode is not None:
-        if longitudinal_mode == "markers":
-            fig.add_trace(go.Scatter(
-                    x=y_new,
-                    y=y_pred_new,
-                    mode=longitudinal_mode,
-                    line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
-                    marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
-                    showlegend=True,
-                    name=f"{traj_label.title()} samples",
-                    text=list(df_new["sampleID"].values), 
-                    hovertemplate = f'<b>{traj_label.title()} reference sample</b><br><br>'+
-                                    '<b>SampleID</b>: %{text}<br>'+
-                                    '<b>Age</b>: %{x:.2f}'+
-                                    '<br><b>MMI</b>: %{y}<br>',
-                    hoveron="points"
-                ))
-        else:
-            # longitudinal - line per subject
-            for trace in df_new["subjectID"].unique():
-                idx = np.where(df_new["subjectID"]==trace)[0]
-                fig.add_trace(go.Scatter(
-                    x=y_new[idx],
-                    y=y_pred_new[idx],
-                    mode=longitudinal_mode,
-                    line=dict(width=3, dash='dash', color=f'rgba({traj_color},0.65)'),
-                    marker=dict(size=10, color=f'rgba({traj_color},0.65)'),
-                    showlegend=longitudinal_showlegend,
-                    name=trace,
-                    text=list(df_new["sampleID"].values[idx]), 
-                    hovertemplate = f'<b>{traj_label.title()} reference sample</b><br><br>'+
-                                    '<b>SampleID</b>: %{text}<br>'+
-                                    '<b>Age</b>: %{x:.2f}'+
-                                    '<br><b>MMI</b>: %{y}<br>',
-                    hoveron="points"
-                ))
-    
-    plt.clf()
-    plt.close('all')
-    del df
-    gc.collect()
-    return fig, ret_val, mae, r2, pi_median, x2, pi, y2
-
-def plot_2_trajectories(estimator_ref, val1, val2, feature_cols, degree=2, plateau_area_start=2, limit_age=1200, start_age=0, time_unit_size=1, time_unit_name="days", 
-                        linear_pval=False, nonlinear_pval=False, img_file_name=None, longitudinal_mode="markers+lines", 
-                        website=False, plot_CI=False, plot_PI=True, layout_settings=None, stats_table=True, dtick=2,PI_percentage=95):
-    val1 = val1.sort_values(by="age_at_collection")
-    X1, y1 = df2vectors(val1, feature_cols)
-    y_pred1 = estimator_ref.predict(X1)
-    sid1 = val1["sampleID"].values
-    
-    val2 = val2.sort_values(by="age_at_collection")
-    X2, y2 = df2vectors(val2, feature_cols)
-    y_pred2 = estimator_ref.predict(X2)
-    sid2 = val2["sampleID"].values
-    
-
-    fig = go.Figure()
-    ret_val = ""
-    
-    limit_age_max1 = int(max(val1["age_at_collection"]))+1
-    limit_age_max2 = int(max(val2["age_at_collection"]))+1
-    limit_age_max = max(limit_age_max1, limit_age_max2)
-
-    if plateau_area_start is not None:
-        # shaded area where plateau is expected
-        if plateau_area_start//time_unit_size+1 < limit_age//time_unit_size+1:
-            _x = np.linspace(plateau_area_start, limit_age_max, 10)//time_unit_size+1
-            fig.add_trace(go.Scatter(
-                x=list(_x)+list(_x[::-1]),
-                y=list(np.zeros(10))+list(np.ones(10)*limit_age//time_unit_size+1),
-                fill='toself',
-                fillcolor='rgba(220,220,220,0.5)',
-                line_color='rgba(220,220,220,0.5)',
-                showlegend=True,
-                name=f"sample at time > {plateau_area_start} days",
-            ))
-    else:
-        plateau_area_start = limit_age
-    
-    
-    fig, ret_val1, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val1, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="0,0,255", traj_label="reference", 
-                                                            plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False,
-                                                            plot_CI=plot_CI, plot_PI=plot_PI, PI_percentage=PI_percentage)
-    fig, ret_val2, _, _, _, _, _, _ = plot_1_trajectory(fig, estimator_ref, val2, feature_cols, limit_age, time_unit_size, time_unit_name, traj_color="255,0,0", traj_label="other", 
-                                                            plateau_area_start=plateau_area_start, limit_age_max=limit_age_max, longitudinal_mode=longitudinal_mode, longitudinal_showlegend=False,
-                                                            plot_CI=plot_CI, plot_PI=plot_PI, PI_percentage=PI_percentage)
-
-              
-    # dataframe will be used for linear and nonlinear p-value calculation
-    df = pd.DataFrame(data={"y":np.concatenate([y1, y2]), "y_pred":np.concatenate([y_pred1, y_pred2]),
-                            "diftimeunit_y":np.concatenate([y1, y2]), "diftimeunit_y_pred":np.concatenate([y_pred1, y_pred2]),
-                            "sampleID":list(sid1)+list(sid2),
-                            "label": ["reference"]*len(y1) + ["other"]*len(y2)})
-
-    if linear_pval:
-        df = df[(df.y<plateau_area_start) & (start_age<df.y)]
-        
-        equation = lambda a, b: np.polyval(a, b) 
-        xx = np.linspace(0, plateau_area_start, 10)/time_unit_size+1
-
-        
-        # lines
-        p1, _cov = np.polyfit(df[df.label=="reference"].y.values//time_unit_size+1, df[df.label=="reference"].y_pred.values//time_unit_size+1, 1, cov=True)  
-        fig.add_trace(go.Scatter(
-            x=xx,
-            y=equation(p1, xx),
-            mode="lines",
-            line = dict(width=5, dash='dash', color="rgba(0,0,255,1.0)"),
-            marker=dict(size=10, color='red'),
-            showlegend=True,
-            name='Reference linear line',
-        ))
-        
-        p2, _cov = np.polyfit(df[df.label=="other"].y.values//time_unit_size+1, df[df.label=="other"].y_pred.values//time_unit_size+1, 1, cov=True)         
-        fig.add_trace(go.Scatter(
-            x=xx,
-            y=equation(p2, xx),
-            mode="lines",
-            line = dict(width=5, dash='dash', color='red'),
-            marker=dict(size=10, color="rgba(255,0,0,1.0)"),
-            showlegend=True,
-            name='Other linear line',
-        ))
-        pval_k, pval_n = get_pvalue_regliner(df, group="label")
-        ret_val += f"<b>Linear lines difference:</b><br>p = {pval_k:.3f}, {pval_n:.3f}"
-
-    if nonlinear_pval:
-        df = df[(df.y<limit_age) & (start_age<df.y)]
-        
-        pval = get_pvalue_permuspliner(df, group="label", degree=degree)
-        
-        ret_val += f"<b>Splines difference:</b><br>p = {pval:.3f}"
-        
-    fig.update_xaxes(title=f"Age [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
-                     tick0=start_age/time_unit_size, dtick=dtick, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray') 
-    fig.update_yaxes(title=f"Microbiome Maturation Index [{time_unit_name}]", range=(start_age/time_unit_size, limit_age/time_unit_size), 
-                     tick0=start_age/time_unit_size, dtick=dtick, showline=True, linecolor='lightgrey', gridcolor='lightgrey', zeroline=True, zerolinecolor='lightgrey', showspikes=True, spikecolor='gray')  
-    
-
-    layout_settings_default = dict(
-        height=900, 
-        width=1000,
-        plot_bgcolor='rgba(0,0,0,0)', 
-        paper_bgcolor='rgba(0,0,0,0)', 
-        margin=dict(l=0, r=0, b=0, pad=0),
-        title_text="Microbiome Trajectory"
-    )
-
-    if layout_settings is None:
-        layout_settings = {}
-    layout_settings_final = {**layout_settings_default, **layout_settings}
-    
-    fig.update_layout(**layout_settings_final)
-    
-    if stats_table:
-        fig.update_layout(go.Layout(
-            annotations=[
-                go.layout.Annotation(
-                    text=ret_val1,
-                    font = dict(size = 10),
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=0.5,
-                    y=.01,
-                    bordercolor='black',
-                    bgcolor='rgba(0,0,220,0.5)',
-                    borderwidth=0.5,
-                    borderpad=8
-                ),
-                go.layout.Annotation(
-                    text=ret_val2,
-                    font = dict(size = 10),
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=1.0,
-                    y=.01,
-                    bordercolor='black',
-                    bgcolor='rgba(220,0,0,0.5)',
-                    borderwidth=0.5,
-                    borderpad=8
-                ),
-                go.layout.Annotation(
-                    text=ret_val,
-                    font = dict(size = 15),
-                    align='left',
-                    showarrow=False,
-                    xref='paper',
-                    yref='paper',
-                    x=.01,
-                    y=.99,
-                    bordercolor='black',
-                    bgcolor='white',
-                    borderwidth=0.5,
-                    borderpad=8
-                )
-            ]
-        ), xaxis=dict(domain=[0.1, 0.1]))
-    
-    if img_file_name:
-        fig.write_html(img_file_name)
-
-    if not website:
-        fig.show()
-    
-    plt.clf()
-    plt.close('all')
-    del df
-    gc.collect()
-    return fig
-
-
+        return results
