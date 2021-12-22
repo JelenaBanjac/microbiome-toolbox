@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ReferenceGroup(Enum):
     USER_DEFINED = 1
     NOVELTY_DETECTION = 2
@@ -21,6 +22,7 @@ class AnomalyType(Enum):
     PREDICTION_INTERVAL = 1
     LOW_PASS_FILTER = 2
     ISOLATION_FOREST = 3
+
 
 class FeatureExtraction(Enum):
     NONE = 0

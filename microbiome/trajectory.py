@@ -1,9 +1,4 @@
-from os import name
-import re
-from catboost import Pool
-from numpy.core.numeric import indices
-from numpy.lib.function_base import select
-from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 import numpy as np
@@ -16,7 +11,6 @@ import copy
 import scipy.stats as stats
 import scipy as sp
 import plotly.express as px
-from statsmodels.base.model import Results
 from microbiome.statistical_analysis import regliner, permuspliner
 from itertools import combinations
 from sklearn.metrics import mean_absolute_error, r2_score
@@ -32,7 +26,12 @@ RANDOM_STATE = 42
 
 class MicrobiomeTrajectory:
     def __init__(
-        self, dataset, feature_columns, feature_extraction=FeatureExtraction.NONE, time_unit=TimeUnit.DAY, train_indices=None
+        self,
+        dataset,
+        feature_columns,
+        feature_extraction=FeatureExtraction.NONE,
+        time_unit=TimeUnit.DAY,
+        train_indices=None,
     ):
         self.dataset = copy.deepcopy(dataset)
         self.__feature_columns = list(feature_columns)
@@ -144,7 +143,11 @@ class MicrobiomeTrajectory:
         self.palette = itertools.cycle(self.colors_rgb)
 
     def get_less_feature_columns(
-        self, plot=False, technique=FeatureExtraction.NONE, thresholds=None, layout_settings=None
+        self,
+        plot=False,
+        technique=FeatureExtraction.NONE,
+        thresholds=None,
+        layout_settings=None,
     ):
         """Extract just few feature columns to reduce the number of features wlog.
 
@@ -278,7 +281,9 @@ class MicrobiomeTrajectory:
                 idx = np.where(constant_filter.get_support())[0]
                 feature_columns = self.__feature_columns[idx]
             elif technique == "corr":
-                correlation_matrix = self.dataset.df[self.__feature_columns].corr().abs()
+                correlation_matrix = (
+                    self.dataset.df[self.__feature_columns].corr().abs()
+                )
                 upper = correlation_matrix.where(
                     np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool)
                 )

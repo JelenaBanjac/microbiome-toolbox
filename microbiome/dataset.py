@@ -17,10 +17,8 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from ipywidgets import VBox
-from sklearn.model_selection import cross_val_score,cross_val_predict
+from sklearn.model_selection import cross_val_score, cross_val_predict
 import re
-
-
 
 
 class MicrobiomeDataset:
@@ -37,26 +35,7 @@ class MicrobiomeDataset:
     # Note: e.g. reference group = healthy samples
     # non reference group = non healthy samples
     # group = country
-    future_columns = [
-        # values: Train, Validation, Test
-        # goal: split reference_group into Train and Validation
-        # but every group has its Train and Validation representatives
-        # and non reference_group samples to be Test
-        # where to use: microbiome trajectory
-        # training on Train, test on Validation,
-        # compare with non reference group Test
-        "dataset_type",
-        # "dataset_type_classification",
-        # values: Train-1, Test-1, Train-2, Test-2
-        # goal: split reference_group into Train-1 and Test-1, and
-        # split non reference_group into Train-2 and Test-2
-        # regardless of the group
-        # where to use: to predict whether the sample is in reference or not
-        #         "classification_dataset_type",
-        # 1 for reference group
-        # -1 for non-reference group
-        #         "classification_label",
-    ]
+    future_columns = []
 
     def __init__(self, file_name=None, feature_columns=FeatureColumnsType.BACTERIA):
 
@@ -66,8 +45,8 @@ class MicrobiomeDataset:
             file_name = "INPUT_FILES/website_mousedata.xls"
         elif file_name == "human_data":
             # file_name = "INPUT_FILES/website_humandata.xls"
-            file_name="/home/jelena/Desktop/microbiome2021/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
-            
+            file_name = "/home/jelena/Desktop/microbiome2021/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
+
         # create dataframe regardless of delimiter (sep)
         self.df = pd.read_csv(file_name, sep=None, engine="python")
 
@@ -126,7 +105,7 @@ class MicrobiomeDataset:
         self.df = pd.get_dummies(self.df, dummy_na=True)
         self.df = self.df.fillna(0)
         self.df = self.df.sort_values(by="age_at_collection", ignore_index=True)
-        
+
         # initialize trajectory values
         self.df["MMI"] = 0
 
@@ -153,7 +132,11 @@ class MicrobiomeDataset:
         self.time_unit = TimeUnit.DAY
         self.reference_group_choice = ReferenceGroup.USER_DEFINED
         # lambda x: x[10:].replace("_", " ") if x.startswith("bacteria_") else x
-        self.nice_name = lambda x: re.sub(' +', "|", re.sub("[kpcofgs]__|\.|_", " ", x[9:]).strip()) if x.startswith("bacteria_") else x
+        self.nice_name = (
+            lambda x: re.sub(" +", "|", re.sub("[kpcofgs]__|\.|_", " ", x[9:]).strip())
+            if x.startswith("bacteria_")
+            else x
+        )
 
     def __str__(self):
         ret_val = ""
@@ -173,18 +156,6 @@ class MicrobiomeDataset:
         ret_val += "### Reference group\n"
         ref_counts = self.df.reference_group.value_counts()
         ret_val += f"Reference group count vs. non-reference: {ref_counts[True]} vs. {ref_counts[False]}\n"
-
-        #         # count dataset type
-        #         ret_val += "### Count dataset type\n"
-        #         ret_val += f"#### All groups:\n"
-        #         ret_val += f"Train data size:      {self.df[(self.df.dataset_type=='Train')].shape[0]:<4} samples | {len(self.df[(self.df.dataset_type=='Train')].subjectID.unique()):<4} infants \n"
-        #         ret_val += f"Validation data size: {self.df[(self.df.dataset_type=='Validation')].shape[0]:<4} samples | {len(self.df[(self.df.dataset_type=='Validation')].subjectID.unique()):<4} infants\n"
-        #         ret_val += f"Test data size:       {self.df[(self.df.dataset_type=='Test')].shape[0]:<4} samples | {len(self.df[(self.df.dataset_type=='Test')].subjectID.unique()):<4} infants\n"
-        #         for g in self.df.group.unique():
-        #             ret_val += f"#### Group: {g}\n"
-        #             ret_val += f"Train data size:      {self.df[(self.df.dataset_type=='Train')&(self.df.group==g)].shape[0]:<4} samples | {len(self.df[(self.df.dataset_type=='Train')&(self.df.group==g)].subjectID.unique()):<4} infants\n"
-        #             ret_val += f"Validation data size: {self.df[(self.df.dataset_type=='Validation')&(self.df.group==g)].shape[0]:<4} samples | {len(self.df[(self.df.dataset_type=='Validation')&(self.df.group==g)].subjectID.unique()):<4} infants\n"
-        #             ret_val += f"Test data size:       {self.df[(self.df.dataset_type=='Test')&(self.df.group==g)].shape[0]:<4} samples | {len(self.df[(self.df.dataset_type=='Test')&(self.df.group==g)].subjectID.unique()):<4} infants\n"
 
         return ret_val
 
@@ -296,7 +267,9 @@ class MicrobiomeDataset:
             reference_group[reference_group == False] = y_test == 1
 
             # calculate new f1score
-            results = two_groups_differentiation(X, copy.deepcopy(reference_group), groups)
+            results = two_groups_differentiation(
+                X, copy.deepcopy(reference_group), groups
+            )
             f1score = results["f1score"]
             print(f"Novelty settings: {settings_final}")
             print(f"Novelty f1score: {f1score}")
@@ -317,7 +290,9 @@ class MicrobiomeDataset:
     @property
     def feature_columns(self):
         if self.log_ratio_bacteria is not None:
-            feature_columns = self._feature_columns[self._feature_columns!=self.log_ratio_bacteria]
+            feature_columns = self._feature_columns[
+                self._feature_columns != self.log_ratio_bacteria
+            ]
         else:
             feature_columns = self._feature_columns
         return feature_columns
@@ -392,11 +367,14 @@ class MicrobiomeDataset:
 
         if val == True:
             from sklearn.preprocessing import normalize
+
             features = normalize(self.__df[self.feature_columns].values, axis=0)
         else:
             features = self.__df[self.feature_columns].values
-        
-        self.df[self.feature_columns] = pd.DataFrame(features, columns=self.feature_columns)
+
+        self.df[self.feature_columns] = pd.DataFrame(
+            features, columns=self.feature_columns
+        )
 
     def set_log_ratio_bacteria_with_least_crossings(self):
         def _crossings(x, y1, y2, degree=5):
@@ -435,28 +413,6 @@ class MicrobiomeDataset:
 
         # bacteria with the least number of crossings
         self.log_ratio_bacteria = min(number_of_crossings, key=number_of_crossings.get)
-
-    #     @property
-    #     def train_val_test_split_size(self):
-    #         return self._train_val_test_split_size
-
-    #     @train_val_test_split_size.setter
-    #     def train_val_test_split_size(self, val):
-    #         self._train_val_test_split_size = val
-    #         self.train_val_test_split(self._train_val_test_split_size)
-
-    #     def train_val_test_split(self, test_size):
-    #         self.df["dataset_type"] = "Test"
-
-    #         for g in self.df.group.unique():
-    #             df_ref_g = self.df[(self.df.reference_group == True) & (self.df.group == g)]
-    #             train_idx_g, val_idx_g = next(
-    #                 GroupShuffleSplit(
-    #                     test_size=test_size, n_splits=2, random_state=7
-    #                 ).split(df_ref_g, groups=df_ref_g["subjectID"])
-    #             )
-    #             self.df.loc[df_ref_g.iloc[train_idx_g].index, "dataset_type"] = "Train"
-    #             self.df.loc[df_ref_g.iloc[val_idx_g].index, "dataset_type"] = "Validation"
 
     def write_data(self, filename):
         with open(filename, "wb") as f:
@@ -522,10 +478,14 @@ class MicrobiomeDataset:
                     x=df.groupby(by="age_at_collection")
                     .agg(np.mean)[bacteria_name]
                     .index,
-                    y=df.groupby(by="age_at_collection").agg(np.mean)[bacteria_name].values,
+                    y=df.groupby(by="age_at_collection")
+                    .agg(np.mean)[bacteria_name]
+                    .values,
                     error_y=dict(
                         type="data",  # value of error bar given in data coordinates
-                        array=df.groupby(by="age_at_collection").agg(np.std)[bacteria_name].values,
+                        array=df.groupby(by="age_at_collection")
+                        .agg(np.std)[bacteria_name]
+                        .values,
                         visible=True,
                     ),
                     name=self.nice_name(bacteria_name),
@@ -676,7 +636,9 @@ class MicrobiomeDataset:
         number_of_bacteria=20,
         color_palette="tab20",
     ):
-        number_of_rows = len(self.df.subjectID.unique()) // number_of_columns + int(len(self.df.subjectID.unique()) % number_of_columns > 0)
+        number_of_rows = len(self.df.subjectID.unique()) // number_of_columns + int(
+            len(self.df.subjectID.unique()) % number_of_columns > 0
+        )
 
         # plotly settings
         layout_settings_default = dict(
@@ -1140,30 +1102,24 @@ def two_groups_differentiation(
     }
 
     rfc = RandomForestClassifier(**settings_final)
-    f1_scores = cross_val_score(rfc, X, y, scoring="f1", groups=groups, cv=GroupShuffleSplit(random_state=RANDOM_STATE))
-    accuracy_scores = cross_val_score(rfc, X, y, scoring="accuracy", groups=groups, cv=GroupShuffleSplit(random_state=RANDOM_STATE))
-    
-    # y_pred = cross_val_predict(rfc, X, y, groups=groups, cv=GroupShuffleSplit(random_state=RANDOM_STATE))
-    # cm = confusion_matrix(y, y_pred)
+    f1_scores = cross_val_score(
+        rfc,
+        X,
+        y,
+        scoring="f1",
+        groups=groups,
+        cv=GroupShuffleSplit(random_state=RANDOM_STATE),
+    )
+    accuracy_scores = cross_val_score(
+        rfc,
+        X,
+        y,
+        scoring="accuracy",
+        groups=groups,
+        cv=GroupShuffleSplit(random_state=RANDOM_STATE),
+    )
 
-    # train_idx, test_idx = next(
-    #     GroupShuffleSplit(random_state=RANDOM_STATE).split(
-    #         X,
-    #         groups=groups,
-    #     )
-    # )
-    # X_train = X[train_idx]
-    # X_test = X[test_idx]
-    # y_train = y[train_idx]
-    # y_test = y[test_idx]
     rfc.fit(X, y)
-    # y_test_pred = rfc.predict(X_test)
-
-    # ret_val = f"Total NON-{y_column.title()} detected in test set: **{cm_test[1][1]:.2f} / {cm_test[1][1]+cm_test[1][0]:.2f}**\n"
-    # ret_val += f"Total {y_column.title()} detected in test set: **{cm_test[0][0]:.2f} / {cm_test[0][1]+cm_test[0][0]:.2f}**\n"
-    # ret_val += f"Probability to detect a NON-{y_column.title()} in the test set: **{cm_test[1][1]/(cm_test[1][1]+cm_test[1][0]):.2f}**\n"
-    # ret_val += f"Probability to detect a {y_column.title()} in the test set: **{cm_test[0][0]/(cm_test[0][1]+cm_test[0][0]):.2f}**\n"
-    # ret_val += f"Accuracy on the test set: **{accuracy:.2f}%** \n"
 
     fig, config, img_src = None, None, None
     if plot:
