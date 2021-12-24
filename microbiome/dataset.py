@@ -23,7 +23,7 @@ import re
 
 class MicrobiomeDataset:
 
-    # initial columns, neccessary for the toolbox to work
+    # initial columns, necessary for the toolbox to work
     specific_columns = [
         "sampleID",
         "subjectID",
@@ -131,12 +131,54 @@ class MicrobiomeDataset:
 
         self.time_unit = TimeUnit.DAY
         self.reference_group_choice = ReferenceGroup.USER_DEFINED
-        # lambda x: x[10:].replace("_", " ") if x.startswith("bacteria_") else x
         self.nice_name = (
             lambda x: re.sub(" +", "|", re.sub("[kpcofgs]__|\.|_", " ", x[9:]).strip())
             if x.startswith("bacteria_")
             else x
         )
+
+        self.layout_settings_default = dict(
+            height=900,
+            width=1200,
+            plot_bgcolor="rgba(255,255,255,255)",
+            paper_bgcolor="rgba(255,255,255,255)",
+            margin=dict(l=70, r=70, t=70, b=70),
+            font=dict(size=17),
+            hoverdistance=-1,
+            legend=dict(
+                x=1.01,
+                y=1,
+                # traceorder='normal',
+            ),
+            # annotations=[go.layout.Annotation(
+            #     text=ret_val,
+            #     align='left',
+            #     showarrow=False,
+            #     xref='paper',
+            #     yref='paper',
+            #     x=1.53,
+            #     y=1,
+            #     width=330,
+            #     bordercolor='black',
+            #     bgcolor='white',
+            #     borderwidth=0.5,
+            #     borderpad=8,
+            # )]
+        )
+
+        self.axis_settings_default = dict(
+            tick0=0,
+            mirror=True,
+            # dtick=2,
+            showline=True,
+            linecolor="lightgrey",
+            gridcolor="lightgrey",
+            zeroline=True,
+            zerolinecolor="lightgrey",
+            showspikes=True,
+            spikecolor="gray",
+        )
+
 
     def __str__(self):
         ret_val = ""
@@ -428,7 +470,7 @@ class MicrobiomeDataset:
 
         return df
 
-    def zscore(self, column_name, sample_size=30):
+    def z_score(self, column_name, sample_size=30):
         # TODO: above and below zscore values
         data = self.df[[column_name, "age_at_collection"]]
         data.age_at_collection //= sample_size
@@ -445,7 +487,6 @@ class MicrobiomeDataset:
         ).tolist()
         return column_zscore
 
-    ##### PLOTS
     def plot_bacteria_abundances(self, number_of_columns=3, layout_settings=None):
         number_of_columns = 3
         number_of_rows = len(self.bacteria_columns) // number_of_columns + 1
@@ -529,9 +570,9 @@ class MicrobiomeDataset:
                 "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
             }
         }
-        # fig.show(config)
+        results = {"fig": fig, "config": config}
 
-        return fig, config
+        return results
 
     def plot_bacteria_abundance_heatmaps(
         self,
@@ -625,9 +666,9 @@ class MicrobiomeDataset:
                 "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
             }
         }
-        # fig.show(config)
+        results = {"fig": fig, "config": config}
 
-        return fig, config
+        return results
 
     def plot_ultradense_longitudinal_data(
         self,
@@ -739,9 +780,9 @@ class MicrobiomeDataset:
                 "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
             }
         }
-        # fig.show(config)
+        results = {"fig": fig, "config": config}
 
-        return fig, config
+        return results
 
     def embedding_to_latent_space(
         self,
@@ -907,9 +948,10 @@ class MicrobiomeDataset:
                 "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
             }
         }
-        # fig.show(config)
 
-        return fig, config
+        results = {"fig": fig, "config": config}
+
+        return results
 
     def embeddings_interactive_selection_notebook(
         self,
@@ -1186,6 +1228,9 @@ def two_groups_differentiation(
             spikecolor="gray",
         )
         fig.update_layout(**layout_settings_final)
+
+        y_pred = rfc.predict(X)
+        cm = confusion_matrix(y_pred, y)
 
         img_src = plot_confusion_matrix(
             cm, [f"non-{y_column}", y_column], "Confusion matrix"

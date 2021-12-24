@@ -5,7 +5,7 @@ from dash_bootstrap_components._components.Col import Col
 from dash_bootstrap_components._components.Row import Row
 from dash_core_components.Markdown import Markdown
 import dash_html_components as dhc
-import dash_core_components as dcc
+from dash import dcc
 from dash.dependencies import Input, Output, State
 import dash_table
 import base64
@@ -25,12 +25,11 @@ from sklearn.model_selection import GroupShuffleSplit
 from microbiome.data_preparation import *
 import gc
 
-from index import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from app import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 from webapp.pages import page1, page2, page3, page4, page5, page6
 
-DF_DEFAULT = pd.read_csv('https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata_default.csv', sep=",")
-FILE_NAME_DEFAULT = "website_mousedata_default.csv"
+
 
 # this example that adds a logo to the navbar brand
 navbar = dbc.Navbar(
@@ -56,143 +55,7 @@ navbar = dbc.Navbar(
         )
 
 
-card1 = dbc.Col(
-    dbc.Card(
-        [
-            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis.jpg", top=True),
-            dbc.CardBody(
-                [
-                    dhc.H4("Reference Definition & Statistics", className="card-title"),
-                    # dhc.P(
-                    #     "Some quick example text to build on the card title and "
-                    #     "make up the bulk of the card's content.",
-                    #     className="card-text",
-                    # ),
-                    #dhc.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/methods/page-1"),
-                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card1-btn"), href='/methods/page-1'),
-                ]
-            ),
-        ],
-        #style={"width": "18rem"},
-        style={"backgroundColor": "rgb(240, 240, 240)"},
-        className="mb-4 box-shadow"
-    ),
-    className="md-4"
-)
 
-card2 = dbc.Col(
-    dbc.Card(
-        [
-            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis2.jpg", top=True),
-            dbc.CardBody(
-                [
-                    dhc.H4("Data Analysis & Exploration", className="card-title"),
-                    # dhc.P(
-                    #     "Some quick example text to build on the card title and "
-                    #     "make up the bulk of the card's content.",
-                    #     className="card-text",
-                    # ),
-                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card2-btn"), href='/methods/page-2'),
-                ]
-            ),
-        ],
-        #style={"width": "18rem"},
-        style={"backgroundColor": "rgb(240, 240, 240)"},
-        className="mb-4 box-shadow"
-    ),
-    className="md-4"
-)
-
-card3 = dbc.Col(
-    dbc.Card(
-        [
-            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis.jpg", top=True),
-            dbc.CardBody(
-                [
-                    dhc.H4("Microbiome Trajectory", className="card-title"),
-                    # dhc.P(
-                    #     "Some quick example text to build on the card title and "
-                    #     "make up the bulk of the card's content.",
-                    #     className="card-text",
-                    # ),
-                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card3-btn"), href='/methods/page-3'),
-                ]
-            ),
-        ],
-        #style={"width": "18rem"},
-        style={"backgroundColor": "rgb(240, 240, 240)"},
-        className="mb-4 box-shadow"
-    ),
-    className="md-4"
-)
-
-card4 = dbc.Col(
-    dbc.Card(
-        [
-            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis2.jpg", top=True),
-            dbc.CardBody(
-                [
-                    dhc.H4("Bacteria Importance with Time", className="card-title"),
-                    # dhc.P(
-                    #     "Some quick example text to build on the card title and "
-                    #     "make up the bulk of the card's content.",
-                    #     className="card-text",
-                    # ),
-                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card4-btn"), href='/methods/page-4'),
-                ]
-            ),
-        ],
-        #style={"width": "18rem"},
-        style={"backgroundColor": "rgb(240, 240, 240)"},
-        className="mb-4 box-shadow"
-    ),
-    className="md-4"
-)
-
-card5 = dbc.Col(
-    dbc.Card(
-        [
-            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis.jpg", top=True),
-            dbc.CardBody(
-                [
-                    dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
-                    # dhc.P(
-                    #     "Some quick example text to build on the card title and "
-                    #     "make up the bulk of the card's content.",
-                    #     className="card-text",
-                    # ),
-                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card5-btn"), href='/methods/page-5'),
-                ]
-            ),
-        ],
-        #style={"width": "18rem"},
-        style={"backgroundColor": "rgb(240, 240, 240)"},
-        className="mb-4 box-shadow"
-    ),
-    className="md-4"
-)
-
-card6 = dbc.Col(
-    dbc.Card(
-        [
-            dbc.CardImg(src="https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/webapp/static/img/data_analysis2.jpg", top=True),
-            dbc.CardBody(
-                [
-                    dhc.H4("Intervention Simulation", className="card-title"),
-                    # dhc.P(
-                    #     "Some quick example text to build on the card title and "
-                    #     "make up the bulk of the card's content.",
-                    #     className="card-text",
-                    # ),
-                    dcc.Link(dbc.Button("See more", outline=True, color="dark", id="card6-btn"), href='/methods/page-6'),
-                ]
-            ),
-        ],
-        style={"backgroundColor": "rgb(240, 240, 240)"},
-        className="mb-4 box-shadow"
-    ),
-    className="md-4"
-)
 
 
 def parse_dataset(filename):
@@ -216,66 +79,66 @@ def parse_dataset(filename):
     return df
 
 
-def main_layout_(session_id, upload_info=None):
+# def main_layout_(session_id, upload_info=None):
 
-    print("\nMain layout function called only with /methods")
-    return dhc.Div(id="main",
-                    children=[
-                    dhc.Div(id='main-content', children=[
-                        dbc.Container([
-                            dbc.Row([
-                                dbc.Col([
-                                    dhc.H3("Upload Dataset", style={'textAlign': 'center',}),
-                                    dhc.Br(),
-                                    dhc.P(["The Microbiome Toolbox implements methods that can be used for microbiome dataset analysis and microbiome trajectory prediction. The dashboard offers a wide variety of interactive visualizations.\
-                                           If you are just interested in seeing what methods are coved, you can use a demo dataset (mouse data) which enables the toolbox options below (by pressing the button).\
-                                           You can also upload your own dataset (by clicking or drag-and-dropping the file into the area below).", 
-                                           dhc.Br(),dhc.Br(),
-                                           "In order for the methods to work, make sure the uploaded dataset has the following columns:",
-                                    ]),
-                                    dcc.Markdown('''
-                                        * `sampleID`: a unique dataset identifier, the ID of a sample,
-                                        * `subjecID`: an identifier of the subject (i.e. mouse name),
-                                        * `age_at_collection`: the time at which the sample was collected (in days),
-                                        * `group`: the groups that are going to be compared, e.g. different `country` that sample comes from,
-                                        * `meta_*`: prefix for metadata columns, e.g. `csection` becomes `meta_csection`, etc.
-                                        * `id_*`: prefix for other ID columns (don't prefix `sampleID` nor `subjecID`)
-                                        * `reference_group`: with `True`/`False` values, examples of a reference vs. non-reference
-                                        * all other columns left should be bacteria names which will be automatically prefixed with `bacteria_*` after the upload.
-                                    '''),
-                                    dcc.Markdown("More methods and specific details of method implementations can be seen in the Github repository [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox)."),
-                                    dhc.Br(),
-                                    dhc.P([dbc.Button("load demo mosue data", outline=True, color="dark", id='upload-default-data', n_clicks=0),], style={'textAlign': 'center',}),
-                                    dhc.P("or", style={'textAlign': 'center',}),
-                                    du.Upload(
-                                        id='upload-data',
-                                        filetypes=['csv', 'xls'],
-                                        upload_id=session_id,
-                                    ),
-                                    dhc.Div(id="upload-infobox"),
-                                    dhc.Br(),
-                                    dhc.Div(id='dataset-settings'),
-                                    dhc.Br(),
-                                    dhc.Div(id='methods',style={
-                                        'verticalAlign':'middle',
-                                        'textAlign': 'center',
-                                        'backgroundColor': 'rgb(255, 255, 255)',
-                                        'position':'relative',
-                                        'width':'100%',
-                                        #'height':'100vh',
-                                        'bottom':'0px',
-                                        'left':'0px',
-                                        'zIndex':'1000',
-                                    }),
-                                    dhc.Br(),
-                                ]),
-                            ]),
+#     print("\nMain layout function called only with /methods")
+#     return dhc.Div(id="main",
+#                     children=[
+#                     dhc.Div(id='main-content', children=[
+#                         dbc.Container([
+#                             dbc.Row([
+#                                 dbc.Col([
+#                                     dhc.H3("Upload Dataset", style={'textAlign': 'center',}),
+#                                     dhc.Br(),
+#                                     dhc.P(["The Microbiome Toolbox implements methods that can be used for microbiome dataset analysis and microbiome trajectory prediction. The dashboard offers a wide variety of interactive visualizations.\
+#                                            If you are just interested in seeing what methods are coved, you can use a demo dataset (mouse data) which enables the toolbox options below (by pressing the button).\
+#                                            You can also upload your own dataset (by clicking or drag-and-dropping the file into the area below).", 
+#                                            dhc.Br(),dhc.Br(),
+#                                            "In order for the methods to work, make sure the uploaded dataset has the following columns:",
+#                                     ]),
+#                                     dcc.Markdown('''
+#                                         * `sampleID`: a unique dataset identifier, the ID of a sample,
+#                                         * `subjecID`: an identifier of the subject (i.e. mouse name),
+#                                         * `age_at_collection`: the time at which the sample was collected (in days),
+#                                         * `group`: the groups that are going to be compared, e.g. different `country` that sample comes from,
+#                                         * `meta_*`: prefix for metadata columns, e.g. `csection` becomes `meta_csection`, etc.
+#                                         * `id_*`: prefix for other ID columns (don't prefix `sampleID` nor `subjecID`)
+#                                         * `reference_group`: with `True`/`False` values, examples of a reference vs. non-reference
+#                                         * all other columns left should be bacteria names which will be automatically prefixed with `bacteria_*` after the upload.
+#                                     '''),
+#                                     dcc.Markdown("More methods and specific details of method implementations can be seen in the Github repository [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox)."),
+#                                     dhc.Br(),
+#                                     dhc.P([dbc.Button("load demo mosue data", outline=True, color="dark", id='upload-default-data', n_clicks=0),], style={'textAlign': 'center',}),
+#                                     dhc.P("or", style={'textAlign': 'center',}),
+#                                     du.Upload(
+#                                         id='upload-data',
+#                                         filetypes=['csv', 'xls'],
+#                                         upload_id=session_id,
+#                                     ),
+#                                     dhc.Div(id="upload-infobox"),
+#                                     dhc.Br(),
+#                                     dhc.Div(id='dataset-settings'),
+#                                     dhc.Br(),
+#                                     dhc.Div(id='methods',style={
+#                                         'verticalAlign':'middle',
+#                                         'textAlign': 'center',
+#                                         'backgroundColor': 'rgb(255, 255, 255)',
+#                                         'position':'relative',
+#                                         'width':'100%',
+#                                         #'height':'100vh',
+#                                         'bottom':'0px',
+#                                         'left':'0px',
+#                                         'zIndex':'1000',
+#                                     }),
+#                                     dhc.Br(),
+#                                 ]),
+#                             ]),
                             
-                        ], className="md-12"),
-                    ]),
-                    dhc.Br(),dhc.Br(),
+#                         ], className="md-12"),
+#                     ]),
+#                     dhc.Br(),dhc.Br(),
 
-        ])
+#         ])
 
 def layout_(session_id, upload_info):
     print("\nLayout function called from server_layout init or can be separately called")
@@ -375,27 +238,27 @@ def read_dataset_settings(session_id, timestamp):
 
 
 # Update the index
-@app.callback(Output('main', 'children'),
-              [Input('url', 'pathname')],
-              [State('session-id', 'children'),
-              State('upload-filename', 'children')])
-def display_page(pathname, session_id, upload_filename):
-    print("\nPathname", pathname, "session_id", session_id)
-    if pathname == '/methods/page-1':
-        return page1.layout
-    elif pathname == '/methods/page-2':
-        return page2.layout
-    elif pathname == '/methods/page-3':
-        return page3.layout
-    elif pathname == '/methods/page-4':
-        return page4.layout
-    elif pathname == '/methods/page-5':
-        return page5.layout
-    elif pathname == '/methods/page-6':
-        return page6.layout
-    else: 
-        print("\tohter path....")
-        return main_layout_(session_id, upload_filename)  #app.layout  #main_layout_(None)
+# @app.callback(Output('main', 'children'),
+#               [Input('url', 'pathname')],
+#               [State('session-id', 'children'),
+#               State('upload-filename', 'children')])
+# def display_page(pathname, session_id, upload_filename):
+#     print("\nPathname", pathname, "session_id", session_id)
+#     if pathname == '/methods/page-1':
+#         return page1.layout
+#     elif pathname == '/methods/page-2':
+#         return page2.layout
+#     elif pathname == '/methods/page-3':
+#         return page3.layout
+#     elif pathname == '/methods/page-4':
+#         return page4.layout
+#     elif pathname == '/methods/page-5':
+#         return page5.layout
+#     elif pathname == '/methods/page-6':
+#         return page6.layout
+#     else: 
+#         print("\tohter path....")
+#         return main_layout_(session_id, upload_filename)  #app.layout  #main_layout_(None)
 
 def fix_zeros(row, feature_columns):
     for c in feature_columns:
@@ -740,14 +603,3 @@ def return_methods(iscompleted, default_data_clicked, session_id, filenames, upl
     del df
     gc.collect()
     return upload_infobox, dataset_settings, methods, filename
-
-
-
-if __name__ == '__main__':
-    app.run_server()
-    # app.run_server(debug=True, port=8082)
-    # app.run_server(debug=False,
-    #             host=os.getenv("HOST", "0.0.0.0"),
-    #             port=os.getenv("PORT", "5000"))
-
-
