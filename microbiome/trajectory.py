@@ -14,7 +14,7 @@ import plotly.express as px
 from microbiome.statistical_analysis import regliner, permuspliner
 from itertools import combinations
 from sklearn.metrics import mean_absolute_error, r2_score
-from microbiome.enumerations import AnomalyType, FeatureExtraction, TimeUnit
+from microbiome.enumerations import AnomalyType, FeatureExtraction, TimeUnit, FeatureColumnsType
 from natsort import natsorted
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
@@ -34,7 +34,16 @@ class MicrobiomeTrajectory:
         train_indices=None,
     ):
         self.dataset = copy.deepcopy(dataset)
-        self.__feature_columns = list(feature_columns)
+        # initialize feature columns (only once, in constructor!)
+        if isinstance(feature_columns, (list, np.ndarray)):
+            self._feature_columns = feature_columns
+        elif feature_columns == FeatureColumnsType.BACTERIA:
+            self._feature_columns = self.dataset.bacteria_columns
+        elif feature_columns == FeatureColumnsType.METADATA:
+            self._feature_columns = self.dataset.metadata_columns
+        elif feature_columns == FeatureColumnsType.BACTERIA_AND_METADATA:
+            self._feature_columns = self.dataset.bacteria_and_metadata_columns
+
         results = self.get_less_feature_columns(plot=True, technique=feature_extraction)
         self.feature_columns = results["feature_columns"]
         self.feature_columns_plot = results["fig"]
@@ -176,9 +185,9 @@ class MicrobiomeTrajectory:
         config = None
 
         if technique == FeatureExtraction.NONE:
-            feature_columns = self.__feature_columns
+            feature_columns = self._feature_columns
         else:
-            X = self.dataset.df[self.__feature_columns].values
+            X = self.dataset.df[self._feature_columns].values
             y = self.dataset.df.age_at_collection.values
             groups = self.dataset.df.subjectID.values
 
@@ -193,7 +202,7 @@ class MicrobiomeTrajectory:
                 if technique == "topK":
                     feature_importances = np.array(estimator.feature_importances_)
                     feature_importance = pd.DataFrame(
-                        list(zip(self.__feature_columns, feature_importances)),
+                        list(zip(self._feature_columns, feature_importances)),
                         columns=["feature_name", "feature_importance"],
                     )
                     feature_importance.sort_values(
@@ -214,14 +223,14 @@ class MicrobiomeTrajectory:
                 if technique == "topK":
                     feature_columns = important_features[:threshold]
                 elif technique == "nzv":
-                    X = self.dataset.df[self.__feature_columns].values
+                    X = self.dataset.df[self._feature_columns].values
                     constant_filter = VarianceThreshold(threshold=threshold)
                     constant_filter.fit(X)
                     idx = np.where(constant_filter.get_support())[0]
-                    feature_columns = self.__feature_columns[idx]
+                    feature_columns = self._feature_columns[idx]
                 elif technique == "corr":
                     correlation_matrix = (
-                        self.dataset.df[self.__feature_columns].corr().abs()
+                        self.dataset.df[self._feature_columns].corr().abs()
                     )
                     upper = correlation_matrix.where(
                         np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool)
@@ -232,9 +241,9 @@ class MicrobiomeTrajectory:
                         if any(upper[column] > threshold)
                     ]
                     idx = np.isin(
-                        self.__feature_columns, correlated_features, invert=True
+                        self._feature_columns, correlated_features, invert=True
                     )
-                    feature_columns = self.__feature_columns[idx]
+                    feature_columns = self._feature_columns[idx]
 
                 X = self.dataset.df[feature_columns].values
                 for scorer in scorer_list:
@@ -275,14 +284,14 @@ class MicrobiomeTrajectory:
             if technique == "topK":
                 feature_columns = important_features[:threshold]
             elif technique == "nzv":
-                X = self.dataset.df[self.__feature_columns].values
+                X = self.dataset.df[self._feature_columns].values
                 constant_filter = VarianceThreshold(threshold=threshold)
                 constant_filter.fit(X)
                 idx = np.where(constant_filter.get_support())[0]
-                feature_columns = self.__feature_columns[idx]
+                feature_columns = self._feature_columns[idx]
             elif technique == "corr":
                 correlation_matrix = (
-                    self.dataset.df[self.__feature_columns].corr().abs()
+                    self.dataset.df[self._feature_columns].corr().abs()
                 )
                 upper = correlation_matrix.where(
                     np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool)
@@ -290,8 +299,8 @@ class MicrobiomeTrajectory:
                 correlated_features = [
                     column for column in upper.columns if any(upper[column] > threshold)
                 ]
-                idx = np.isin(self.__feature_columns, correlated_features, invert=True)
-                feature_columns = self.__feature_columns[idx]
+                idx = np.isin(self._feature_columns, correlated_features, invert=True)
+                feature_columns = self._feature_columns[idx]
 
             if plot:
                 layout_settings_default = dict(

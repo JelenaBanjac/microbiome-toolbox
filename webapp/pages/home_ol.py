@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_components._components.Col import Col
 from dash_bootstrap_components._components.Row import Row
 from dash_core_components.Markdown import Markdown
-import dash_html_components as dhc
+from dash import html as dhc
 from dash import dcc
 from dash.dependencies import Input, Output, State
 import dash_table
@@ -25,58 +25,58 @@ from sklearn.model_selection import GroupShuffleSplit
 from microbiome.data_preparation import *
 import gc
 
-from app import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
+from webapp.app import server, app, cache, UPLOAD_FOLDER_ROOT, loading_img
 
 from webapp.pages import page1, page2, page3, page4, page5, page6
 
 
 
-# this example that adds a logo to the navbar brand
-navbar = dbc.Navbar(
-            dbc.Container(
-                [
-                    dhc.A(
-                        # Use row and col to control vertical alignment of logo / brand
-                        dbc.Row(
-                            [
-                                #dbc.Col(dhc.Img(src=PLOTLY_LOGO, height="30px")),
-                                dbc.Col(dbc.NavbarBrand("Microbiome Toolbox", className="ml-2")),
-                            ],
-                            align="center",
-                            no_gutters=True,
-                        ),
-                        href="#",
-                    ),
-                ]
-            ),
-            color="dark",
-            dark=True,
-            className="mb-5",
-        )
+# # this example that adds a logo to the navbar brand
+# navbar = dbc.Navbar(
+#             dbc.Container(
+#                 [
+#                     dhc.A(
+#                         # Use row and col to control vertical alignment of logo / brand
+#                         dbc.Row(
+#                             [
+#                                 #dbc.Col(dhc.Img(src=PLOTLY_LOGO, height="30px")),
+#                                 dbc.Col(dbc.NavbarBrand("Microbiome Toolbox", className="ml-2")),
+#                             ],
+#                             align="center",
+#                             no_gutters=True,
+#                         ),
+#                         href="#",
+#                     ),
+#                 ]
+#             ),
+#             color="dark",
+#             dark=True,
+#             className="mb-5",
+#         )
 
 
 
 
 
-def parse_dataset(filename):
-    df = None
-    try:
-        if 'csv' in filename:
-            # Assume that the user uploaded a CSV file
-            df = pd.read_csv(filename)
-        elif 'xls' in filename:
-            # Assume that the user uploaded an excel file
-            df = pd.read_csv(filename, sep="\t")
-            if len(df.columns)==1:
-                df = pd.read_csv(filename, sep=",")
-                if len(df.columns)==1:
-                    raise Exception("Not a good file separator")
-    except Exception as e:
-        print(e)
-        return None
-    print('\nFinished parsing df parse_dataset')
+# def parse_dataset(filename):
+#     df = None
+#     try:
+#         if 'csv' in filename:
+#             # Assume that the user uploaded a CSV file
+#             df = pd.read_csv(filename)
+#         elif 'xls' in filename:
+#             # Assume that the user uploaded an excel file
+#             df = pd.read_csv(filename, sep="\t")
+#             if len(df.columns)==1:
+#                 df = pd.read_csv(filename, sep=",")
+#                 if len(df.columns)==1:
+#                     raise Exception("Not a good file separator")
+#     except Exception as e:
+#         print(e)
+#         return None
+#     print('\nFinished parsing df parse_dataset')
 
-    return df
+#     return df
 
 
 # def main_layout_(session_id, upload_info=None):

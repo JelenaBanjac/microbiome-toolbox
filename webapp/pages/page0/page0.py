@@ -1,5 +1,6 @@
-import dash_html_components as dhc
+# from dash import html as dhc
 from dash import dcc
+from dash import html as dhc
 
 page_1_layout = dhc.Div([
     dhc.H1('Page 1'),

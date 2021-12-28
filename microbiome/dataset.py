@@ -5,7 +5,7 @@ import itertools
 
 import numpy as np
 import pandas as pd
-from microbiome.enumerations import ReferenceGroup, TimeUnit, FeatureColumnsType
+from microbiome.enumerations import Normalization, ReferenceGroup, TimeUnit, FeatureColumnsType
 from collections import namedtuple
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.neighbors import LocalOutlierFactor
@@ -42,10 +42,10 @@ class MicrobiomeDataset:
         if file_name == "mouse_data":
             # file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata_default.csv"
             # TODO: remove two classification columns
-            file_name = "INPUT_FILES/website_mousedata.xls"
+            file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls"
         elif file_name == "human_data":
             # file_name = "INPUT_FILES/website_humandata.xls"
-            file_name = "/home/jelena/Desktop/microbiome2021/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
+            file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
 
         # create dataframe regardless of delimiter (sep)
         self.df = pd.read_csv(file_name, sep=None, engine="python")
@@ -127,7 +127,7 @@ class MicrobiomeDataset:
         # normalization by log-ratio
         self.log_ratio_bacteria = None
         # normalization by mean and std (along columns)
-        self.normalized = False
+        self.normalized = Normalization.NON_NORMALIZED
 
         self.time_unit = TimeUnit.DAY
         self.reference_group_choice = ReferenceGroup.USER_DEFINED
@@ -339,20 +339,20 @@ class MicrobiomeDataset:
             feature_columns = self._feature_columns
         return feature_columns
 
-    #     @feature_columns.setter
-    #     def feature_columns(self, val):
-    #         if isinstance(val, (list, np.array)):
-    #             self._feature_columns = val
-    #         elif isinstance(val, FeatureColumnsType):
-    #             if val == FeatureColumnsType.BACTERIA:
-    #                 self._feature_columns = self.bacteria_columns
-    #             elif val == FeatureColumnsType.METADATA:
-    #                 self._feature_columns = self.metadata_columns
-    #             elif val == FeatureColumnsType.BACTERIA_AND_METADATA:
-    #                 self._feature_columns = self.bacteria_and_metadata_columns
-
-    #         # but also update novelty detection result if it was used
-    #         self.reference_group_choice = self._reference_group_choice
+    @feature_columns.setter
+    def feature_columns(self, val):
+        if isinstance(val, list):
+            self._feature_columns = val
+        elif isinstance(val, FeatureColumnsType):
+            if val == FeatureColumnsType.BACTERIA:
+                self._feature_columns = self.bacteria_columns
+            elif val == FeatureColumnsType.METADATA:
+                self._feature_columns = self.metadata_columns
+            elif val == FeatureColumnsType.BACTERIA_AND_METADATA:
+                self._feature_columns = self.bacteria_and_metadata_columns
+        # but also update novelty detection result if it was used
+        # self.reference_group_choice = self._reference_group_choice
+        
 
     @property
     def bacteria_columns(self):
@@ -384,20 +384,27 @@ class MicrobiomeDataset:
 
     @log_ratio_bacteria.setter
     def log_ratio_bacteria(self, val):
+        bacteria_columns_all = self.__df.columns[self.df.columns.str.startswith("bacteria_")].to_numpy()
         self._log_ratio_bacteria = val
-
+        features = self.__df[bacteria_columns_all].values
         if val is not None:
-            self.normalized = False
-            self.df = self.__df.copy(deep=True)
-            for c in self.bacteria_columns:
+            self.normalized = Normalization.NON_NORMALIZED
+            
+            for i, c in enumerate(bacteria_columns_all):
+                self.df.loc[:, c] = features[:, i]
                 if c != val:
                     self.df[c] = self.df.apply(
                         lambda row: math.log2(row[c] / row[val]), axis=1
                     )
+            
             # remove reference, since these are abundances
             self.df = self.df.drop(columns=val, axis=1)
+            
         else:
-            self.df = self.__df.copy(deep=True)
+            
+            for i, feature_column in enumerate(bacteria_columns_all):
+                self.df.loc[:, feature_column] = features[:, i]
+            # self.df = self.__df.copy(deep=True)
 
     @property
     def normalized(self):
@@ -406,17 +413,15 @@ class MicrobiomeDataset:
     @normalized.setter
     def normalized(self, val):
         self._normalized = val
-
-        if val == True:
+        features = self.__df[self.feature_columns].values
+        
+        if val == Normalization.NORMALIZED:
             from sklearn.preprocessing import normalize
+            features = normalize(features, axis=0)
+        
+        for i, feature_column in enumerate(self.feature_columns):
+            self.df.loc[:, feature_column] = features[:, i]
 
-            features = normalize(self.__df[self.feature_columns].values, axis=0)
-        else:
-            features = self.__df[self.feature_columns].values
-
-        self.df[self.feature_columns] = pd.DataFrame(
-            features, columns=self.feature_columns
-        )
 
     def set_log_ratio_bacteria_with_least_crossings(self):
         def _crossings(x, y1, y2, degree=5):

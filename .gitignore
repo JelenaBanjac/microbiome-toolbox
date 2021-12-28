@@ -9,6 +9,9 @@ notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l4.csv
 notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l5.csv
 notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l6.csv
 notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l7.csv
+webapp/cache/
+webapp/cache-directory/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -29,3 +29,8 @@ class FeatureExtraction(Enum):
     NEAR_ZERO_VARIANCE = 1
     CORRELATION = 2
     TOP_K_IMPORTANT = 3
+
+
+class Normalization(Enum):
+    NORMALIZED = True
+    NON_NORMALIZED = False
