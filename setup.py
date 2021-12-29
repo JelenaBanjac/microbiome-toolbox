@@ -94,5 +94,6 @@ setuptools.setup(
         # "dash-dangerously-set-inner-html",
         "gunicorn",
         "diskcache",
+        "dotenv",
     ]
 )
