@@ -34,7 +34,7 @@ du.configure_upload(app, UPLOAD_FOLDER_ROOT)
 cache = Cache(
     app.server,
     config={
-        # "CACHE_TYPE": "simple",
+        "CACHE_TYPE": "simple",
         # Note that filesystem cache doesn't work on systems with ephemeral
         # filesystems like Heroku.
         # "CACHE_TYPE": "filesystem",
