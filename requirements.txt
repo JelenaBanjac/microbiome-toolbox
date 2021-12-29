@@ -1,13 +1,13 @@
 amqp==5.0.6
-argon2-cffi @ file:///tmp/build/80754af9/argon2-cffi_1596828496740/work
+argon2-cffi
 async-generator==1.10
-attrs @ file:///tmp/build/80754af9/attrs_1600298409949/work
+attrs
 backcall==0.2.0
 billiard==3.6.4.0
 biom-format==2.1.10
 black==21.11b1
-bleach @ file:///tmp/build/80754af9/bleach_1600439572647/work
-Brotli @ file:///home/conda/feedstock_root/build_artifacts/brotli-split_1603546189128/work
+bleach
+Brotli
 cached-property==1.5.2
 catboost==1.0.3
 celery==5.1.2
@@ -19,10 +19,10 @@ click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.2.0
 cloudpickle==2.0.0
-colorama @ file:///tmp/build/80754af9/colorama_1603211150991/work
+colorama
 cycler==0.10.0
 Cython==0.29.24
-dash @ file:///home/conda/feedstock_root/build_artifacts/dash_1632235402030/work
+dash
 dash-bootstrap-components==1.0.2
 dash-core-components==2.0.0
 dash-dangerously-set-inner-html==0.0.2
@@ -31,7 +31,7 @@ dash-html-components==2.0.0
 dash-renderer==1.9.1
 dash-table==5.0.0
 dash-uploader==0.6.0
-dataclasses @ file:///home/conda/feedstock_root/build_artifacts/dataclasses_1628958435052/work
+dataclasses
 decorator==4.4.2
 defusedxml==0.6.0
 dill==0.3.4
@@ -47,33 +47,32 @@ gunicorn==20.1.0
 h5py==3.1.0
 icc-rt==2019.0
 idna==3.3
-importlib-metadata @ file:///tmp/build/80754af9/importlib-metadata_1602276842396/work
+importlib-metadata
 intel-openmp==2021.4.0
 ipydatawidgets==4.2.0
-ipykernel @ file:///tmp/build/80754af9/ipykernel_1596206602906/work/dist/ipykernel-5.3.4-py3-none-any.whl
-ipython @ file:///tmp/build/80754af9/ipython_1593447367857/work
+ipykernel
+ipython
 ipython-genutils==0.2.0
 ipyvolume==0.5.2
 ipywebrtc==0.6.0
-ipywidgets @ file:///tmp/build/80754af9/ipywidgets_1601490159889/work
-itsdangerous @ file:///home/conda/feedstock_root/build_artifacts/itsdangerous_1621360792037/work
-jedi @ file:///tmp/build/80754af9/jedi_1598371618777/work
+ipywidgets
+itsdangerous
+jedi
 Jinja2==3.0.3
-joblib @ file:///tmp/build/80754af9/joblib_1601912903842/work
+joblib
 jsbeautifier==1.14.0
-jsonschema @ file:///tmp/build/80754af9/jsonschema_1602607155483/work
+jsonschema
 jupyter==1.0.0
-jupyter-client @ file:///tmp/build/80754af9/jupyter_client_1601311786391/work
-jupyter-console @ file:///tmp/build/80754af9/jupyter_console_1598884538475/work
+jupyter-client
+jupyter-console
 jupyter-core==4.6.3
-jupyterlab-pygments @ file:///tmp/build/80754af9/jupyterlab_pygments_1601490720602/work
+jupyterlab-pygments
 kaleido==0.2.1
 kiwisolver==1.2.0
 kombu==5.1.0
 llvmlite==0.36.0
 MarkupSafe==2.0.1
 matplotlib==2.2.2
--e git+git@github.com:JelenaBanjac/microbiome-toolbox.git@555392f367a81a05cdb6a093cb1d1473271f4528#egg=microbiome_toolbox
 mistune==0.8.4
 mkl-fft==1.2.0
 mkl-random==1.1.1
@@ -82,15 +81,14 @@ more-itertools==8.12.0
 multiprocess==0.70.12.2
 mypy-extensions==0.4.3
 natsort==8.0.1
-nbclient @ file:///tmp/build/80754af9/nbclient_1602783176460/work
-nbconvert @ file:///tmp/build/80754af9/nbconvert_1601914804165/work
-nbformat @ file:///tmp/build/80754af9/nbformat_1602783287752/work
-nest-asyncio @ file:///tmp/build/80754af9/nest-asyncio_1601499549014/work
-notebook @ file:///tmp/build/80754af9/notebook_1601501581489/work
+nbclient
+nbconvert
+nbformat
+nest-asyncio
 numba==0.53.1
 numpy==1.19.1
 packaging==21.2
-pandas @ file:///tmp/build/80754af9/pandas_1602088135163/work
+pandas
 pandocfilters==1.4.2
 parso==0.7.0
 pathspec==0.9.0
@@ -99,28 +97,28 @@ pexpect==4.8.0
 pickleshare==0.7.5
 Pillow==8.4.0
 platformdirs==2.4.0
-plotly @ file:///home/conda/feedstock_root/build_artifacts/plotly_1640064922437/work
+plotly
 prometheus-client==0.8.0
-prompt-toolkit @ file:///tmp/build/80754af9/prompt-toolkit_1602688806899/work
+prompt-toolkit
 psutil==5.8.0
 ptyprocess==0.6.0
-pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
-Pygments @ file:///tmp/build/80754af9/pygments_1600458456400/work
+pycparser
+Pygments
 pyparsing==2.4.7
-pyrsistent @ file:///tmp/build/80754af9/pyrsistent_1600141725711/work
+pyrsistent
 python-dateutil==2.8.1
 python-dotenv==0.19.2
 pythreejs==2.3.0
 pytz==2020.1
 pyzmq==19.0.2
-qtconsole @ file:///tmp/build/80754af9/qtconsole_1600870028330/work
+qtconsole
 QtPy==1.9.0
 redis==3.5.3
 regex==2021.11.10
 requests==2.26.0
 scikit-learn==0.23.2
-scipy @ file:///tmp/build/80754af9/scipy_1597686625380/work
-seaborn @ file:///tmp/build/80754af9/seaborn_1600553570093/work
+scipy
+seaborn
 Send2Trash==1.5.0
 shap==0.40.0
 sip==4.19.24
@@ -128,10 +126,10 @@ six==1.15.0
 slicer==0.0.7
 stats==0.1.2a0
 statsmodels==0.12.2
-tenacity @ file:///home/conda/feedstock_root/build_artifacts/tenacity_1626090218611/work
+tenacity
 terminado==0.9.1
 testpath==0.4.4
-threadpoolctl @ file:///tmp/tmp9twdgx9k/threadpoolctl-2.1.0-py3-none-any.whl
+threadpoolctl
 tk==0.1.0
 tomli==1.2.2
 tornado==6.0.4
@@ -143,9 +141,9 @@ typing-extensions==4.0.1
 uncertainties==3.1.6
 urllib3==1.26.7
 vine==5.0.0
-wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
+wcwidth
 webencodings==0.5.1
 Werkzeug==2.0.2
 widgetsnbextension==3.5.1
 xgboost==0.90
-zipp @ file:///tmp/build/80754af9/zipp_1603306325174/work
+zipp
