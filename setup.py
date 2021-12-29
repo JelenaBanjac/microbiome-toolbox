@@ -37,7 +37,7 @@ setuptools.setup(
         #"kiwisolver==1.2.0",
         #"libpng==1.6.37",
         #"libxgboost==0.90",
-        "matplotlib",
+        "matplotlib==2.2.2",
         "pyparsing",
         # "sip==4.19.24",
         # "backcall",
