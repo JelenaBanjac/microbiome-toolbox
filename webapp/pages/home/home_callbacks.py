@@ -1,5 +1,5 @@
 # from dash.dependencies import Input, Output, State
-from app import app, cache
+from app import app
 import pandas as pd
 from microbiome.dataset import MicrobiomeDataset
 import dash_bootstrap_components as dbc
@@ -7,14 +7,11 @@ import dash_uploader as du
 from microbiome.enumerations import *
 from microbiome.trajectory import MicrobiomeTrajectory
 import dash
-import os
-from os.path import join, dirname
 from environment.settings import UPLOAD_FOLDER_ROOT
 from dash_extensions.enrich import Output, Input, State
-import sys
 import pathlib
-from .home_data import get_dataset, set_dataset, set_trajectory, get_trajectory
-
+from .home_data import get_dataset, set_dataset, set_trajectory
+import traceback
 
 @du.callback(
     [
@@ -158,8 +155,8 @@ def dataset_buttons_click(
             dataset_settings_disabled = False
 
         except Exception as e:
-            traceback = sys.exc_info()[2]
-            infobox = dbc.Alert("Microbiome dataset error: " + str(e) + str(traceback), color="danger")
+            traceback_msg = traceback.format_exc()
+            infobox = dbc.Alert("Microbiome dataset error: " + str(e) + str(traceback_msg), color="danger")
 
     if dataset is not None:
 
@@ -210,9 +207,9 @@ def dataset_buttons_click(
             card_5_btn_disabled = False
             card_6_btn_disabled = False
         except Exception as e:
-            traceback = sys.exc_info()[2]
+            traceback_msg = traceback.format_exc()
             infobox = dbc.Alert(
-                "Microbiome trajectory error: " + str(e) + str(traceback), color="danger"
+                "Microbiome trajectory error: " + str(e) + str(traceback_msg), color="danger"
             )
 
     print("file_name", file_name)
