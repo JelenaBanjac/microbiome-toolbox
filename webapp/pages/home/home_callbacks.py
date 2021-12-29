@@ -11,7 +11,7 @@ import os
 from os.path import join, dirname
 from environment.settings import UPLOAD_FOLDER_ROOT
 from dash_extensions.enrich import Output, Input, State
-
+import sys
 import pathlib
 from .home_data import get_dataset, set_dataset, set_trajectory, get_trajectory
 
@@ -158,7 +158,8 @@ def dataset_buttons_click(
             dataset_settings_disabled = False
 
         except Exception as e:
-            infobox = dbc.Alert("Microbiome dataset error: " + str(e), color="danger")
+            traceback = sys.exc_info()[2]
+            infobox = dbc.Alert("Microbiome dataset error: " + str(e) + str(traceback), color="danger")
 
     if dataset is not None:
 
@@ -209,8 +210,9 @@ def dataset_buttons_click(
             card_5_btn_disabled = False
             card_6_btn_disabled = False
         except Exception as e:
+            traceback = sys.exc_info()[2]
             infobox = dbc.Alert(
-                "Microbiome trajectory error: " + str(e), color="danger"
+                "Microbiome trajectory error: " + str(e) + str(traceback), color="danger"
             )
 
     print("file_name", file_name)
