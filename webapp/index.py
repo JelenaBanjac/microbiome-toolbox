@@ -6,7 +6,6 @@ from app import app, server
 
 from routes import render_page_content
 from pages.home.home_callbacks import *
-from pages.page0.page0_callbacks import *
 from pages.page1.page1_callbacks import *
 from pages.page2.page2_callbacks import *
 from pages.page3.page3_callbacks import *

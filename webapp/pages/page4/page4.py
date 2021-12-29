@@ -4,8 +4,7 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 from utils.constants import home_location
 
-layout = dhc.Div(
-    [
+layout = dhc.Div(id="page-4-layout", children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -65,6 +64,8 @@ layout = dhc.Div(
                                 max=20,
                                 step=1,
                                 value=2,
+                                persistence=True,
+                                persistence_type="session",
                             ),
                             width=2,
                         ),
@@ -83,6 +84,8 @@ layout = dhc.Div(
                                 max=10,
                                 step=1,
                                 value=5,
+                                persistence=True,
+                                persistence_type="session",
                             ),
                             width=2,
                         ),
@@ -102,6 +105,8 @@ layout = dhc.Div(
                                 max=20,
                                 step=1,
                                 value=5,
+                                persistence=True,
+                                persistence_type="session",
                             ),
                             width=2,
                         ),
@@ -121,6 +126,8 @@ layout = dhc.Div(
                                 pushable=1,
                                 allowCross=False,
                                 tooltip={"placement": "bottom", "always_visible": True},
+                                persistence=True,
+                                persistence_type="session",
                             ),
                             width=8,
                         ),
@@ -146,16 +153,5 @@ layout = dhc.Div(
                 
             ]
         )
-    ],
-    # style={
-    #     "verticalAlign": "middle",
-    #     "textAlign": "center",
-    #     "backgroundColor": "rgb(255, 255, 255)",  #'rgb(245, 245, 245)',
-    #     "position": "relative",
-    #     "width": "100%",
-    #     #'height':'100vh',
-    #     "bottom": "0px",
-    #     "left": "0px",
-    #     "zIndex": "1000",
-    # },
+    ]
 )

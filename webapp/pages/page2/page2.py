@@ -4,7 +4,8 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 
 layout = dhc.Div(
-    [
+    id="page-2-layout",
+    children=[
         dbc.Container(
             [
                 dbc.Row(

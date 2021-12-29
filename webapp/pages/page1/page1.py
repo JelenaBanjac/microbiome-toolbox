@@ -4,8 +4,7 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 from utils.constants import home_location
 
-layout = dhc.Div(
-    [
+layout = dhc.Div(id="page-1-layout", children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -56,16 +55,5 @@ layout = dhc.Div(
                 
             ]
         )
-    ],
-    # style={
-    #     "verticalAlign": "middle",
-    #     "textAlign": "center",
-    #     "backgroundColor": "rgb(255, 255, 255)",  #'rgb(245, 245, 245)',
-    #     "position": "relative",
-    #     "width": "100%",
-    #     #'height':'100vh',
-    #     "bottom": "0px",
-    #     "left": "0px",
-    #     "zIndex": "1000",
-    # },
+    ]
 )

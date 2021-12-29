@@ -713,7 +713,7 @@ def serve_layout():
     trajectory_settings = serve_trajectory_settings()
     methods = serve_methods()
 
-    layout = [
+    layout = dhc.Div(id="home-layout", children=[
         dbc.Container(
             dbc.Row(
                 dbc.Col(
@@ -762,7 +762,7 @@ def serve_layout():
         ),
         dhc.Br(),
         dhc.Br(),
-    ]
+    ])
 
     return layout
 
