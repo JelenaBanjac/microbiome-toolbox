@@ -47,10 +47,12 @@ class MicrobiomeDataset:
         if file_name == "mouse_data":
             # file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata_default.csv"
             # TODO: remove two classification columns
-            file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls"
+            # file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls"
+            file_name = "https://github.com/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.xls"
         elif file_name == "human_data":
             # file_name = "INPUT_FILES/website_humandata.xls"
-            file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
+            # file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
+            file_name = "https://github.com/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
 
         # create dataframe regardless of delimiter (sep)
         self.df = pd.read_csv(file_name, sep=None, engine="python")

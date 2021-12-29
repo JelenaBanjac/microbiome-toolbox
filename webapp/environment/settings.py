@@ -15,9 +15,3 @@ DEV_TOOLS_PROPS_CHECK = bool(os.environ.get("DEV_TOOLS_PROPS_CHECK"))
 UPLOAD_FOLDER_ROOT = join(os.getcwd(), "cached_files")
 LOADING_TYPE = "default"
 pathlib.Path(UPLOAD_FOLDER_ROOT).mkdir(parents=True, exist_ok=True)
-
-DF_DEFAULT = pd.read_csv(
-    "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata_default.csv",
-    sep=",",
-)
-FILE_NAME_DEFAULT = "website_mousedata_default.csv"
