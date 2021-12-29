@@ -1,2 +1,1 @@
-web: gunicorn app:server --timeout 500
-celery_main_worker: celery -A tasks worker -E --loglevel=info
+web: gunicorn --pythonpath webapp index:server --timeout 3600
