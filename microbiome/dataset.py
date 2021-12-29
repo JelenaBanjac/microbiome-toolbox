@@ -5,7 +5,12 @@ import itertools
 
 import numpy as np
 import pandas as pd
-from microbiome.enumerations import Normalization, ReferenceGroup, TimeUnit, FeatureColumnsType
+from microbiome.enumerations import (
+    Normalization,
+    ReferenceGroup,
+    TimeUnit,
+    FeatureColumnsType,
+)
 from collections import namedtuple
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.neighbors import LocalOutlierFactor
@@ -179,7 +184,6 @@ class MicrobiomeDataset:
             spikecolor="gray",
         )
 
-
     def __str__(self):
         ret_val = ""
 
@@ -241,7 +245,7 @@ class MicrobiomeDataset:
         """Modify reference_group column"""
         if val not in ReferenceGroup:
             raise ValueError(
-                f"There is no value {val} in ReferenceGroup enumeration calss!"
+                f"There is no value {val} in ReferenceGroup enumeration class!"
             )
         self._reference_group_choice = val
 
@@ -263,8 +267,20 @@ class MicrobiomeDataset:
         # get latest values for y and groups
         y = self.df.reference_group.values
         # groups = self.df.subjectID.values
-        results = two_groups_differentiation(X, y, groups)
+        results = two_groups_differentiation(
+            self.df[self.feature_columns],
+            self.df.reference_group,
+            groups,
+            y_column="reference_group",
+            plot=True,
+        )
         self._differentiation_score = results["f1score"]
+
+        self.reference_group_plot = results["fig"]
+        self.reference_group_img_src = results["img_src"]
+        self.reference_group_accuracy = results["accuracy"]
+        self.reference_group_f1score = results["f1score"]
+        self.reference_group_config = results["config"]
 
     def _find_best_novelty_reference_group(self, X, y, groups, novelty_settings=None):
 
@@ -352,7 +368,6 @@ class MicrobiomeDataset:
                 self._feature_columns = self.bacteria_and_metadata_columns
         # but also update novelty detection result if it was used
         # self.reference_group_choice = self._reference_group_choice
-        
 
     @property
     def bacteria_columns(self):
@@ -384,24 +399,26 @@ class MicrobiomeDataset:
 
     @log_ratio_bacteria.setter
     def log_ratio_bacteria(self, val):
-        bacteria_columns_all = self.__df.columns[self.df.columns.str.startswith("bacteria_")].to_numpy()
+        bacteria_columns_all = self.__df.columns[
+            self.df.columns.str.startswith("bacteria_")
+        ].to_numpy()
         self._log_ratio_bacteria = val
         features = self.__df[bacteria_columns_all].values
         if val is not None:
             self.normalized = Normalization.NON_NORMALIZED
-            
+
             for i, c in enumerate(bacteria_columns_all):
                 self.df.loc[:, c] = features[:, i]
                 if c != val:
                     self.df[c] = self.df.apply(
                         lambda row: math.log2(row[c] / row[val]), axis=1
                     )
-            
+
             # remove reference, since these are abundances
             self.df = self.df.drop(columns=val, axis=1)
-            
+
         else:
-            
+
             for i, feature_column in enumerate(bacteria_columns_all):
                 self.df.loc[:, feature_column] = features[:, i]
             # self.df = self.__df.copy(deep=True)
@@ -414,14 +431,14 @@ class MicrobiomeDataset:
     def normalized(self, val):
         self._normalized = val
         features = self.__df[self.feature_columns].values
-        
+
         if val == Normalization.NORMALIZED:
             from sklearn.preprocessing import normalize
+
             features = normalize(features, axis=0)
-        
+
         for i, feature_column in enumerate(self.feature_columns):
             self.df.loc[:, feature_column] = features[:, i]
-
 
     def set_log_ratio_bacteria_with_least_crossings(self):
         def _crossings(x, y1, y2, degree=5):
@@ -493,7 +510,6 @@ class MicrobiomeDataset:
         return column_zscore
 
     def plot_bacteria_abundances(self, number_of_columns=3, layout_settings=None):
-        number_of_columns = 3
         number_of_rows = len(self.bacteria_columns) // number_of_columns + 1
 
         layout_settings_default = dict(
@@ -595,7 +611,7 @@ class MicrobiomeDataset:
         layout_settings_final = {**layout_settings_default, **layout_settings}
 
         # extract just the important columns for the heatmap
-        df = self.df[self.bacteria_columns + ["subjectID", "age_at_collection"]]
+        df = self.df[list(self.bacteria_columns) + ["subjectID", "age_at_collection"]]
         # replace long bacteria names with nice names
         df = df.rename({b: self.nice_name(b) for b in self.bacteria_columns}, axis=1)
         # update the bacteria_names with short names
@@ -1065,9 +1081,33 @@ class MicrobiomeDataset:
         )
 
         def selection_fn(trace, points, selector):
-            t.data[0].cells.values = [
-                self.df.loc[points.point_inds][col] for col in ["sampleID", "subjectID"]
-            ]
+            results = self.selection_embeddings(t)(trace, points, selector)
+
+            # plot the result of reference analysis with feature_columns_for_reference
+            results["fig"].show(config=results["config"])
+            results["img_src"].show()
+
+        f.data[0].on_selection(selection_fn)
+
+        if "selected" in self.df.columns:
+            self.df.drop(columns="selected", inplace=True)
+
+        plt.close("all")
+
+        # Put everything together
+        return VBox((f, t))
+
+    def selection_embeddings(self, t):
+        def _inner(trace, points, selector):
+            if hasattr(points, "point_inds"):
+                t.data[0].cells.values = [
+                    self.df.loc[points.point_inds][col]
+                    for col in ["sampleID", "subjectID"]
+                ]
+            else:
+                t.data[0].cells.values = [
+                    self.df.loc[points][col] for col in ["sampleID", "subjectID"]
+                ]
 
             df_selected = pd.DataFrame(
                 data={
@@ -1075,13 +1115,6 @@ class MicrobiomeDataset:
                     "subjectID": t.data[0].cells.values[1],
                 }
             )
-            df_selected.to_csv(file_name, index=False)
-            if file_name:
-                print("Saved to:", file_name)
-            else:
-                print(
-                    "Selection file not saved. Specify file_name if you want to save."
-                )
 
             plt.clf()
             # create new column called selected to use for reference analysis: True - selected, False - not selected
@@ -1098,19 +1131,10 @@ class MicrobiomeDataset:
                 nice_name=self.nice_name,
                 plot=True,
             )
-            # plot the result of reference analysis with feature_columns_for_reference
-            results["fig"].show(config=results["config"])
-            results["img_src"].show()
 
-        f.data[0].on_selection(selection_fn)
+            return results
 
-        if "selected" in self.df.columns:
-            self.df.drop(columns="selected", inplace=True)
-
-        plt.close("all")
-
-        # Put everything together
-        return VBox((f, t))
+        return _inner
 
 
 ### HELPERS for datasets?
@@ -1124,16 +1148,24 @@ RANDOM_STATE = 42
 
 
 def two_groups_differentiation(
-    X, y, groups, nice_name=lambda x: x, settings=None, plot=False, layout_settings=None
+    X,
+    y,
+    groups,
+    y_column=None,
+    nice_name=lambda x: x,
+    settings=None,
+    plot=False,
+    layout_settings=None,
 ):
     if isinstance(X, pd.DataFrame):
         x_columns = X.columns
         X = X.values
 
     if isinstance(y, pd.Series):
-        y_column = y.name
+        y_column = y_column or y.name
         y = y.values.astype(int)
     else:
+        y_column = "main group"
         y = y.astype(int)
 
     if isinstance(groups, pd.Series):

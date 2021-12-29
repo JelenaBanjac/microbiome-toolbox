@@ -1,12 +1,18 @@
 
 
-import dash_uploader as du
+
 
 from app import app, server
 
 from routes import render_page_content
 from pages.home.home_callbacks import *
 from pages.page0.page0_callbacks import *
+from pages.page1.page1_callbacks import *
+from pages.page2.page2_callbacks import *
+from pages.page3.page3_callbacks import *
+from pages.page4.page4_callbacks import *
+from pages.page5.page5_callbacks import *
+from pages.page6.page6_callbacks import *
 
 from environment.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, UPLOAD_FOLDER_ROOT
 
@@ -17,8 +23,6 @@ if __name__ == "__main__":
     # app.run_server(
     #     debug=False, host=os.getenv("HOST", "0.0.0.0"), port=os.getenv("PORT", "5000")
     # )
-
-    du.configure_upload(app, UPLOAD_FOLDER_ROOT)
 
     app.run_server(
         host=APP_HOST,

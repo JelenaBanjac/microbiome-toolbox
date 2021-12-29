@@ -82,7 +82,9 @@ def serve_upload(session_id):
                                 n_clicks=0,
                                 disabled=True,
                             )),
-                            dhc.Div(dhc.P()),
+                            dhc.Div(dhc.Small("Upload your dataset to enable the button."), id="small-upload-info-text", hidden=False),
+                            dhc.Br(),
+                            dhc.Div(dcc.Store(id="upload-data-file-path"), hidden=True),
                             dhc.Div(du.Upload(
                                 id="upload-data",
                                 filetypes=["csv", "xls"],
@@ -95,25 +97,29 @@ def serve_upload(session_id):
                 dbc.Row([
                     dbc.Col(width=3),
                     dbc.Col(
-                        dcc.Loading(id="loading-boxes", children=[
-                            dhc.Div(id="upload-infobox"),
-                            dhc.Div(id="upload-errorbox"),
-                        ], type="default"), width=6),
+                        dcc.Loading(id="loading-boxes", children=dhc.Div(id="upload-infobox"), type="default"), width=6),
                 ]),
+                # dbc.Row([
+                #     dbc.Col(width=3),
+                #     dbc.Col(
+                #         dcc.Loading(id="loading-boxes", children=dhc.Div(id="dataset-errors"), type="default"), width=6),
+                # ]),
             ],
             className="md-12",
-            style={"height": 250},
+            # style={"height": 250},
         ),
         dhc.Br(),
         
     ]
     return upload
 
-
-def serve_settings():
-    
-    # reference_groups = ["user defined", "novelty detection algorithm decision"]
-
+def serve_dataset_table():
+    file_name = dhc.Div(id="upload-file-name")
+    number_of_samples = dhc.Div(id="upload-number-of-samples")
+    number_of_subjects = dhc.Div(id="upload-number-of-subjects")
+    unique_groups = dhc.Div(id="upload-unique-groups")
+    number_of_reference_samples = dhc.Div(id="upload-number-of-reference-samples")
+    differentiation_score = dhc.Div(id="upload-differentiation-score")
     table = dash_table.DataTable(
         id='upload-datatable',
         # style_data={
@@ -146,98 +152,12 @@ def serve_settings():
         tooltip_duration=None
     )
 
-    
-    feature_columns_choice = dcc.Dropdown(
-        id='settings-feature-columns-choice',
-        optionHeight=20,
-        options=[ {'label': e.name, "value": e.name} for e in FeatureColumnsType],
-        searchable=True,
-        clearable=True,
-        placeholder="select feature columns",
-        # value=FeatureColumnsType.BACTERIA.name,
-        value=None,
-    )
-
-    reference_group_choice = dcc.Dropdown(
-        id='settings-reference-group-choice',
-        optionHeight=20,
-        options=[ {'label': e.name, "value": e.name} for e in ReferenceGroup],
-        searchable=True,
-        clearable=True,
-        placeholder="select reference group",
-        # value=ReferenceGroup.USER_DEFINED.name,
-        value=None,
-    )
-
-    time_unit_choice = dcc.Dropdown(
-        id='settings-time-unit-choice',
-        optionHeight=20,
-        options=[ {'label': e.name, "value": e.name} for e in TimeUnit],
-        searchable=True,
-        clearable=True,
-        placeholder="select time unit",
-        # value=TimeUnit.DAY.name,
-        value=None,
-    )
-
-    
-
-    normalized_choice = dcc.Dropdown(
-        id='settings-normalized-choice',
-        optionHeight=20,
-        options=[ {'label': e.name, "value": e.name} for e in Normalization],
-        searchable=True,
-        clearable=True,
-        placeholder="select normalization",
-        # value=Normalization.NON_NORMALIZED.name,
-        value=None,
-    )
-
-    anomaly_type_choice = dcc.Dropdown(
-        id='settings-anomaly-type-choice',
-        optionHeight=20,
-        options=[ {'label': e.name, "value": e.name} for e in AnomalyType],
-        searchable=True,
-        clearable=True,
-        placeholder="select anomaly type",
-        # value=AnomalyType.PREDICTION_INTERVAL.name,
-        value=None,
-    )
-
-    feature_extraction_choice = dcc.Dropdown(
-        id='settings-feature-extraction-choice',
-        optionHeight=20,
-        options=[ {'label': e.name, "value": e.name} for e in FeatureExtraction],
-        searchable=True,
-        clearable=True,
-        placeholder="select feature extraction",
-        # value=FeatureExtraction.NONE.name,
-        value=None,
-    )
-
-    log_ratio_bacteria_choice = dcc.Dropdown(
-        id='settings-log-ratio-bacteria-choice',
-        optionHeight=20,
-        # options=[ {'label': b, "value": b} for b in log_ratio_bacterias],
-        searchable=True,
-        clearable=True,
-        placeholder="[optional] select a bacteria for log-ratio",
-        value=None,
-    )
-
-    file_name = dhc.Div(id="upload-file-name")
-    number_of_samples = dhc.Div(id="upload-number-of-samples")
-    number_of_subjects = dhc.Div(id="upload-number-of-subjects")
-    unique_groups = dhc.Div(id="upload-unique-groups")
-    number_of_reference_samples = dhc.Div(id="upload-number-of-reference-samples")
-    differentiation_score = dhc.Div(id="upload-differentiation-score")
-
-    settings = [
+    dataset_table = [
         dhc.Br(),
         dhc.Br(),
         dhc.Br(),
         dhc.H3(
-            "Dataset settings",
+            "Dataset table",
             style={
                 "textAlign": "center",
             },
@@ -295,11 +215,94 @@ def serve_settings():
 
         table,
         dhc.Br(),
+    ]
+
+    return dataset_table
+
+def serve_dataset_settings():
+    
+    # reference_groups = ["user defined", "novelty detection algorithm decision"]
+    feature_columns_choice = dcc.Dropdown(
+        id='settings-feature-columns-choice-dataset',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in FeatureColumnsType],
+        searchable=True,
+        clearable=True,
+        placeholder="select feature columns",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+    reference_group_choice = dcc.Dropdown(
+        id='settings-reference-group-choice',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in ReferenceGroup],
+        searchable=True,
+        clearable=True,
+        placeholder="select reference group",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+    time_unit_choice = dcc.Dropdown(
+        id='settings-time-unit-choice',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in TimeUnit],
+        searchable=True,
+        clearable=True,
+        placeholder="select time unit",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+    
+
+    normalized_choice = dcc.Dropdown(
+        id='settings-normalized-choice',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in Normalization],
+        searchable=True,
+        clearable=True,
+        placeholder="select normalization",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+
+    log_ratio_bacteria_choice = dcc.Dropdown(
+        id='settings-log-ratio-bacteria-choice',
+        optionHeight=20,
+        searchable=True,
+        clearable=True,
+        placeholder="[optional] select a bacteria for log-ratio",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+    
+
+    settings = [
+        
+        dhc.Br(),
+        dhc.Br(),
+        dhc.Br(),
+        dhc.H3(
+            "Dataset settings",
+            style={
+                "textAlign": "center",
+            },
+        ),
+        dhc.Br(),
         dbc.Container(
             [
                 dbc.Row(
                     [
-                        dbc.Col("Feature columns:", width=3),
+                        dbc.Col("Feature columns (for novelty detection):", width=3),
                         dbc.Col(feature_columns_choice, width=6),
                     ]
                 ),
@@ -325,25 +328,35 @@ def serve_settings():
                         dbc.Col(normalized_choice, width=6),
                     ]
                 ),
-                dhc.Br(),
-                dbc.Row(
-                    [
-                        dbc.Col("Anomaly type:", width=3),
-                        dbc.Col(anomaly_type_choice, width=6),
-                    ]
-                ),
-                dhc.Br(),
-                dbc.Row(
-                    [
-                        dbc.Col("Feature extraction:", width=3),
-                        dbc.Col(feature_extraction_choice, width=6),
-                    ]
-                ),
+                
                 dhc.Br(),
                 dbc.Row(
                     [
                         dbc.Col("Log-ratio bacteria:", width=3),
                         dbc.Col(log_ratio_bacteria_choice, width=6),
+                    ]
+                ),
+                dhc.Br(),
+
+                dbc.Row(
+                    [
+                        dbc.Col(dhc.P(), width=3),
+                        dbc.Col(
+                            [dhc.Div(dbc.Button(
+                                "Update dataset",
+                                outline=True,
+                                color="dark",
+                                id="button-dataset-settings-update",
+                                n_clicks=0,
+                                disabled=True,
+                            )),
+                            dhc.Br(),
+                            dhc.Br(),
+                            dcc.Loading(id="loading-boxes-dataset", children=[
+                                dhc.Div(id="dataset-settings-infobox"),
+                            ], type="default")
+                            ]
+                            , width=6),
                     ]
                 ),
                 dhc.Br(),
@@ -358,6 +371,129 @@ def serve_settings():
     # )
     return settings
 
+def serve_trajectory_settings():
+    feature_columns_choice = dcc.Dropdown(
+        id='settings-feature-columns-choice-trajectory',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in FeatureColumnsType],
+        searchable=True,
+        clearable=True,
+        placeholder="select feature columns",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+    # time_unit_choice = dcc.Dropdown(
+    #     id='settings-time-unit-choice-trajectory',
+    #     optionHeight=20,
+    #     options=[ {'label': e.name, "value": e.name} for e in TimeUnit],
+    #     searchable=True,
+    #     clearable=True,
+    #     placeholder="select time unit",
+    #     # value=TimeUnit.DAY.name,
+    #     value=None,
+    # )
+
+    anomaly_type_choice = dcc.Dropdown(
+        id='settings-anomaly-type-choice',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in AnomalyType],
+        searchable=True,
+        clearable=True,
+        placeholder="select anomaly type",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+    feature_extraction_choice = dcc.Dropdown(
+        id='settings-feature-extraction-choice',
+        optionHeight=20,
+        options=[ {'label': e.name, "value": e.name} for e in FeatureExtraction],
+        searchable=True,
+        clearable=True,
+        placeholder="select feature extraction",
+        value=None,
+        persistence=True,
+        persistence_type="session",
+    )
+
+    settings = [
+        
+        dhc.Br(),
+        dhc.Br(),
+        dhc.Br(),
+        dhc.H3(
+            "Trajectory settings",
+            style={
+                "textAlign": "center",
+            },
+        ),
+        dhc.Br(),
+        dbc.Container(
+            [
+                dbc.Row(
+                    [
+                        dbc.Col("Feature columns (for trajectory model):", width=3),
+                        dbc.Col(feature_columns_choice, width=6),
+                    ]
+                ),
+                dhc.Br(),
+                
+                # dbc.Row(
+                #     [
+                #         dbc.Col("Time unit (for plots):", width=3),
+                #         dbc.Col(time_unit_choice, width=6),
+                #     ]
+                # ),
+                # dhc.Br(),
+                
+                
+                dbc.Row(
+                    [
+                        dbc.Col("Anomaly type:", width=3),
+                        dbc.Col(anomaly_type_choice, width=6),
+                    ]
+                ),
+                dhc.Br(),
+                dbc.Row(
+                    [
+                        dbc.Col("Feature extraction:", width=3),
+                        dbc.Col(feature_extraction_choice, width=6),
+                    ]
+                ),
+                
+                dhc.Br(),
+                dbc.Row(
+                    [
+                        dbc.Col(dhc.P(), width=3),
+                        dbc.Col(
+                            [dhc.Div(dbc.Button(
+                                "Update trajectory",
+                                outline=True,
+                                color="dark",
+                                id="button-trajectory-settings-update",
+                                n_clicks=0,
+                                disabled=True,
+                            )),
+                            dhc.Br(),
+                            dhc.Br(),
+                            dcc.Loading(id="loading-boxes-trajectory", children=[
+                                dhc.Div(id="trajectory-settings-infobox"),
+                            ], type="default")
+                            ]
+                            , width=6),
+                    ]
+                ),
+                dhc.Br(),
+            ],
+            className="md-12",
+            # style={"height": 250},
+        ),
+    ]
+
+    return settings
+
 def serve_methods():
 
     card1 = dbc.Col(
@@ -369,7 +505,7 @@ def serve_methods():
                 ),
                 dbc.CardBody(
                     [
-                        dhc.H4("Reference Definition & Statistics", className="card-title"),
+                        dhc.H4("Reference Definition", className="card-title"),
                         # dhc.P(
                         #     "Some quick example text to build on the card title and "
                         #     "make up the bulk of the card's content.",
@@ -378,7 +514,7 @@ def serve_methods():
                         # dhc.A(dbc.Button("Go somewhere", outline=True, color="dark", id="card1-btn"), href="/methods/page-1"),
                         dcc.Link(
                             dbc.Button(
-                                "See more", outline=True, color="dark", id="card1-btn"
+                                "See more", outline=True, color="dark", id="card-1-btn", disabled=True,
                             ),
                             href=page1_location,
                         ),
@@ -409,7 +545,7 @@ def serve_methods():
                         # ),
                         dcc.Link(
                             dbc.Button(
-                                "See more", outline=True, color="dark", id="card2-btn"
+                                "See more", outline=True, color="dark", id="card-2-btn", disabled=True,
                             ),
                             href=page2_location,
                         ),
@@ -440,7 +576,7 @@ def serve_methods():
                         # ),
                         dcc.Link(
                             dbc.Button(
-                                "See more", outline=True, color="dark", id="card3-btn"
+                                "See more", outline=True, color="dark", id="card-3-btn", disabled=True,
                             ),
                             href=page3_location,
                         ),
@@ -471,7 +607,7 @@ def serve_methods():
                         # ),
                         dcc.Link(
                             dbc.Button(
-                                "See more", outline=True, color="dark", id="card4-btn"
+                                "See more", outline=True, color="dark", id="card-4-btn", disabled=True,
                             ),
                             href=page4_location,
                         ),
@@ -494,7 +630,7 @@ def serve_methods():
                 ),
                 dbc.CardBody(
                     [
-                        dhc.H4("Longitudinal Anomaly Detection", className="card-title"),
+                        dhc.H4("Anomaly Detection", className="card-title"),
                         # dhc.P(
                         #     "Some quick example text to build on the card title and "
                         #     "make up the bulk of the card's content.",
@@ -502,7 +638,7 @@ def serve_methods():
                         # ),
                         dcc.Link(
                             dbc.Button(
-                                "See more", outline=True, color="dark", id="card5-btn"
+                                "See more", outline=True, color="dark", id="card-5-btn", disabled=True,
                             ),
                             href=page5_location,
                         ),
@@ -533,7 +669,7 @@ def serve_methods():
                         # ),
                         dcc.Link(
                             dbc.Button(
-                                "See more", outline=True, color="dark", id="card6-btn"
+                                "See more", outline=True, color="dark", id="card-6-btn", disabled=True,
                             ),
                             href=page6_location,
                         ),
@@ -553,7 +689,7 @@ def serve_methods():
                     dbc.Col(
                         [
                             dhc.Br(),
-                            dhc.Div(dhc.H3("Dataset methods")),
+                            dhc.Div(dhc.H3("Trajectory methods")),
                             dhc.Br(),
                         ],
                         className="md-12",
@@ -572,7 +708,9 @@ def serve_layout():
     session_id = str(uuid.uuid4())
 
     upload = serve_upload(session_id)
-    settings = serve_settings()
+    dataset_table = serve_dataset_table()
+    dataset_settings = serve_dataset_settings()
+    trajectory_settings = serve_trajectory_settings()
     methods = serve_methods()
 
     layout = [
@@ -586,7 +724,18 @@ def serve_layout():
                         dhc.Br(),
                         dhc.Br(),
                         dhc.Hr(),
-                        dhc.Div(children=settings, id="dataset-settings"),
+                        dhc.Br(),
+                        dhc.Div(children=dataset_table, id="dataset-table"),
+                        dhc.Br(),
+                        dhc.Br(),
+                        dhc.Hr(),
+                        dhc.Br(),
+                        dhc.Div(children=dataset_settings, id="dataset-settings"),
+                        dhc.Br(),
+                        dhc.Br(),
+                        dhc.Hr(),
+                        dhc.Br(),
+                        dhc.Div(children=trajectory_settings, id="trajectory-settings"),
                         dhc.Br(),
                         dhc.Br(),
                         dhc.Hr(),

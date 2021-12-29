@@ -9,6 +9,9 @@ content = html.Div(id="page-content")
 layout = dhc.Div(
     [
         dcc.Location(id="url", refresh=False),
+        # dcc.Store(data=session_id, id='session-id'),
+        dcc.Store(id='microbiome-dataset-location'),
+        dcc.Store(id='microbiome-trajectory-location'),
         navbar,
         content,
     ]

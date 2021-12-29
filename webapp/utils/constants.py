@@ -1,4 +1,5 @@
 home_location = "/"
+page0_location = "/page-0"
 page1_location = "/page-1"
 page2_location = "/page-2"
 page3_location = "/page-3"
