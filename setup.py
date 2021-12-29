@@ -82,6 +82,7 @@ setuptools.setup(
         "dash-renderer",
         "dash-table",
         "dash-uploader",
+        "dash-extensions",
         "plotly",
         "flask-caching",
         # "catboost",
