@@ -95,5 +95,8 @@ setuptools.setup(
         "gunicorn",
         "diskcache",
         "python-dotenv",
+        "psutil",
+        "diskcache",
+        "multiprocess",
     ]
 )
