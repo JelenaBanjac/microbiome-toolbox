@@ -98,5 +98,6 @@ setuptools.setup(
         "psutil",
         "diskcache",
         "multiprocess",
+        "natsort",
     ]
 )
