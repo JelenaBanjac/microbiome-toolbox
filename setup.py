@@ -75,9 +75,9 @@ setuptools.setup(
         # "wcwidth==0.2.5",
         "wheel",
         # "wincertstore==0.2",
-        "dash-bootstrap-components",
-        "dash-html-components",
-        "dash-core-components",
+        # "dash-bootstrap-components",
+        # "dash-html-components",
+        # "dash-core-components",
         "dash",
         "dash-renderer",
         "dash-table",
@@ -91,6 +91,7 @@ setuptools.setup(
         "shap",
         "tk",
         # "dash-dangerously-set-inner-html",
-        "gunicorn"
+        "gunicorn",
+        "diskcache",
     ]
 )
