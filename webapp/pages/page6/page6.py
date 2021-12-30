@@ -4,7 +4,9 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 from utils.constants import home_location
 
-layout = dhc.Div(id="page-6-layout", children=[
+layout = dhc.Div(
+    id="page-6-layout",
+    children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -15,15 +17,19 @@ layout = dhc.Div(id="page-6-layout", children=[
                                 "Intervention Simulation",
                                 style={
                                     "textAlign": "center",
-                                }
+                                },
                             ),
                             dhc.Br(),
-                            dcc.Markdown('''
+                            dcc.Markdown(
+                                """
                             Click on one of the outliers below to see the suggestion for the intervention. 
                             The intervention simulation consists of suggesting the taxa values to change (or log-ratio values to change) in order to bring back the sample to the reference microbiome trajectory.
-                            ''', style={'textAlign': 'left',}),
-
-                            ]
+                            """,
+                                style={
+                                    "textAlign": "left",
+                                },
+                            ),
+                        ]
                     )
                 ),
                 dhc.Br(),
@@ -88,7 +94,6 @@ layout = dhc.Div(id="page-6-layout", children=[
                     ]
                 ),
                 dhc.Br(),
-                
                 dbc.Row(
                     [
                         dbc.Col("Number of time blocks: ", width=2),
@@ -129,8 +134,6 @@ layout = dhc.Div(id="page-6-layout", children=[
                         dbc.Col(dhc.P(), width=2),
                     ]
                 ),
-                
-                
                 dhc.Br(),
                 dhc.Br(),
                 dbc.Row(
@@ -145,8 +148,7 @@ layout = dhc.Div(id="page-6-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-                
             ]
         )
-    ]
+    ],
 )

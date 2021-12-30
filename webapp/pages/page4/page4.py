@@ -4,7 +4,9 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 from utils.constants import home_location
 
-layout = dhc.Div(id="page-4-layout", children=[
+layout = dhc.Div(
+    id="page-4-layout",
+    children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -15,20 +17,29 @@ layout = dhc.Div(id="page-4-layout", children=[
                                 "Bacteria Importance with Time",
                                 style={
                                     "textAlign": "center",
-                                }
+                                },
                             ),
                             dhc.Br(),
-                            dcc.Markdown('''
+                            dcc.Markdown(
+                                """
                             * Importance of different bacteria and their abundances across time boxes (reference data) - resolution (i.e. box width) can be chosen (in the dashboard it is fixed)
                                 - bacteria height represents its importance in that time block
                                 - values in the box represent average ± STD of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want.)
                                 - total height of the box is fixed in all time blocks
                                 - can choose number of important bacteria for time interval
                             * Importance of different bacteria and their abundances across time boxes on non-healthy data (but model trained on healthy samples)
-                            ''', style={'textAlign': 'left',}),
-                            dcc.Markdown("The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.", style={'textAlign': 'left',}),
-                            
-                            ]
+                            """,
+                                style={
+                                    "textAlign": "left",
+                                },
+                            ),
+                            dcc.Markdown(
+                                "The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.",
+                                style={
+                                    "textAlign": "left",
+                                },
+                            ),
+                        ]
                     )
                 ),
                 dhc.Br(),
@@ -93,7 +104,6 @@ layout = dhc.Div(id="page-4-layout", children=[
                     ]
                 ),
                 dhc.Br(),
-                
                 dbc.Row(
                     [
                         dbc.Col("Number of time blocks: ", width=2),
@@ -134,8 +144,6 @@ layout = dhc.Div(id="page-4-layout", children=[
                         dbc.Col(dhc.P(), width=2),
                     ]
                 ),
-                
-                
                 dhc.Br(),
                 dhc.Br(),
                 dbc.Row(
@@ -150,8 +158,7 @@ layout = dhc.Div(id="page-4-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-                
             ]
         )
-    ]
+    ],
 )

@@ -1,8 +1,8 @@
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
+
 # from dash import html as dhc
 from dash import html as dhc
-# from pages import page1, page2, page3, page4, page5, page6
 
 from app import app
 from utils.constants import (
@@ -14,13 +14,6 @@ from utils.constants import (
     page5_location,
     page6_location,
 )
-from pages.home import home
-from pages.page1 import page1
-from pages.page2 import page2
-from pages.page3 import page3
-from pages.page4 import page4
-from pages.page5 import page5
-from pages.page6 import page6
 
 
 @app.callback(
@@ -51,10 +44,19 @@ def render_page_content(pathname):
     elif pathname == page6_location:
         return True, True, True, True, True, True, False, ""
     # If the user tries to reach a different page, return a 404 message
-    return True, True, True, True, True, True, True, dbc.Jumbotron(
-        [
-            dhc.H1("404: Not found", className="text-danger"),
-            dhc.Hr(),
-            dhc.P(f"The pathname {pathname} was not recognized..."),
-        ]
+    return (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        dbc.Jumbotron(
+            [
+                dhc.H1("404: Not found", className="text-danger"),
+                dhc.Hr(),
+                dhc.P(f"The pathname {pathname} was not recognized..."),
+            ]
+        ),
     )

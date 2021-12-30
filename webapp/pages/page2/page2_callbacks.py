@@ -43,13 +43,16 @@ def display_value(dataset_path):
         except Exception as e:
             results = [
                 dbc.Alert(
-                children=[
-                    dcc.Markdown("Dataset/Plot error: " + str(e)),
-                    dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
-                ],
-                color="danger",
-            )]
+                    children=[
+                        dcc.Markdown("Dataset/Plot error: " + str(e)),
+                        dcc.Markdown(traceback.format_exc()),
+                        dcc.Markdown(
+                            "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."
+                        ),
+                    ],
+                    color="danger",
+                )
+            ]
     return results
 
 
@@ -155,7 +158,9 @@ def display_value(selectedData, dataset_path, fig):
                 ]
             )
 
-            results = dataset.selection_embeddings(t)(None, fig["data"][0]["selectedpoints"], None)
+            results = dataset.selection_embeddings(t)(
+                None, fig["data"][0]["selectedpoints"], None
+            )
 
             ffig = results["fig"]
             img_src = results["img_src"]
@@ -169,20 +174,24 @@ def display_value(selectedData, dataset_path, fig):
                 dcc.Graph(figure=ffig),
                 dhc.Br(),
                 dbc.Container(
-                    dbc.Row([
-                        dbc.Col([
-                            dhc.Br(),
-                            dhc.H5("Groups discrimination performance results"),
-                            dhc.Br(),
-                            dhc.Br(),
-                            dhc.P(
-                                "The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dhc.Br(),
+                                    dhc.H5("Groups discrimination performance results"),
+                                    dhc.Br(),
+                                    dhc.Br(),
+                                    dhc.P(
+                                        "The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."
+                                    ),
+                                    dhc.P(f"Accuracy: {acccuracy:.2f}"),
+                                    dhc.P(f"F1-score: {f1score:.2f}"),
+                                ]
                             ),
-                            dhc.P(f"Accuracy: {acccuracy:.2f}"),
-                            dhc.P(f"F1-score: {f1score:.2f}"),
-                        ]), 
-                        dbc.Col(confusion_matrix)
-                    ])
+                            dbc.Col(confusion_matrix),
+                        ]
+                    )
                 ),
                 dhc.Br(),
             ]

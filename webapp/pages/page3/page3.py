@@ -4,7 +4,9 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 from utils.constants import home_location
 
-layout = dhc.Div(id="page-3-layout", children=[
+layout = dhc.Div(
+    id="page-3-layout",
+    children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -15,7 +17,7 @@ layout = dhc.Div(id="page-3-layout", children=[
                                 "Microbiome Trajectory",
                                 style={
                                     "textAlign": "center",
-                                }
+                                },
                             ),
                             dhc.Br(),
                             dcc.Markdown(
@@ -92,7 +94,6 @@ layout = dhc.Div(id="page-3-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-
                 # Reference trajectory
                 dhc.Br(),
                 dhc.Hr(),
@@ -138,7 +139,6 @@ layout = dhc.Div(id="page-3-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-                
                 # Reference groups
                 dhc.Br(),
                 dhc.Hr(),
@@ -184,7 +184,6 @@ layout = dhc.Div(id="page-3-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-
                 # Groups
                 dhc.Br(),
                 dhc.Hr(),
@@ -230,7 +229,6 @@ layout = dhc.Div(id="page-3-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-
                 # Longitudinal information
                 dhc.Br(),
                 dhc.Hr(),
@@ -278,5 +276,5 @@ layout = dhc.Div(id="page-3-layout", children=[
                 dhc.Br(),
             ]
         )
-    ]
+    ],
 )

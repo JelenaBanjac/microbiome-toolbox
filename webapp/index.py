@@ -1,8 +1,4 @@
-
-
-
-
-from app import app, server
+from app import app
 
 from routes import render_page_content
 from pages.home.home_callbacks import *
@@ -13,7 +9,12 @@ from pages.page4.page4_callbacks import *
 from pages.page5.page5_callbacks import *
 from pages.page6.page6_callbacks import *
 
-from environment.settings import APP_HOST, APP_PORT, APP_DEBUG, DEV_TOOLS_PROPS_CHECK, UPLOAD_FOLDER_ROOT
+from environment.settings import (
+    APP_HOST,
+    APP_PORT,
+    APP_DEBUG,
+    DEV_TOOLS_PROPS_CHECK,
+)
 
 
 if __name__ == "__main__":
@@ -27,5 +28,5 @@ if __name__ == "__main__":
         host=APP_HOST,
         port=APP_PORT,
         debug=APP_DEBUG,
-        dev_tools_props_check=DEV_TOOLS_PROPS_CHECK
+        dev_tools_props_check=DEV_TOOLS_PROPS_CHECK,
     )

@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 from microbiome.enumerations import AnomalyType
 
+
 @app.callback(
     Output("anomaly-type-selection", "value"),
     Input("microbiome-trajectory-location", "data"),
@@ -20,9 +21,8 @@ def display_value(trajectory_path):
     return anomaly_type
 
 
-
 @app.callback(
-    Output('page-5-display-value-1', 'children'),
+    Output("page-5-display-value-1", "children"),
     Input("microbiome-trajectory-location", "data"),
     Input("anomaly-type-selection", "value"),
     Input("polynomial-degree-anomalies", "value"),
@@ -37,7 +37,9 @@ def display_value(trajectory_path, anomaly_type, degree):
         else:
             anomaly_type_enum = AnomalyType[anomaly_type]
 
-        result = trajectory.plot_anomalies(anomaly_type=anomaly_type_enum, degree=degree)
+        result = trajectory.plot_anomalies(
+            anomaly_type=anomaly_type_enum, degree=degree
+        )
 
         results = [
             dcc.Markdown(result["ret_val"], dangerously_allow_html=True),

@@ -10,8 +10,8 @@ import numpy as np
 
 
 @app.callback(
-    Output('time-block-ranges', 'value'),
-    Output('time-block-ranges', 'max'),
+    Output("time-block-ranges", "value"),
+    Output("time-block-ranges", "max"),
     Input("microbiome-trajectory-location", "data"),
     Input("number-of-timeblocks", "value"),
 )
@@ -20,15 +20,16 @@ def display_value(trajectory_path, number_od_timeblocks):
     values = []
     if trajectory_path:
         trajectory = get_trajectory(trajectory_path)
-        
+
         maximum = trajectory.y.max()
         values = np.linspace(0, maximum, number_od_timeblocks)
-    
+
     print("values", values, "\n\n")
     return values, maximum
 
+
 @app.callback(
-    Output('page-4-display-value-1', 'children'),
+    Output("page-4-display-value-1", "children"),
     Output("anomaly-type-timeblocks", "children"),
     Input("microbiome-trajectory-location", "data"),
     Input("time-block-ranges", "value"),
@@ -41,9 +42,9 @@ def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree):
     if trajectory_path:
         trajectory = get_trajectory(trajectory_path)
         anomaly_type = trajectory.anomaly_type.name
-        
+
         result = trajectory.plot_timeboxes(
-            layout_settings=dict(hoverdistance=None), 
+            layout_settings=dict(hoverdistance=None),
             time_block_ranges=time_block_ranges,
             num_top_bacteria=num_top_bacteria,
             degree=degree,

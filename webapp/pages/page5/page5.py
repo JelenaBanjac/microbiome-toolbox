@@ -5,7 +5,9 @@ import dash_bootstrap_components as dbc
 from utils.constants import home_location
 from microbiome.enumerations import AnomalyType
 
-layout = dhc.Div(id="page-5-layout", children=[
+layout = dhc.Div(
+    id="page-5-layout",
+    children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -16,10 +18,11 @@ layout = dhc.Div(id="page-5-layout", children=[
                                 "Anomaly Detection",
                                 style={
                                     "textAlign": "center",
-                                }
+                                },
                             ),
                             dhc.Br(),
-                            dcc.Markdown('''
+                            dcc.Markdown(
+                                """
                             * Detecting the outlier depending on outlier definition (in healthy reference data)
                                 - *Prediction Interval:* outside 95% prediction interval (healthy trajectory interval)
                                 - Other ways of detecting outliers - *longitudinal anomaly detection* - implemented rolling average:
@@ -32,10 +35,18 @@ layout = dhc.Div(id="page-5-layout", children=[
                                 - Returning the (one) outlier back to the healthy region by changing the bacteria abundances that are not in normal range (healthy reference data)
                                 - Remove these outliers and retrain the model with updated reference dataset
                             * Importance of different bacteria and their abundances across time boxes on non-healthy data (but model trained on healthy samples).
-                            ''', style={'textAlign': 'left',}),
-                            dcc.Markdown("The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.", style={'textAlign': 'left',}),
-                        
-                            ]
+                            """,
+                                style={
+                                    "textAlign": "left",
+                                },
+                            ),
+                            dcc.Markdown(
+                                "The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.",
+                                style={
+                                    "textAlign": "left",
+                                },
+                            ),
+                        ]
                     )
                 ),
                 dhc.Br(),
@@ -74,9 +85,12 @@ layout = dhc.Div(id="page-5-layout", children=[
                         dbc.Col("Select anomaly type: ", width=2),
                         dbc.Col(
                             dcc.Dropdown(
-                                id='anomaly-type-selection',
+                                id="anomaly-type-selection",
                                 optionHeight=20,
-                                options=[ {'label': e.name, "value": e.name} for e in AnomalyType],
+                                options=[
+                                    {"label": e.name, "value": e.name}
+                                    for e in AnomalyType
+                                ],
                                 searchable=True,
                                 clearable=True,
                                 placeholder="select anomaly type",
@@ -84,16 +98,12 @@ layout = dhc.Div(id="page-5-layout", children=[
                                 persistence=True,
                                 persistence_type="session",
                             ),
-
                             width=4,
                         ),
                         dbc.Col(dhc.P(), width=6),
                     ]
                 ),
                 dhc.Br(),
-                
-                
-                
                 dhc.Br(),
                 dhc.Br(),
                 dbc.Row(
@@ -108,8 +118,7 @@ layout = dhc.Div(id="page-5-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-                
             ]
         )
-    ]
+    ],
 )

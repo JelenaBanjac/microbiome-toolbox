@@ -4,7 +4,9 @@ from dash import html as dhc
 import dash_bootstrap_components as dbc
 from utils.constants import home_location
 
-layout = dhc.Div(id="page-1-layout", children=[
+layout = dhc.Div(
+    id="page-1-layout",
+    children=[
         dbc.Container(
             [
                 dbc.Row(
@@ -15,10 +17,11 @@ layout = dhc.Div(id="page-1-layout", children=[
                                 "Reference Definition",
                                 style={
                                     "textAlign": "center",
-                                }
+                                },
                             ),
                             dhc.Br(),
-                            dcc.Markdown('''
+                            dcc.Markdown(
+                                """
                             There are two ways to define the reference set in the dataset:  
                                 1. _predefined by user (on raw data)_: all samples that belong to the reference are specified by user in the uploaded dataset (with the `True` value in the `reference_group` column). 
                                 Other samples are considered to be non-reference samples.  
@@ -30,14 +33,15 @@ layout = dhc.Div(id="page-1-layout", children=[
                             Bellow we also analyse the features important in each of the groups. 
                             To find the features that differentiate the two groups (reference vs non-reference group), we train the binary classification model (using supervised ensemble methods `XGBClassifier` or `RandomForestClassifier`) with confusion matrix.
                             The confusion matrix enables the insight on how good the separation between the two groups is.
-                            ''', style={'textAlign': 'left',}),
-
-                            ]
+                            """,
+                                style={
+                                    "textAlign": "left",
+                                },
+                            ),
+                        ]
                     )
                 ),
                 dhc.Br(),
-                
-                
                 dhc.Br(),
                 dhc.Br(),
                 dbc.Row(
@@ -52,8 +56,7 @@ layout = dhc.Div(id="page-1-layout", children=[
                 ),
                 dhc.Br(),
                 dhc.Br(),
-                
             ]
         )
-    ]
+    ],
 )
