@@ -195,7 +195,7 @@ def dataset_buttons_click(
             two_references_not_available = True
             note_on_reference_group = dbc.Alert(
                 "Column `reference_group` is not defined. All samples are therefore considered reference.",
-                color="warning",
+                color="warning", duration=2000,
             )
             infobox.append(note_on_reference_group)
 

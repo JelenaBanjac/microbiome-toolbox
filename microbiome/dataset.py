@@ -11,18 +11,16 @@ from microbiome.enumerations import (
     TimeUnit,
     FeatureColumnsType,
 )
-from collections import namedtuple
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, f1_score
 from plotly.subplots import make_subplots
 import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from ipywidgets import VBox
-from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.model_selection import cross_val_score
 import re
 
 
@@ -1243,7 +1241,7 @@ def two_groups_differentiation(
 
         # if not hasattr(shap_values, "shape"):
         #     shap_values = shap_values[0]
-        
+
         shap.summary_plot(
             shap_values[0],
             features=X,

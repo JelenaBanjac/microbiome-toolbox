@@ -21,6 +21,7 @@ long_callback_manager = DiskcacheLongCallbackManager(
 app = DashProxy(
     __name__,
     # server=server,
+    prevent_initial_callbacks=True,
     suppress_callback_exceptions=True,
     external_stylesheets=[dbc.themes.COSMO],
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],

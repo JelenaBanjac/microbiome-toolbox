@@ -1,4 +1,5 @@
-from dash.dependencies import Input, Output
+# from dash.dependencies import Input, Output
+from dash_extensions.enrich import Output, Input
 from app import app
 from pages.home.home_data import get_dataset
 from dash import dcc

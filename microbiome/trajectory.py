@@ -14,7 +14,12 @@ import plotly.express as px
 from microbiome.statistical_analysis import regliner, permuspliner
 from itertools import combinations
 from sklearn.metrics import mean_absolute_error, r2_score
-from microbiome.enumerations import AnomalyType, FeatureExtraction, TimeUnit, FeatureColumnsType
+from microbiome.enumerations import (
+    AnomalyType,
+    FeatureExtraction,
+    TimeUnit,
+    FeatureColumnsType,
+)
 from natsort import natsorted
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
@@ -65,8 +70,6 @@ class MicrobiomeTrajectory:
 
         X_train = df_train[self.feature_columns].values
         y_train = df_train.age_at_collection.values
-
-        
 
         groups_train = list(df_train.subjectID.values)
 
@@ -298,9 +301,7 @@ class MicrobiomeTrajectory:
                 idx = np.where(constant_filter.get_support())[0]
                 feature_columns = self._feature_columns[idx]
             elif technique == FeatureExtraction.CORRELATION:
-                correlation_matrix = (
-                    self.dataset.df[self._feature_columns].corr().abs()
-                )
+                correlation_matrix = self.dataset.df[self._feature_columns].corr().abs()
                 upper = correlation_matrix.where(
                     np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool)
                 )
@@ -329,7 +330,6 @@ class MicrobiomeTrajectory:
                     rows=1, cols=len(scorer_list), horizontal_spacing=0.2
                 )
                 ret_val = "<b>Performance Information</b><br>"
-                
 
                 for col, scorer in enumerate(scorer_list, start=1):
                     df_scorer = df_scores[df_scores.scorer == scorer]
@@ -892,7 +892,7 @@ class MicrobiomeTrajectory:
         fig : plotly.graph_objects.Figure
             Figure with added time boxes.
         """
-        current_time = time_block_ranges[0] #time_start
+        current_time = time_block_ranges[0]  # time_start
         box_height = self._get_axis_max_limit(fig, "y") // 3
 
         legend_labels = []
@@ -988,7 +988,9 @@ class MicrobiomeTrajectory:
         # click anomaly to intervene
         # our custom event handler
         def _update_trace(trace, points, selector):
-            results = self.selection_update_trace(fig, time_block_ranges, number_of_changes, indices)(trace, points, selector)
+            results = self.selection_update_trace(
+                fig, time_block_ranges, number_of_changes, indices
+            )(trace, points, selector)
             # fig = results["fig"]
 
         # we need to add the on_click event to each trace separately
@@ -997,7 +999,9 @@ class MicrobiomeTrajectory:
 
         return fig
 
-    def selection_update_trace(self, fig, time_block_ranges, number_of_changes, indices):
+    def selection_update_trace(
+        self, fig, time_block_ranges, number_of_changes, indices
+    ):
         # this list stores the points which were clicked on
         # in all but one trace they are empty
         # if len(points.point_inds) == 0:
@@ -1009,7 +1013,7 @@ class MicrobiomeTrajectory:
             # if points.trace_name == "Samples":
             ret_val = ""
             config = None
-            
+
             if trace["name"] == "Samples":
                 if hasattr(points, "point_inds"):
                     i = points.point_inds[0]
@@ -1021,14 +1025,18 @@ class MicrobiomeTrajectory:
                 subject_ids = [x[0] for x in list(trace["customdata"])]
                 sample_ids = [x[1] for x in list(trace["customdata"])]
                 X = pd.DataFrame(
-                    [x[2] for x in list(trace["customdata"])], columns=self.feature_columns
+                    [x[2] for x in list(trace["customdata"])],
+                    columns=self.feature_columns,
                 )
 
                 X_i = X.iloc[i]
                 y_i = y[i]
 
                 feature_importance = self.get_intervention_point(
-                    X_i, y_i, time_block_ranges, indices,
+                    X_i,
+                    y_i,
+                    time_block_ranges,
+                    indices,
                 )
 
                 ret_val = "<b>Intervention bacteria"
@@ -1077,7 +1085,6 @@ class MicrobiomeTrajectory:
                     # line_colors = trace.line.color
                     sizes = trace["marker"]["size"]
 
-                    
                     widths = trace["marker"]["line"]["width"]
                     # customdata = trace.customdata
                 customdata = [
@@ -1088,7 +1095,6 @@ class MicrobiomeTrajectory:
                     # trace.line.color = line_colors
                     trace["marker"]["line"]["color"] = colors
                     trace["marker"]["size"] = sizes
-
 
                     trace["marker"]["line"]["width"] = widths
                     trace["marker"]["line"]["color"] = "black"
