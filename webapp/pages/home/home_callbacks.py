@@ -31,7 +31,7 @@ def upload_file(file_name):
     return False, file_name[0], True
 
 
-@app.callback(
+@app.long_callback(
     [
         # store dataset and trajectory in session
         Output("microbiome-dataset-location", "data"),
@@ -279,7 +279,7 @@ def dataset_buttons_click(
     )
 
 
-@app.callback(
+@app.long_callback(
     [
         Output("microbiome-dataset-location", "data"),
         Output("dataset-settings-infobox", "children"),
@@ -339,7 +339,7 @@ def update_dataset(
     return dataset_path, infobox, number_of_reference_samples, differentiation_score
 
 
-@app.callback(
+@app.long_callback(
     [
         Output("microbiome-trajectory-location", "data"),
         Output("trajectory-settings-infobox", "children"),
@@ -396,7 +396,7 @@ def update_trajectory(
     return trajectory_path, infobox
 
 
-@app.callback(
+@app.long_callback(
     [  # Table content
         Output("upload-datatable", "data"),
         Output("upload-datatable", "columns"),
