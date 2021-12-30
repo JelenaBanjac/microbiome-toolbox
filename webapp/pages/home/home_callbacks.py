@@ -15,7 +15,6 @@ import traceback
 from dash import dcc
 
 
-
 @du.callback(
     [
         Output("button-custom-data", "disabled"),
@@ -167,7 +166,9 @@ def dataset_buttons_click(
                 children=[
                     dcc.Markdown("Microbiome dataset error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."
+                    ),
                 ],
                 color="danger",
             )
@@ -189,14 +190,19 @@ def dataset_buttons_click(
         dataset.log_ratio_bacteria = log_ratio_bacteria
         dataset.normalized = Normalization[normalized]
 
+        infobox = [dbc.Alert("Successfully loaded data", color="success")]
         if len(dataset.df.reference_group.unique()) != 2:
             two_references_not_available = True
+            note_on_reference_group = dbc.Alert(
+                "Column `reference_group` is not defined. All samples are therefore considered reference.",
+                color="warning",
+            )
+            infobox.append(note_on_reference_group)
 
         log_ratio_bacteria_choices = [
             {"label": e, "value": e} for e in dataset.bacteria_columns
         ]
 
-        infobox = dbc.Alert("Successfully loaded data", color="success")
         number_of_samples = len(dataset.df)
         number_of_subjects = len(dataset.df.subjectID.unique())
         unique_groups = ", ".join(list(dataset.df.group.unique()))
@@ -228,7 +234,9 @@ def dataset_buttons_click(
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."
+                    ),
                 ],
                 color="danger",
             )
@@ -287,7 +295,6 @@ def dataset_buttons_click(
         # Write dataset count stats
         Output("upload-number-of-reference-samples", "children"),
         Output("upload-differentiation-score", "children"),
-        
     ],
     [
         Input("button-dataset-settings-update", "n_clicks"),
