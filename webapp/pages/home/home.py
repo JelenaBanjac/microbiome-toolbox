@@ -213,7 +213,7 @@ def serve_dataset_table():
             # style={"height": 250},
         ),
 
-        table,
+        dcc.Loading(table, id="upload-datatable-loading", type="default"),
         dhc.Br(),
     ]
 
