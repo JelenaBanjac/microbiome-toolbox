@@ -99,5 +99,6 @@ setuptools.setup(
         "diskcache",
         "multiprocess",
         "natsort",
+        "umap-learn",
     ]
 )
