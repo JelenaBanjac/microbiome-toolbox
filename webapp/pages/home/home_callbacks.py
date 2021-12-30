@@ -15,6 +15,7 @@ import traceback
 from dash import dcc
 
 
+
 @du.callback(
     [
         Output("button-custom-data", "disabled"),
@@ -31,7 +32,7 @@ def upload_file(file_name):
     return False, file_name[0], True
 
 
-@app.long_callback(
+@app.callback(
     [
         # store dataset and trajectory in session
         Output("microbiome-dataset-location", "data"),
@@ -279,7 +280,7 @@ def dataset_buttons_click(
     )
 
 
-@app.long_callback(
+@app.callback(
     [
         Output("microbiome-dataset-location", "data"),
         Output("dataset-settings-infobox", "children"),
@@ -339,7 +340,7 @@ def update_dataset(
     return dataset_path, infobox, number_of_reference_samples, differentiation_score
 
 
-@app.long_callback(
+@app.callback(
     [
         Output("microbiome-trajectory-location", "data"),
         Output("trajectory-settings-infobox", "children"),

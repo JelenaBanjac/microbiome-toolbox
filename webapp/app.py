@@ -7,6 +7,7 @@ import flask
 import diskcache
 import dash_uploader as du
 from dash_extensions.enrich import Output, DashProxy, Input, MultiplexerTransform
+import dash_labs as dl
 
 from layout.layout import layout
 from environment.settings import UPLOAD_FOLDER_ROOT
@@ -26,7 +27,12 @@ app = DashProxy(
     external_stylesheets=[dbc.themes.COSMO],
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
     long_callback_manager=long_callback_manager,
-    transforms=[MultiplexerTransform()]
+    transforms=[MultiplexerTransform()],
+    # plugins=[
+    # dl.plugins.FlexibleCallbacks(),
+    # dl.plugins.HiddenComponents(),
+    # dl.plugins.LongCallback(long_callback_manager)
+    # ]
 )
 
 du.configure_upload(app, UPLOAD_FOLDER_ROOT)
