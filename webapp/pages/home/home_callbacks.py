@@ -397,7 +397,7 @@ def update_trajectory(
     return trajectory_path, infobox
 
 
-@app.long_callback(
+@app.callback(
     [  # Table content
         Output("upload-datatable", "data"),
         Output("upload-datatable", "columns"),
