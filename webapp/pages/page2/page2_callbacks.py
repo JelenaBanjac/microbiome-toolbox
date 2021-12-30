@@ -6,19 +6,23 @@ from dash import html as dhc
 import dash
 import dash_bootstrap_components as dbc
 import traceback
-
+from microbiome.enumerations import EmbeddingModelType
+import numpy as np
 
 @app.callback(
     Output("page-2-display-value-1", "children"),
     Input("microbiome-dataset-location", "data"),
+    Input("abundances-number-of-columns", "value"),
 )
-def display_value(dataset_path):
+def display_value(dataset_path, number_of_columns):
     results = []
     if dataset_path:
         try:
             dataset = get_dataset(dataset_path)
 
-            result = dataset.plot_bacteria_abundances()
+            result = dataset.plot_bacteria_abundances(
+                number_of_columns=number_of_columns,
+            )
 
             results = [
                 dcc.Graph(figure=result["fig"], config=result["config"]),
@@ -38,14 +42,22 @@ def display_value(dataset_path):
 @app.callback(
     Output("page-2-display-value-2", "children"),
     Input("microbiome-dataset-location", "data"),
+    Input("heatmap-relative-absolute-values", "value"),
+    Input("heatmap-fillna", "value"),
+    Input("heatmap-avg-fn", "value"),
 )
-def display_value(dataset_path):
+def display_value(dataset_path, relative_values, fillna, avg_fn):
     results = []
     if dataset_path:
         try:
             dataset = get_dataset(dataset_path)
 
-            result = dataset.plot_bacteria_abundance_heatmaps()
+            result = dataset.plot_bacteria_abundance_heatmaps(
+                relative_values=relative_values=="relative",
+                fillna=len(fillna)>0,
+                avg_fn=np.median if avg_fn=="median" else np.mean,
+
+            )
 
             results = [
                 dcc.Graph(figure=result["fig"], config=result["config"]),
@@ -69,14 +81,19 @@ def display_value(dataset_path):
 @app.callback(
     Output("page-2-display-value-3", "children"),
     Input("microbiome-dataset-location", "data"),
+    Input("longitudinal-number-of-columns", "value"),
+    Input("longitudinal-number-of-bacteria", "value"),
 )
-def display_value(dataset_path):
+def display_value(dataset_path, number_of_columns, number_of_bacteria):
     results = []
     if dataset_path:
         try:
             dataset = get_dataset(dataset_path)
 
-            result = dataset.plot_ultradense_longitudinal_data()
+            result = dataset.plot_ultradense_longitudinal_data(
+                number_of_columns=number_of_columns,
+                number_of_bacteria=number_of_bacteria,
+            )
 
             results = [
                 dcc.Graph(figure=result["fig"], config=result["config"]),
@@ -97,15 +114,19 @@ def display_value(dataset_path):
     Output("page-2-display-value-4", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("embedding-dimension", "value"),
+    Input("embedding-method-type", "value"),
 )
-def display_value(dataset_path, embedding_dimension):
+def display_value(dataset_path, embedding_dimension, embedding_method_type):
     results = []
     if dataset_path:
         try:
             dataset = get_dataset(dataset_path)
 
+            embedding_model = EmbeddingModelType[embedding_method_type].value(n_components=embedding_dimension)
+
             result = dataset.embedding_to_latent_space(
-                embedding_dimension=embedding_dimension
+                embedding_dimension=embedding_dimension,
+                embedding_model=embedding_model,
             )
 
             results = [
@@ -126,14 +147,17 @@ def display_value(dataset_path, embedding_dimension):
 @app.callback(
     Output("page-2-display-value-5", "children"),
     Input("microbiome-dataset-location", "data"),
+    Input("embedding-method-type-interactive", "value"),
 )
-def display_value(dataset_path):
+def display_value(dataset_path, embedding_method_type):
     results = []
     if dataset_path:
         try:
             dataset = get_dataset(dataset_path)
 
-            vbox = dataset.embeddings_interactive_selection_notebook()
+            embedding_model = EmbeddingModelType[embedding_method_type].value(n_components=2)
+
+            vbox = dataset.embeddings_interactive_selection_notebook(embedding_model=embedding_model)
 
             results = [
                 dcc.Graph(figure=vbox.children[0], id="interactive-embeddings"),

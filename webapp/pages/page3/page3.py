@@ -84,6 +84,20 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     dbc.Col(
+                        dbc.Button(
+                            "Refresh",
+                            outline=True,
+                            color="dark",
+                            id="button-refresh-feature-extraction",
+                            n_clicks=0,
+                        ),
+                        width=12,
+                    ),
+                ),
+                dhc.Br(),
+                dbc.Row(
+                    
+                    dbc.Col(
                         dcc.Loading(
                             id="loading-3-0",
                             children=dhc.Div(id="page-3-display-value-0"),

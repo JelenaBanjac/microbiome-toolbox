@@ -11,8 +11,9 @@ import traceback
 @app.callback(
     Output("page-1-display-value-1", "children"),
     Input("microbiome-dataset-location", "data"),
+    Input("button-refresh-reference-statistics", "n_clicks"),
 )
-def display_value(dataset_path):
+def display_value(dataset_path, n_clicks):
     results = []
     if dataset_path:
 

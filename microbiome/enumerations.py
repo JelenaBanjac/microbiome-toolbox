@@ -1,4 +1,7 @@
 from enum import Enum
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE, Isomap
+from umap import UMAP
 
 
 class ReferenceGroup(Enum):
@@ -34,3 +37,10 @@ class FeatureExtraction(Enum):
 class Normalization(Enum):
     NORMALIZED = True
     NON_NORMALIZED = False
+
+
+class EmbeddingModelType(Enum):
+    PCA = PCA
+    TSNE = TSNE
+    UMAP = UMAP
+    ISOMAP = Isomap

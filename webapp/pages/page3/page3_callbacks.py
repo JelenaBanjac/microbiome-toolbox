@@ -10,8 +10,9 @@ import dash_bootstrap_components as dbc
 @app.callback(
     Output("page-3-display-value-0", "children"),
     Input("microbiome-trajectory-location", "data"),
+    Input("button-refresh-feature-extraction", "n_clicks"),
 )
-def display_value(trajectory_path):
+def display_value(trajectory_path, n_clicks):
     results = []
     if trajectory_path:
         try:

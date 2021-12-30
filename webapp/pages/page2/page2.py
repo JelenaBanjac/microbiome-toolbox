@@ -3,6 +3,16 @@ from dash import dcc
 from dash import html as dhc
 import dash_bootstrap_components as dbc
 
+
+from microbiome.enumerations import EmbeddingModelType
+
+embedding_methods = [
+    {"label": "PCA", "value": "pca"},
+    {"label": "UMAP", "value": "umap"},
+    {"label": "t-SNE", "value": "tsne"},
+    {"label": "Isomap", "value": "isomap"},
+]
+
 layout = dhc.Div(
     id="page-2-layout",
     children=[
@@ -46,9 +56,28 @@ layout = dhc.Div(
                             dhc.Br(),
                             dhc.H4("Taxa Abundances"),
                             dhc.Br(),
-                            # dcc.Input(id='number-of-columns', type='number', min=2, max=10, step=1, value=3),
-                            # dhc.Div(id='page-2-display-value-1', children=loading_img),
-                            # dhc.Div(id='page-2-display-value-1-hidden', hidden=True),
+                            dbc.Container(
+                                [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Number of columns: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="abundances-number-of-columns",
+                                                    type="number",
+                                                    min=1,
+                                                    max=15,
+                                                    step=1,
+                                                    value=3,
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    
+                                ]
+                            ),
                             dcc.Loading(
                                 id="loading-2-1",
                                 children=[
@@ -79,8 +108,64 @@ layout = dhc.Div(
                             dhc.Br(),
                             dhc.H4("Taxa Abundances Heatmap"),
                             dhc.Br(),
-                            # dhc.Div(id='page-2-display-value-3', children=loading_img),
-                            # dhc.Div(id='page-2-display-value-3-hidden', hidden=True),
+                            dbc.Container(
+                                [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Values: ", width=2),
+                                            dbc.Col(
+                                                dcc.RadioItems(
+                                                    id="heatmap-relative-absolute-values",
+                                                    options=[
+                                                        {'label': 'Relative', 'value': 'relative'},
+                                                        {'label': 'Absolute', 'value': 'absolute'},
+                                                    ],
+                                                    value='relative',
+                                                    # labelStyle={'display': 'inline-block'}
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Fill empty: ", width=2),
+                                            dbc.Col(
+                                                dcc.Checklist(
+                                                    id="heatmap-fillna",
+                                                    options=[
+                                                        {'label': 'fill empty cells', 'value': "fill"},
+                                                    ],
+                                                    value=[],
+                                                    # labelStyle={'display': 'inline-block'}
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Average function: ", width=2),
+                                            dbc.Col(
+                                                dcc.RadioItems(
+                                                    id="heatmap-avg-fn",
+                                                    options=[
+                                                        {'label': 'Median', 'value': "median"},
+                                                        {'label': 'Mean', 'value': "mean"},
+                                                    ],
+                                                    value="median",
+                                                    # labelStyle={'display': 'inline-block'}
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                            dhc.Br(),
                             dcc.Loading(
                                 id="loading-2-2",
                                 children=[
@@ -101,8 +186,44 @@ layout = dhc.Div(
                             dhc.Hr(),
                             dhc.H4("Dense Longitudinal Data"),
                             dhc.Br(),
-                            # dhc.Div(id='page-2-display-value-5', children=loading_img),
-                            # dhc.Div(id='page-2-display-value-5-hidden', hidden=True),
+                            dbc.Container(
+                                [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Number of columns: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="longitudinal-number-of-columns",
+                                                    type="number",
+                                                    min=1,
+                                                    max=15,
+                                                    step=1,
+                                                    value=6,
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Number of bacteria: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="longitudinal-number-of-bacteria",
+                                                    type="number",
+                                                    min=1,
+                                                    max=50,
+                                                    step=1,
+                                                    value=20,
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                ]
+                            ),
                             dcc.Loading(
                                 id="loading-2-3",
                                 children=[
@@ -119,8 +240,6 @@ layout = dhc.Div(
                             dhc.Hr(),
                             dhc.H4("Embedding in 2D space"),
                             dhc.Br(),
-                            # dhc.Div(id='page-2-display-value-6', children=loading_img),
-                            # dhc.Div(id='page-2-display-value-6-hidden', hidden=True),
                             dbc.Container(
                                 [
                                     dbc.Row(
@@ -137,46 +256,89 @@ layout = dhc.Div(
                                                 ),
                                                 width=2,
                                             ),
-                                            dbc.Col(
-                                                dcc.Loading(
-                                                    id="loading-2-4",
-                                                    children=[
-                                                        dhc.Div(
-                                                            [
-                                                                dhc.Div(
-                                                                    id="page-2-display-value-4"
-                                                                ),
-                                                            ]
-                                                        )
-                                                    ],
-                                                    type="default",
-                                                ),
-                                                width=8,
-                                            ),
+                                            dbc.Col(dhc.P(), width=8),
                                         ]
+                                    ),
+                                    dhc.Br(),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Embedding method: ", width=2),
+                                            dbc.Col(
+                                                dcc.Dropdown(
+                                                    id="embedding-method-type",
+                                                    optionHeight=20,
+                                                    options=[
+                                                        {"label": e.name, "value": e.name}
+                                                        for e in EmbeddingModelType
+                                                    ],
+                                                    searchable=True,
+                                                    clearable=True,
+                                                    placeholder="select anomaly type",
+                                                    value=EmbeddingModelType.PCA.name,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        dbc.Col(
+                                            dcc.Loading(
+                                                id="loading-2-4",
+                                                children=[
+                                                    dhc.Div(
+                                                        [
+                                                            dhc.Div(
+                                                                id="page-2-display-value-4"
+                                                            ),
+                                                        ]
+                                                    )
+                                                ],
+                                                type="default",
+                                            ),
+                                            width=12,
+                                        ),
                                     ),
                                 ]
                             ),
                             dhc.Br(),
                             dhc.Br(),
-                            # # Embedding in 3D
-                            # dhc.Hr(),
-                            # dhc.H4("Embedding in 3D space"),
-                            # dhc.Br(),
-                            # # dhc.Div(id='page-2-display-value-7', children=loading_img),
-                            # # dhc.Div(id='page-2-display-value-7-hidden', hidden=True),
-                            # dcc.Loading(
-                            #     id="loading-2-7",
-                            #     children=[dhc.Div([dhc.Div(id='page-2-display-value-7'),])],
-                            #     type="default",
-                            # ),
-                            # dhc.Br(),
+                            
                             # Embedding in 2D, interactive
                             dhc.Hr(),
                             dhc.H4("Embedding in 2D space - Interactive Analysis"),
                             dhc.Br(),
-                            # dhc.Div(id='page-2-display-value-8', children=loading_img),
-                            # dhc.Div(id='page-2-display-value-8-hidden', hidden=True),
+                            
+                            dbc.Container(
+                                [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Embedding method: ", width=2),
+                                            dbc.Col(
+                                                dcc.Dropdown(
+                                                    id="embedding-method-type-interactive",
+                                                    optionHeight=20,
+                                                    options=[
+                                                        {"label": e.name, "value": e.name}
+                                                        for e in EmbeddingModelType
+                                                    ],
+                                                    searchable=True,
+                                                    clearable=True,
+                                                    placeholder="select anomaly type",
+                                                    value=EmbeddingModelType.PCA.name,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                ]
+                            ),
+
                             dhc.Br(),
                             dcc.Loading(
                                 id="loading-2-5",
