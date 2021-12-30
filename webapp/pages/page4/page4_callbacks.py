@@ -1,12 +1,11 @@
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from app import app
 from pages.home.home_data import get_trajectory
 from dash import dcc
 from dash import html as dhc
-import dash
 import dash_bootstrap_components as dbc
-import pandas as pd
 import numpy as np
+import traceback
 
 
 @app.callback(
@@ -40,19 +39,29 @@ def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree):
     results = []
     anomaly_type = []
     if trajectory_path:
-        trajectory = get_trajectory(trajectory_path)
-        anomaly_type = trajectory.anomaly_type.name
+        try:
+            trajectory = get_trajectory(trajectory_path)
+            anomaly_type = trajectory.anomaly_type.name
 
-        result = trajectory.plot_timeboxes(
-            layout_settings=dict(hoverdistance=None),
-            time_block_ranges=time_block_ranges,
-            num_top_bacteria=num_top_bacteria,
-            degree=degree,
-        )
+            result = trajectory.plot_timeboxes(
+                layout_settings=dict(hoverdistance=None),
+                time_block_ranges=time_block_ranges,
+                num_top_bacteria=num_top_bacteria,
+                degree=degree,
+            )
 
-        results = [
-            dcc.Markdown(result["ret_val"], dangerously_allow_html=True),
-            dhc.Br(),
-            dcc.Graph(figure=result["fig"], config=result["config"]),
-        ]
+            results = [
+                dcc.Markdown(result["ret_val"], dangerously_allow_html=True),
+                dhc.Br(),
+                dcc.Graph(figure=result["fig"], config=result["config"]),
+            ]
+        except Exception as e:
+            results = dbc.Alert(
+                children=[
+                    dcc.Markdown("Microbiome trajectory error: " + str(e)),
+                    dcc.Markdown(traceback.format_exc()),
+                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
+                ],
+                color="danger",
+            )
     return results, anomaly_type
