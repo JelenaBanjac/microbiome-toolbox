@@ -59,13 +59,19 @@ def display_value(trajectory_path, degree):
     if trajectory_path:
         trajectory = get_trajectory(trajectory_path)
         
-        result = trajectory.plot_reference_groups(degree=degree)
+        if len(trajectory.dataset.df.reference_group.unique()) != 2:
+            results = [
+                dcc.Markdown("Reference groups are not available."),
+                dcc.Markdown("Dataset contains only samples from a reference. Please modify the reference_group (with True, False values) column in your dataset to correspond to the reference groups."),
+            ]
+        else:
+            result = trajectory.plot_reference_groups(degree=degree)
 
-        results = [
-            dcc.Markdown(result["ret_val"], dangerously_allow_html=True),
-            dhc.Br(),
-            dcc.Graph(figure=result["fig"], config=result["config"]),
-        ]
+            results = [
+                dcc.Markdown(result["ret_val"], dangerously_allow_html=True),
+                dhc.Br(),
+                dcc.Graph(figure=result["fig"], config=result["config"]),
+            ]
     return results
 
 

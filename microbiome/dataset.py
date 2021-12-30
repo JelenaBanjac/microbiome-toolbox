@@ -269,13 +269,22 @@ class MicrobiomeDataset:
         # get latest values for y and groups
         y = self.df.reference_group.values
         # groups = self.df.subjectID.values
-        results = two_groups_differentiation(
-            self.df[self.feature_columns],
-            self.df.reference_group,
-            groups,
-            y_column="reference_group",
-            plot=True,
-        )
+        if len(self.df.reference_group.unique()) == 1:
+            results = {
+                "accuracy": "",
+                "f1score": "",
+                "fig": None,
+                "config": None,
+                "img_src": None,
+            }
+        else:
+            results = two_groups_differentiation(
+                self.df[self.feature_columns],
+                self.df.reference_group,
+                groups,
+                y_column="reference_group",
+                plot=True,
+            )
         self._differentiation_score = results["f1score"]
 
         self.reference_group_plot = results["fig"]
@@ -1162,6 +1171,8 @@ def two_groups_differentiation(
     if isinstance(X, pd.DataFrame):
         x_columns = X.columns
         X = X.values
+    else:
+        x_columns = [f"feature_{i}" for i in range(X.shape[1])]
 
     if isinstance(y, pd.Series):
         y_column = y_column or y.name
@@ -1223,8 +1234,18 @@ def two_groups_differentiation(
         shap_values = explainer.shap_values(X)
         fig, ax = plt.subplots()
 
+        # # (137, 35)
+        # # (353, 141)
+        # print(X.shape)
+        # # (137, 35)
+        # # 141
+        # print("shap_values", type(shap_values), shap_values[0].shape)
+
+        # if not hasattr(shap_values, "shape"):
+        #     shap_values = shap_values[0]
+        
         shap.summary_plot(
-            shap_values[0] if style == "dot" else shap_values,
+            shap_values[0],
             features=X,
             class_names=[y_column, f"non-{y_column}"],
             show=False,

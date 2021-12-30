@@ -5,7 +5,7 @@ from dash import dcc
 from dash import html as dhc
 import dash
 import dash_bootstrap_components as dbc
-import pandas as pd
+import traceback
 
 
 @app.callback(
@@ -34,11 +34,22 @@ def display_value(dataset_path):
     if dataset_path:
         dataset = get_dataset(dataset_path)
 
-        result = dataset.plot_bacteria_abundance_heatmaps()
+        try:
+            result = dataset.plot_bacteria_abundance_heatmaps()
 
-        results = [
-            dcc.Graph(figure=result["fig"], config=result["config"]),
-        ]
+            results = [
+                dcc.Graph(figure=result["fig"], config=result["config"]),
+            ]
+        except Exception as e:
+            results = [
+                dbc.Alert(
+                children=[
+                    dcc.Markdown("Dataset/Plot error: " + str(e)),
+                    dcc.Markdown(traceback.format_exc()),
+                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
+                ],
+                color="danger",
+            )]
     return results
 
 

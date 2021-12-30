@@ -64,9 +64,9 @@ class MicrobiomeTrajectory:
         df_test = self.dataset.df.iloc[~train_indices]
 
         X_train = df_train[self.feature_columns].values
-        X_test = df_test[self.feature_columns].values
         y_train = df_train.age_at_collection.values
-        y_test = df_test.age_at_collection.values
+
+        
 
         groups_train = list(df_train.subjectID.values)
 
@@ -80,9 +80,13 @@ class MicrobiomeTrajectory:
         self.estimator = search.best_estimator_
 
         y_train_pred = self.estimator.predict(X_train).astype(float)
-        y_test_pred = self.estimator.predict(X_test).astype(float)
         self.dataset.df.loc[df_train.index, "MMI"] = y_train_pred
-        self.dataset.df.loc[df_test.index, "MMI"] = y_test_pred
+
+        if len(df_test) > 0:
+            X_test = df_test[self.feature_columns].values
+            y_test = df_test.age_at_collection.values
+            y_test_pred = self.estimator.predict(X_test).astype(float)
+            self.dataset.df.loc[df_test.index, "MMI"] = y_test_pred
 
         self.reference_groups = self.dataset.df.reference_group.values.astype(bool)
         # indices = reference_groups == True

@@ -12,6 +12,8 @@ from dash_extensions.enrich import Output, Input, State
 import pathlib
 from .home_data import get_dataset, set_dataset, set_trajectory
 import traceback
+from dash import dcc
+
 
 @du.callback(
     [
@@ -68,6 +70,9 @@ def upload_file(file_name):
         Output("settings-feature-columns-choice-trajectory", "value"),
         Output("settings-anomaly-type-choice", "value"),
         Output("settings-feature-extraction-choice", "value"),
+        # Disable reference group choice if references are all samples
+        Output("settings-reference-group-choice", "disabled"),
+        Output("card-2-btn", "disabled"),
     ],
     [
         Input("button-mouse-data", "n_clicks"),
@@ -123,6 +128,8 @@ def dataset_buttons_click(
     feature_extraction = None
     log_ratio_bacteria_choices = []
 
+    two_references_not_available = False
+
     if (
         button_mouse_dataset_clicks > 0
         or button_human_dataset_clicks > 0
@@ -155,8 +162,14 @@ def dataset_buttons_click(
             dataset_settings_disabled = False
 
         except Exception as e:
-            traceback_msg = traceback.format_exc()
-            infobox = dbc.Alert("Microbiome dataset error: " + str(e) + str(traceback_msg), color="danger")
+            infobox = dbc.Alert(
+                children=[
+                    dcc.Markdown("Microbiome dataset error: " + str(e)),
+                    dcc.Markdown(traceback.format_exc()),
+                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
+                ],
+                color="danger",
+            )
 
     if dataset is not None:
 
@@ -174,6 +187,9 @@ def dataset_buttons_click(
         dataset.reference_group_choice = ReferenceGroup[reference_group]
         dataset.log_ratio_bacteria = log_ratio_bacteria
         dataset.normalized = Normalization[normalized]
+
+        if len(dataset.df.reference_group.unique()) != 2:
+            two_references_not_available = True
 
         log_ratio_bacteria_choices = [
             {"label": e, "value": e} for e in dataset.bacteria_columns
@@ -207,9 +223,13 @@ def dataset_buttons_click(
             card_5_btn_disabled = False
             card_6_btn_disabled = False
         except Exception as e:
-            traceback_msg = traceback.format_exc()
             infobox = dbc.Alert(
-                "Microbiome trajectory error: " + str(e) + str(traceback_msg), color="danger"
+                children=[
+                    dcc.Markdown("Microbiome trajectory error: " + str(e)),
+                    dcc.Markdown(traceback.format_exc()),
+                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an [email](msjelenabanjac@gmail.com)."),
+                ],
+                color="danger",
             )
 
     print("file_name", file_name)
@@ -253,6 +273,9 @@ def dataset_buttons_click(
         feature_columns_trajectory,
         anomaly_type,
         feature_extraction,
+        # Disable
+        two_references_not_available,
+        two_references_not_available,
     )
 
 
@@ -263,6 +286,7 @@ def dataset_buttons_click(
         # Write dataset count stats
         Output("upload-number-of-reference-samples", "children"),
         Output("upload-differentiation-score", "children"),
+        
     ],
     [
         Input("button-dataset-settings-update", "n_clicks"),
@@ -363,7 +387,9 @@ def update_trajectory(
                     train_indices=None,
                 )
 
-                infobox = dbc.Alert("Trajectory updated", color="success", duration=2000)
+                infobox = dbc.Alert(
+                    "Trajectory updated", color="success", duration=2000
+                )
 
                 set_trajectory(trajectory, trajectory_path)
 
