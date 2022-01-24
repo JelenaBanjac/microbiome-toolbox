@@ -75,6 +75,72 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("X-axis Δtick: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="xaxis-delta-tick-abundances",
+                                                    type="number",
+                                                    min=1,
+                                                    # max=20,
+                                                    step=1,
+                                                    # value=1,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Y-axis Δtick: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="yaxis-delta-tick-abundances",
+                                                    type="number",
+                                                    min=1,
+                                                    # max=20,
+                                                    step=1,
+                                                    # value=1,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Row height: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="height-abundances",
+                                                    type="number",
+                                                    # min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=200,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Figure width: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="width-abundances",
+                                                    type="number",
+                                                    min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=1200,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                        ]
+                                    ),
                                     
                                 ]
                             ),
@@ -130,14 +196,16 @@ layout = dhc.Div(
                                     ),
                                     dbc.Row(
                                         [
-                                            dbc.Col("Fill empty: ", width=2),
+                                            dbc.Col("Empty cells: ", width=2),
                                             dbc.Col(
-                                                dcc.Checklist(
-                                                    id="heatmap-fillna",
+                                                dcc.RadioItems(
+                                                    id="heatmap-fillna-dropna",
                                                     options=[
-                                                        {'label': 'fill empty cells', 'value': "fill"},
+                                                        {'label': 'fill', 'value': "fill"},
+                                                        {'label': 'drop', 'value': "drop"},
+                                                        {'label': 'none', 'value': "none"},
                                                     ],
-                                                    value=[],
+                                                    value="none",
                                                     # labelStyle={'display': 'inline-block'}
                                                 ),
                                                 width=2,
@@ -161,6 +229,39 @@ layout = dhc.Div(
                                                 width=2,
                                             ),
                                             dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Row height: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="height-heatmap",
+                                                    type="number",
+                                                    # min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=20,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Figure width: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="width-heatmap",
+                                                    type="number",
+                                                    min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=1200,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
                                         ]
                                     ),
                                 ]
@@ -220,6 +321,72 @@ layout = dhc.Div(
                                                 width=2,
                                             ),
                                             dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("X-axis Δtick: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="xaxis-delta-tick-longitudinal-stack",
+                                                    type="number",
+                                                    min=1,
+                                                    # max=20,
+                                                    step=1,
+                                                    # value=1,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Y-axis Δtick: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="yaxis-delta-tick-longitudinal-stack",
+                                                    type="number",
+                                                    min=1,
+                                                    # max=20,
+                                                    step=1,
+                                                    # value=1,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Figure height: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="height-longitudinal-stack",
+                                                    type="number",
+                                                    min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=900,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Figure width: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="width-longitudinal-stack",
+                                                    type="number",
+                                                    min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=1200,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
                                         ]
                                     ),
                                 ]
@@ -284,6 +451,39 @@ layout = dhc.Div(
                                         ]
                                     ),
                                     dbc.Row(
+                                        [
+                                            dbc.Col("Figure height: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="height-embedding",
+                                                    type="number",
+                                                    min=100,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=800,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Figure width: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="width-embedding",
+                                                    type="number",
+                                                    min=100,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=800,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                        ]
+                                    ),
+                                    dbc.Row(
                                         dbc.Col(
                                             dcc.Loading(
                                                 id="loading-2-4",
@@ -334,6 +534,39 @@ layout = dhc.Div(
                                                 width=2,
                                             ),
                                             dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Figure height: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="height-embedding-interactive",
+                                                    type="number",
+                                                    min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=800,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=1),
+                                            dbc.Col("Figure width: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="width-embedding-interactive",
+                                                    type="number",
+                                                    min=500,
+                                                    # max=20,
+                                                    step=1,
+                                                    value=800,
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                ),
+                                                width=2,
+                                            ),
                                         ]
                                     ),
                                 ]

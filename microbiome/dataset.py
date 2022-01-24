@@ -22,6 +22,9 @@ from sklearn.decomposition import PCA
 from ipywidgets import VBox
 from sklearn.model_selection import cross_val_score
 import re
+from collections import Counter
+from itertools import tee, count
+import string
 
 
 class MicrobiomeDataset:
@@ -182,6 +185,7 @@ class MicrobiomeDataset:
             zerolinecolor="lightgrey",
             showspikes=True,
             spikecolor="gray",
+            autorange=True,
         )
 
     def __str__(self):
@@ -518,7 +522,7 @@ class MicrobiomeDataset:
         ).tolist()
         return column_zscore
 
-    def plot_bacteria_abundances(self, number_of_columns=3, layout_settings=None):
+    def plot_bacteria_abundances(self, number_of_columns=3, layout_settings=None, xaxis_settings=None, yaxis_settings=None):
         number_of_rows = len(self.bacteria_columns) // number_of_columns + 1
 
         layout_settings_default = dict(
@@ -534,6 +538,12 @@ class MicrobiomeDataset:
         if layout_settings is None:
             layout_settings = {}
         layout_settings_final = {**layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
         fig = make_subplots(
             rows=number_of_rows,
@@ -571,22 +581,13 @@ class MicrobiomeDataset:
                 title=f"Age at collection [{self.time_unit.name}]",
                 row=idx // number_of_columns + 1,
                 col=idx % number_of_columns + 1,
-                gridcolor="lightgrey",
-                showspikes=True,
-                spikecolor="gray",
-                zeroline=True,
-                zerolinecolor="lightgrey",
+                **xaxis_settings_final,
             )
             fig.update_yaxes(
-                title="Abundance value",
+                title=bacteria_name, #"Abundance value",
                 row=idx // number_of_columns + 1,
                 col=idx % number_of_columns + 1,
-                # range=(y_min, y_max),
-                gridcolor="lightgrey",
-                showspikes=True,
-                spikecolor="gray",
-                zeroline=True,
-                zerolinecolor="lightgrey",
+                **yaxis_settings_final,
             )
 
         fig.update_layout(**layout_settings_final)
@@ -604,10 +605,13 @@ class MicrobiomeDataset:
 
         return results
 
+    
+
     def plot_bacteria_abundance_heatmaps(
         self,
         relative_values=False,
         fillna=False,
+        dropna=False,
         avg_fn=np.median,
         layout_settings=None,
     ):
@@ -622,9 +626,9 @@ class MicrobiomeDataset:
         # extract just the important columns for the heatmap
         df = self.df[list(self.bacteria_columns) + ["subjectID", "age_at_collection"]]
         # replace long bacteria names with nice names
-        df = df.rename({b: self.nice_name(b) for b in self.bacteria_columns}, axis=1)
+        # df = df.rename({b: self.nice_name(b) for b in self.bacteria_columns}, axis=1)
         # update the bacteria_names with short names
-        bacteria_names = np.array(list(map(self.nice_name, self.bacteria_columns)))
+        
 
         def fill_collected(row):
             """Ïf we use bigger time units, then we need to find a median when collapsing all the samples in that time interval into one box in the heatmap"""
@@ -634,7 +638,7 @@ class MicrobiomeDataset:
             row["bacteria_value"] = avg_fn(val) if len(val) != 0 else np.nan
             return row
 
-        x, y = np.meshgrid(bacteria_names, range(int(max(df.age_at_collection)) + 1))
+        x, y = np.meshgrid(self.bacteria_columns, range(int(max(df.age_at_collection)) + 1))
 
         df_heatmap = pd.DataFrame(
             data={
@@ -644,13 +648,16 @@ class MicrobiomeDataset:
             }
         )
         df_heatmap = df_heatmap.sort_values(by=["bacteria_name", "age_at_collection"])
+        # if dropna:
+        #     df_heatmap = df_heatmap.dropna()
         df_heatmap = df_heatmap.fillna(0)
         df_heatmap = df_heatmap.apply(lambda row: fill_collected(row), axis=1)
 
+        
         # create new column bacteria_name_cat in order to sort dataframe by bacteria importance
         df_heatmap["bacteria_name_cat"] = pd.Categorical(
             df_heatmap["bacteria_name"],
-            categories=bacteria_names,  # order of bacteria is imposed by the list
+            categories=self.bacteria_columns,  # order of bacteria is imposed by the list
             ordered=True,
         )
         df_heatmap = df_heatmap.sort_values("bacteria_name_cat")
@@ -658,9 +665,9 @@ class MicrobiomeDataset:
 
         if relative_values:
             X = df_heatmap.bacteria_value.values
-            X = X.reshape(len(bacteria_names), -1)
-            xmin = np.nanmin(X, axis=1).reshape(len(bacteria_names), 1)
-            xmax = np.nanmax(X, axis=1).reshape(len(bacteria_names), 1)
+            X = X.reshape(len(self.bacteria_columns), -1)
+            xmin = np.nanmin(X, axis=1).reshape(len(self.bacteria_columns), 1)
+            xmax = np.nanmax(X, axis=1).reshape(len(self.bacteria_columns), 1)
             X_std = (X - xmin) / (xmax - xmin + 1e-10)
             df_heatmap.bacteria_value = X_std.flatten()
 
@@ -668,24 +675,43 @@ class MicrobiomeDataset:
         df_heatmap = df_heatmap[
             ["age_at_collection", "bacteria_name_cat", "bacteria_value"]
         ]
+        bacteria_names = list(map(self.nice_name, self.bacteria_columns))
+        uniquify(bacteria_names, suffs=(f'_{x!s}' for x in range(1, 100)) )
+        bacteria_names = np.array(bacteria_names)
+        bacteria_names_mapping = {k:v for k,v in zip(self.bacteria_columns, bacteria_names)}
+
+        def _rename_bacteria(row):
+            row["bacteria_name_cat"] = bacteria_names_mapping[row["bacteria_name_cat"]]
+            return row
+        df_heatmap = df_heatmap.apply(lambda row: _rename_bacteria(row), axis=1)
+
         df_heatmap_pivot = df_heatmap.pivot(
             "bacteria_name_cat", "age_at_collection", "bacteria_value"
         )
 
         if fillna:
             df_heatmap_pivot = df_heatmap_pivot.fillna(0)
+        
+        if dropna:
+            df_heatmap_pivot = df_heatmap_pivot.dropna(axis = 1, how = 'all')
 
+        xaxis_mapping = {v:k for k,v in enumerate(df_heatmap_pivot.columns.tolist())}
         fig = px.imshow(
             df_heatmap_pivot.values,
             labels=dict(
                 x=f"Age [{self.time_unit.name}]", y="Bacteria Name", color="Abundance"
             ),
-            x=df_heatmap_pivot.columns,
-            y=df_heatmap_pivot.index,
-            title="Absolute abundances",
+            x=[xaxis_mapping[i] for i in df_heatmap_pivot.columns.tolist()],
+            y=df_heatmap_pivot.index.tolist(),
+            title="Abundances",
             **layout_settings_final,
         )
-        fig.update_xaxes(side="bottom")
+        if dropna:
+            fig.update_xaxes(
+                side="bottom",
+                tickvals = [xaxis_mapping[i] for i in df_heatmap_pivot.columns.tolist()],
+                ticktext = df_heatmap_pivot.columns.tolist()
+            )
 
         config = {
             "toImageButtonOptions": {
@@ -702,10 +728,12 @@ class MicrobiomeDataset:
 
     def plot_ultradense_longitudinal_data(
         self,
-        layout_settings=None,
         number_of_columns=6,
         number_of_bacteria=20,
         color_palette="tab20",
+        layout_settings=None,
+        xaxis_settings=None,
+        yaxis_settings=None,
     ):
         number_of_rows = len(self.df.subjectID.unique()) // number_of_columns + int(
             len(self.df.subjectID.unique()) % number_of_columns > 0
@@ -721,6 +749,12 @@ class MicrobiomeDataset:
         if layout_settings is None:
             layout_settings = {}
         layout_settings_final = {**layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
         # limit to plot 20 bacteria
         bacteria_names = self.bacteria_columns[:number_of_bacteria]
@@ -770,7 +804,15 @@ class MicrobiomeDataset:
                         col=j + 1,
                     )
 
-                    fig.update_xaxes(title=infant, row=i + 1, col=j + 1)
+                    fig.update_xaxes(
+                        title=infant, 
+                        row=i + 1, 
+                        col=j + 1,
+                        **xaxis_settings_final,
+                    )
+                    fig.update_yaxes(
+                        **yaxis_settings_final,
+                    )
 
             else:
                 for b in bacteria_names:
@@ -794,7 +836,14 @@ class MicrobiomeDataset:
                         col=j + 1,
                     )
 
-                    fig.update_xaxes(title=infant, row=i + 1, col=j + 1)
+                    fig.update_xaxes(title=infant, 
+                        row=i + 1, 
+                        col=j + 1,
+                        **xaxis_settings_final,
+                    )
+                    fig.update_yaxes(
+                        **yaxis_settings_final,
+                    )
 
         fig.update_layout(**layout_settings_final)
 
@@ -820,6 +869,8 @@ class MicrobiomeDataset:
         embedding_model=PCA(n_components=3),
         embedding_dimension=2,
         layout_settings=None,
+        xaxis_settings=None,
+        yaxis_settings=None,
     ):
         fig = go.Figure()
 
@@ -864,6 +915,12 @@ class MicrobiomeDataset:
         if layout_settings is None:
             layout_settings = {}
         layout_settings_final = {**layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
         if embedding_dimension == 2:
             if color_column_name:
@@ -948,23 +1005,11 @@ class MicrobiomeDataset:
 
         fig.update_xaxes(
             title=xaxis_label,
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
+            **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=yaxis_label,
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
+            **yaxis_settings_final,
         )
 
         fig.update_layout(**layout_settings_final)
@@ -987,7 +1032,8 @@ class MicrobiomeDataset:
         self,
         embedding_model=PCA(n_components=2),
         layout_settings=None,
-        file_name=None,
+        xaxis_settings=None,
+        yaxis_settings=None,
     ):
         fig = go.Figure()
 
@@ -1029,6 +1075,12 @@ class MicrobiomeDataset:
         if layout_settings is None:
             layout_settings = {}
         layout_settings_final = {**layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
         fig.add_trace(
             go.Scatter(
@@ -1048,23 +1100,11 @@ class MicrobiomeDataset:
 
         fig.update_xaxes(
             title=xaxis_label,
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
+            **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=yaxis_label,
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
+            **yaxis_settings_final,
         )
 
         fig.update_layout(**layout_settings_final)
@@ -1103,8 +1143,20 @@ class MicrobiomeDataset:
 
         plt.close("all")
 
+        config = {
+            "toImageButtonOptions": {
+                "format": "svg",  # one of png, svg, jpeg, webp
+                "filename": "embedding_to_latent_space",
+                "height": layout_settings_final["height"],
+                "width": layout_settings_final["width"],
+                "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        }
+
+        results = {"vbox": VBox((f, t)), "config": config}
+
         # Put everything together
-        return VBox((f, t))
+        return results
 
     def selection_embeddings(self, t):
         def _inner(trace, points, selector):
@@ -1165,6 +1217,8 @@ def two_groups_differentiation(
     settings=None,
     plot=False,
     layout_settings=None,
+    xaxis_settings=None,
+    yaxis_settings=None,
 ):
     if isinstance(X, pd.DataFrame):
         x_columns = X.columns
@@ -1222,9 +1276,28 @@ def two_groups_differentiation(
             margin=dict(l=0, r=0, b=0, pad=0),
             title_text="Classification Important Features",
         )
+        axis_settings_default = dict(
+            tick0=0,
+            mirror=True,
+            # dtick=2,
+            showline=True,
+            linecolor="lightgrey",
+            gridcolor="lightgrey",
+            zeroline=True,
+            zerolinecolor="lightgrey",
+            showspikes=True,
+            spikecolor="gray",
+            autorange=True,
+        )
         if layout_settings is None:
             layout_settings = {}
         layout_settings_final = {**layout_settings_default, **layout_settings}
+        if xaxis_settings is None:
+            xaxis_settings = {}
+        if yaxis_settings is None:
+            yaxis_settings = {}
+        xaxis_settings_final = {**axis_settings_default, **xaxis_settings}
+        yaxis_settings_final = {**axis_settings_default, **yaxis_settings}
 
         shap.initjs()
 
@@ -1256,13 +1329,7 @@ def two_groups_differentiation(
 
         fig.update_xaxes(
             title="SHAP value (impact on model output)",
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
+            **xaxis_settings_final,
         )
 
         fig.update_yaxes(
@@ -1277,13 +1344,7 @@ def two_groups_differentiation(
                     )[::-1][:max_limit][::-1],
                 )
             ),
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
+            **yaxis_settings_final,
         )
         fig.update_layout(**layout_settings_final)
 
@@ -1358,3 +1419,22 @@ def plot_confusion_matrix(cm, classes, title):
     }
     fig = go.Figure(data=data, layout=layout)
     return fig
+
+def uniquify(seq, suffs=None):
+    """Make all the items unique by adding a suffix (1, 2, etc).
+
+    `seq` is mutable sequence of strings.
+    `suffs` is an optional alternative suffix iterable.
+    """
+    
+    not_unique = [k for k,v in Counter(seq).items() if v>1]
+    # suffix generator dict - e.g., {'name': <my_gen>, 'zip': <my_gen>}
+    suff_gens = dict(zip(not_unique, tee(suffs, len(not_unique))))  
+    for idx,s in enumerate(seq):
+        try:
+            suffix = str(next(suff_gens[s]))
+        except KeyError:
+            # s was unique
+            continue
+        else:
+            seq[idx] += suffix

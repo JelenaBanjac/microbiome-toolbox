@@ -82,12 +82,12 @@ def serve_upload(session_id):
                                 n_clicks=0,
                                 disabled=True,
                             )),
-                            dhc.Div(dhc.Small("Upload your dataset to enable the button."), id="small-upload-info-text", hidden=False),
+                            dhc.Div(dhc.Small("Upload your CSV dataset to enable the button."), id="small-upload-info-text", hidden=False),
                             dhc.Br(),
                             dhc.Div(dcc.Store(id="upload-data-file-path"), hidden=True),
                             dhc.Div(du.Upload(
                                 id="upload-data",
-                                filetypes=["csv", "xls"],
+                                filetypes=["csv"],
                                 upload_id=session_id,
                             ))
                             ], width=6),
@@ -145,7 +145,7 @@ def serve_dataset_table():
             'textDecorationStyle': 'dotted',
         },
         editable=True, 
-        export_format='xlsx',
+        export_format='csv',
         export_headers='display',
         merge_duplicate_headers=True,
         tooltip_delay=0,

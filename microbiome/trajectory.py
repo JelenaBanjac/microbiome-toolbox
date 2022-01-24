@@ -1,3 +1,4 @@
+from black import re
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
@@ -50,8 +51,23 @@ class MicrobiomeTrajectory:
         elif feature_columns == FeatureColumnsType.BACTERIA_AND_METADATA:
             self._feature_columns = self.dataset.bacteria_and_metadata_columns
 
+        self.axis_settings_default = dict(
+            tick0=0,
+            mirror=True,
+            # dtick=2,
+            showline=True,
+            linecolor="lightgrey",
+            gridcolor="lightgrey",
+            zeroline=True,
+            zerolinecolor="lightgrey",
+            showspikes=True,
+            spikecolor="gray",
+            autorange=True,
+        )
+
         results = self.get_less_feature_columns(plot=True, technique=feature_extraction)
         self.feature_columns = results["feature_columns"]
+        self.feature_importance = results["feature_importance"]
         self.feature_columns_plot = results["fig"]
         self.feature_columns_plot_ret_val = results["ret_val"]
         self.feature_columns_plot_config = results["config"]
@@ -132,18 +148,7 @@ class MicrobiomeTrajectory:
             # )]
         )
 
-        self.axis_settings_default = dict(
-            tick0=0,
-            mirror=True,
-            # dtick=2,
-            showline=True,
-            linecolor="lightgrey",
-            gridcolor="lightgrey",
-            zeroline=True,
-            zerolinecolor="lightgrey",
-            showspikes=True,
-            spikecolor="gray",
-        )
+        
 
         self.color_reference = "26,150,65"
         self.color_non_reference = "255,150,65"
@@ -167,6 +172,8 @@ class MicrobiomeTrajectory:
         technique=FeatureExtraction.NONE,
         thresholds=None,
         layout_settings=None,
+        xaxis_settings=None,
+        yaxis_settings=None,
     ):
         """Extract just few feature columns to reduce the number of features wlog.
 
@@ -325,6 +332,12 @@ class MicrobiomeTrajectory:
                 if layout_settings is None:
                     layout_settings = {}
                 layout_settings_final = {**layout_settings_default, **layout_settings}
+                if xaxis_settings is None:
+                    xaxis_settings = {}
+                if yaxis_settings is None:
+                    yaxis_settings = {}
+                xaxis_settings_final = {**self.axis_settings_default, **xaxis_settings}
+                yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
                 fig = make_subplots(
                     rows=1, cols=len(scorer_list), horizontal_spacing=0.2
@@ -387,24 +400,16 @@ class MicrobiomeTrajectory:
                     )
                     fig.update_xaxes(
                         title="Number of features",
-                        showline=True,
-                        linecolor="lightgrey",
-                        gridcolor="lightgrey",
-                        zeroline=True,
-                        zerolinecolor="lightgrey",
                         row=1,
                         col=col,
+                        **xaxis_settings_final,
                     )
                     fig.update_yaxes(
                         title=scorer,
-                        range=rangey,
-                        showline=True,
-                        linecolor="lightgrey",
-                        gridcolor="lightgrey",
-                        zeroline=True,
-                        zerolinecolor="lightgrey",
                         row=1,
                         col=col,
+                        # range=rangey,
+                        **yaxis_settings_final,
                     )
 
                 fig.update_layout(**layout_settings_final)
@@ -418,11 +423,28 @@ class MicrobiomeTrajectory:
                     }
                 }
 
+        X = self.dataset.df[feature_columns].values
+        y = self.dataset.df.age_at_collection.values
+        groups = self.dataset.df.subjectID.values
+
+        estimator = RandomForestRegressor(random_state=RANDOM_STATE)
+        estimator.fit(X, y)
+
+        feature_importances = np.array(estimator.feature_importances_)
+        feature_importance = pd.DataFrame(
+            list(zip(feature_columns, feature_importances)),
+            columns=["feature_name", "feature_importance"],
+        )
+        feature_importance.sort_values(
+            by=["feature_importance"], ascending=False, inplace=True
+        )
+
         results = {
             "fig": fig,
             "config": config,
             "ret_val": ret_val,
             "feature_columns": list(feature_columns),
+            "feature_importance": feature_importance,
         }
 
         return results
@@ -1470,12 +1492,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
         fig.update_layout(
@@ -1599,12 +1621,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
 
@@ -1717,12 +1739,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
 
@@ -1821,12 +1843,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
         fig.update_layout(
@@ -1936,12 +1958,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
         fig.update_layout(
@@ -2055,12 +2077,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "x")),
+            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, self._get_axis_max_limit(fig, "y")),
+            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
         fig.update_layout(
@@ -2185,12 +2207,12 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            range=(0.0, y.max()),
+            # range=(0.0, y.max()),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            range=(0.0, y_pred.max()),
+            # range=(0.0, y_pred.max()),
             **yaxis_settings_final,
         )
         fig.update_layout(

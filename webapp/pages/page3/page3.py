@@ -96,7 +96,6 @@ layout = dhc.Div(
                 ),
                 dhc.Br(),
                 dbc.Row(
-                    
                     dbc.Col(
                         dcc.Loading(
                             id="loading-3-0",
@@ -106,6 +105,19 @@ layout = dhc.Div(
                         width=12,
                     ),
                 ),
+                dhc.Br(),
+                dbc.Row([
+                    dbc.Col(dhc.P(), width=3),
+                    dbc.Col(
+                        dcc.Loading(
+                            id="loading-3-0-table",
+                            children=dhc.Div(id="page-3-display-value-0-table"),
+                            type="default",
+                        ),
+                        width=6,
+                    ),
+                    dbc.Col(dhc.P(), width=3),
+                ]),
                 dhc.Br(),
                 dhc.Br(),
                 # Reference trajectory
@@ -137,6 +149,72 @@ layout = dhc.Div(
                             width=2,
                         ),
                         dbc.Col(dhc.P(), width=8),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col("X-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="xaxis-delta-tick-reference-trajectory",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Y-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="yaxis-delta-tick-reference-trajectory",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col("Figure height: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="height-reference-trajectory",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=900,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Figure width: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="width-reference-trajectory",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=1200,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
                     ]
                 ),
                 dhc.Br(),
@@ -184,6 +262,72 @@ layout = dhc.Div(
                         dbc.Col(dhc.P(), width=8),
                     ]
                 ),
+                dbc.Row(
+                    [
+                        dbc.Col("X-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="xaxis-delta-tick-reference-groups",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Y-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="yaxis-delta-tick-reference-groups",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col("Figure height: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="height-reference-groups",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=900,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Figure width: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="width-reference-groups",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=1200,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
                 dhc.Br(),
                 dhc.Br(),
                 dbc.Row(
@@ -229,6 +373,72 @@ layout = dhc.Div(
                         dbc.Col(dhc.P(), width=8),
                     ]
                 ),
+                dbc.Row(
+                    [
+                        dbc.Col("X-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="xaxis-delta-tick-groups",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Y-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="yaxis-delta-tick-groups",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col("Figure height: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="height-groups",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=900,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Figure width: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="width-groups",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=1200,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
                 dhc.Br(),
                 dhc.Br(),
                 dbc.Row(
@@ -272,6 +482,72 @@ layout = dhc.Div(
                             width=2,
                         ),
                         dbc.Col(dhc.P(), width=8),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col("X-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="xaxis-delta-tick-longitudinal",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Y-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="yaxis-delta-tick-longitudinal",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col("Figure height: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="height-longitudinal",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=900,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Figure width: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="width-longitudinal",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=1200,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
                     ]
                 ),
                 dhc.Br(),
