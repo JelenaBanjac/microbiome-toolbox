@@ -549,6 +549,7 @@ class MicrobiomeDataset:
             rows=number_of_rows,
             cols=number_of_columns,
             horizontal_spacing=0.1,
+            subplot_titles=self.bacteria_columns,
         )
         # y_max = self.df[self.bacteria_columns].values.max()+1
         # y_min = self.df[self.bacteria_columns].values.min()-1
@@ -584,12 +585,15 @@ class MicrobiomeDataset:
                 **xaxis_settings_final,
             )
             fig.update_yaxes(
-                title=bacteria_name, #"Abundance value",
+                title="Abundance value",
                 row=idx // number_of_columns + 1,
                 col=idx % number_of_columns + 1,
                 **yaxis_settings_final,
             )
 
+        for i in fig['layout']['annotations']:
+            i['font'] = dict(size=10)
+        
         fig.update_layout(**layout_settings_final)
 
         config = {

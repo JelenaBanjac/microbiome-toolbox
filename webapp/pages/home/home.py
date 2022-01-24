@@ -505,7 +505,7 @@ def serve_methods():
                 ),
                 dbc.CardBody(
                     [
-                        dhc.H4("Reference Definition", className="card-title"),
+                        dhc.H4("Data Analysis & Exploration", className="card-title"),
                         # dhc.P(
                         #     "Some quick example text to build on the card title and "
                         #     "make up the bulk of the card's content.",
@@ -537,7 +537,7 @@ def serve_methods():
                 ),
                 dbc.CardBody(
                     [
-                        dhc.H4("Data Analysis & Exploration", className="card-title"),
+                        dhc.H4("Reference Definition", className="card-title"),
                         # dhc.P(
                         #     "Some quick example text to build on the card title and "
                         #     "make up the bulk of the card's content.",

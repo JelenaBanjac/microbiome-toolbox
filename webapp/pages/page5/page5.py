@@ -2,7 +2,7 @@
 from dash import dcc
 from dash import html as dhc
 import dash_bootstrap_components as dbc
-from utils.constants import home_location
+from utils.constants import methods_location
 from microbiome.enumerations import AnomalyType
 
 layout = dhc.Div(
@@ -13,7 +13,7 @@ layout = dhc.Div(
                 dbc.Row(
                     dbc.Col(
                         [
-                            dcc.Link("Back", href=home_location),
+                            dcc.Link("Back", href=methods_location),
                             dhc.H3(
                                 "Anomaly Detection",
                                 style={
@@ -115,6 +115,15 @@ layout = dhc.Div(
                         ),
                         width=12,
                     ),
+                ),
+                dhc.Br(),
+                dhc.Br(),
+                dcc.Link(
+                    "Back", 
+                    href=methods_location,
+                    style={
+                        "textAlign": "center",
+                    },
                 ),
                 dhc.Br(),
                 dhc.Br(),
