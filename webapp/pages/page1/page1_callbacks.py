@@ -10,7 +10,7 @@ from microbiome.enumerations import EmbeddingModelType
 import numpy as np
 
 @app.callback(
-    Output("page-2-display-value-1", "children"),
+    Output("page-1-display-value-1", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("abundances-number-of-columns", "value"),
     Input("height-abundances", "value"),
@@ -60,7 +60,7 @@ def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y
 
 
 @app.callback(
-    Output("page-2-display-value-2", "children"),
+    Output("page-1-display-value-2", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("heatmap-relative-absolute-values", "value"),
     Input("heatmap-fillna-dropna", "value"),
@@ -109,7 +109,7 @@ def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row
 
 
 @app.callback(
-    Output("page-2-display-value-3", "children"),
+    Output("page-1-display-value-3", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("longitudinal-number-of-columns", "value"),
     Input("longitudinal-number-of-bacteria", "value"),
@@ -117,8 +117,9 @@ def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row
     Input("width-longitudinal-stack", "value"),
     Input("xaxis-delta-tick-longitudinal-stack", "value"),
     Input("yaxis-delta-tick-longitudinal-stack", "value"),
+    Input("color-palette-name-longitudinal-stack", "value"),
 )
-def display_value(dataset_path, number_of_columns, number_of_bacteria, height, width, x_delta, y_delta):
+def display_value(dataset_path, number_of_columns, number_of_bacteria, height, width, x_delta, y_delta, palette_name):
     results = []
     if dataset_path:
         try:
@@ -141,6 +142,7 @@ def display_value(dataset_path, number_of_columns, number_of_bacteria, height, w
                 layout_settings=layout_settings,
                 xaxis_settings=xaxis_settings,
                 yaxis_settings=yaxis_settings,
+                color_palette=palette_name,
             )
 
             results = [
@@ -159,7 +161,7 @@ def display_value(dataset_path, number_of_columns, number_of_bacteria, height, w
 
 
 @app.callback(
-    Output("page-2-display-value-4", "children"),
+    Output("page-1-display-value-4", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("embedding-dimension", "value"),
     Input("embedding-method-type", "value"),
@@ -201,7 +203,7 @@ def display_value(dataset_path, embedding_dimension, embedding_method_type, heig
 
 
 @app.callback(
-    Output("page-2-display-value-5", "children"),
+    Output("page-1-display-value-5", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("embedding-method-type-interactive", "value"),
     Input("height-embedding-interactive", "value"),

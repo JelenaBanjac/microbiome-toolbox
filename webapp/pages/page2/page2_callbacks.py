@@ -9,7 +9,7 @@ import traceback
 
 
 @app.callback(
-    Output("page-1-display-value-1", "children"),
+    Output("page-2-display-value-1", "children"),
     Input("microbiome-dataset-location", "data"),
     Input("button-refresh-reference-statistics", "n_clicks"),
 )
@@ -25,9 +25,9 @@ def display_value(dataset_path, n_clicks):
                     dcc.Markdown("Reference groups have not been defined yet."),
                 ]
             else:
-                img_src = dataset.reference_group_img_src
                 acccuracy = dataset.reference_group_accuracy
                 f1score = dataset.reference_group_f1score
+                img_src = dataset.reference_group_img_src
                 img_src.update_layout(height=400, width=400)
                 confusion_matrix = dcc.Graph(figure=img_src)
 
@@ -45,7 +45,7 @@ def display_value(dataset_path, n_clicks):
                                         dhc.Br(),
                                         dhc.Br(),
                                         dcc.Markdown(
-                                            f"Reference groups differentiation can be seen below."
+                                            "Reference groups differentiation can be seen below."
                                         ),
                                         dcc.Markdown(
                                             "The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."

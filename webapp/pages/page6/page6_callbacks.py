@@ -34,8 +34,12 @@ def display_value(trajectory_path, number_od_timeblocks):
     Input("time-block-ranges-intervention", "value"),
     Input("number-of-top-bacteria-intervention", "value"),
     Input("polynomial-degree-intervention", "value"),
+    Input("height-intervention", "value"),
+    Input("width-intervention", "value"),
+    Input("xaxis-delta-tick-intervention", "value"),
+    Input("yaxis-delta-tick-intervention", "value"),
 )
-def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree):
+def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree, height, width, x_delta, y_delta):
     results = []
     anomaly_type = []
     if trajectory_path:
@@ -43,10 +47,24 @@ def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree):
             trajectory = get_trajectory(trajectory_path)
             anomaly_type = trajectory.anomaly_type.name
 
+            layout_settings = dict(
+                height=height,
+                width=width,
+            )
+            xaxis_settings = dict(
+                dtick=x_delta,
+            )
+            yaxis_settings = dict(
+                dtick=y_delta,
+            )
+
             result = trajectory.plot_intervention(
                 time_block_ranges=time_block_ranges,
                 num_top_bacteria=num_top_bacteria,
                 degree=degree,
+                layout_settings=layout_settings,
+                xaxis_settings=xaxis_settings,
+                yaxis_settings=yaxis_settings,
             )
 
             results = [

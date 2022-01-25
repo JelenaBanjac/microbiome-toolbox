@@ -82,6 +82,75 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     [
+                        dbc.Col("X-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="xaxis-delta-tick-anomalies",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Y-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="yaxis-delta-tick-anomalies",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dhc.Br(),
+                dbc.Row(
+                    [
+                        dbc.Col("Figure height: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="height-anomalies",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=900,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Figure width: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="width-anomalies",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=1200,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+
+                dhc.Br(),
+                dbc.Row(
+                    [
                         dbc.Col("Select anomaly type: ", width=2),
                         dbc.Col(
                             dcc.Dropdown(

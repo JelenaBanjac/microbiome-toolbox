@@ -25,12 +25,28 @@ def display_value(trajectory_path):
     Input("microbiome-trajectory-location", "data"),
     Input("anomaly-type-selection", "value"),
     Input("polynomial-degree-anomalies", "value"),
+    Input("height-anomalies", "value"),
+    Input("width-anomalies", "value"),
+    Input("xaxis-delta-tick-anomalies", "value"),
+    Input("yaxis-delta-tick-anomalies", "value"),
 )
-def display_value(trajectory_path, anomaly_type, degree):
+def display_value(trajectory_path, anomaly_type, degree, height, width, x_delta, y_delta):
     results = []
     if trajectory_path:
         try:
             trajectory = get_trajectory(trajectory_path)
+
+            layout_settings = dict(
+                height=height,
+                width=width,
+            )
+            xaxis_settings = dict(
+                dtick=x_delta,
+            )
+            yaxis_settings = dict(
+                dtick=y_delta,
+            )
+
 
             if anomaly_type is None:
                 anomaly_type_enum = trajectory.anomaly_type
@@ -38,7 +54,11 @@ def display_value(trajectory_path, anomaly_type, degree):
                 anomaly_type_enum = AnomalyType[anomaly_type]
 
             result = trajectory.plot_anomalies(
-                anomaly_type=anomaly_type_enum, degree=degree
+                anomaly_type=anomaly_type_enum,
+                degree=degree,
+                layout_settings=layout_settings,
+                xaxis_settings=xaxis_settings,
+                yaxis_settings=yaxis_settings,
             )
 
             results = [

@@ -14,7 +14,7 @@ embedding_methods = [
 ]
 
 layout = dhc.Div(
-    id="page-2-layout",
+    id="page-1-layout",
     children=[
         dbc.Container(
             [
@@ -47,11 +47,11 @@ layout = dhc.Div(
                             # dhc.Hr(),
                             # dhc.H4("Loaded data table"),
                             # dhc.Br(),
-                            # # dhc.Div(id='page-2-display-value-0', children=loading_img),
-                            # # dhc.Div(id='page-2-display-value-0-hidden', hidden=True),
+                            # # dhc.Div(id='page-1-display-value-0', children=loading_img),
+                            # # dhc.Div(id='page-1-display-value-0-hidden', hidden=True),
                             # dcc.Loading(
-                            #     id="loading-2-0",
-                            #     children=[dhc.Div([dhc.Div(id='page-2-display-value-0'),])],
+                            #     id="loading-1-0",
+                            #     children=[dhc.Div([dhc.Div(id='page-1-display-value-0'),])],
                             #     type="default",
                             # ),
                             # dhc.Br(),
@@ -80,6 +80,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("X-axis Δtick: ", width=2),
@@ -113,6 +114,7 @@ layout = dhc.Div(
                                             ),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Row height: ", width=2),
@@ -150,11 +152,11 @@ layout = dhc.Div(
                                 ]
                             ),
                             dcc.Loading(
-                                id="loading-2-1",
+                                id="loading-1-1",
                                 children=[
                                     dhc.Div(
                                         [
-                                            dhc.Div(id="page-2-display-value-1"),
+                                            dhc.Div(id="page-1-display-value-1"),
                                         ]
                                     )
                                 ],
@@ -165,11 +167,11 @@ layout = dhc.Div(
                             # dhc.Hr(),
                             # dhc.H4("Sampling Statistics"),
                             # dhc.Br(),
-                            # # dhc.Div(id='page-2-display-value-2', children=loading_img),
-                            # # dhc.Div(id='page-2-display-value-2-hidden', hidden=True),
+                            # # dhc.Div(id='page-1-display-value-2', children=loading_img),
+                            # # dhc.Div(id='page-1-display-value-1-hidden', hidden=True),
                             # dcc.Loading(
-                            #     id="loading-2-2",
-                            #     children=[dhc.Div([dhc.Div(id='page-2-display-value-2'),])],
+                            #     id="loading-1-2",
+                            #     children=[dhc.Div([dhc.Div(id='page-1-display-value-2'),])],
                             #     type="default",
                             # ),
                             # dhc.Br(),
@@ -199,6 +201,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Empty cells: ", width=2),
@@ -218,6 +221,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Average function: ", width=2),
@@ -236,6 +240,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Row height: ", width=2),
@@ -273,11 +278,11 @@ layout = dhc.Div(
                             ),
                             dhc.Br(),
                             dcc.Loading(
-                                id="loading-2-2",
+                                id="loading-1-2",
                                 children=[
                                     dhc.Div(
                                         [
-                                            dhc.Div(id="page-2-display-value-2"),
+                                            dhc.Div(id="page-1-display-value-2"),
                                         ]
                                     )
                                 ],
@@ -287,7 +292,7 @@ layout = dhc.Div(
                             # # Shannon's diversity index and Simpson's dominace
                             # dhc.Hr(),
                             # dhc.H4("Diversity"),
-                            # dhc.Div(id='page-2-display-value-4', children=loading_img),
+                            # dhc.Div(id='page-1-display-value-4', children=loading_img),
                             # Dense longitudinal data
                             dhc.Hr(),
                             dhc.H4("Dense Longitudinal Data"),
@@ -311,6 +316,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Number of bacteria: ", width=2),
@@ -328,6 +334,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("X-axis Δtick: ", width=2),
@@ -361,6 +368,7 @@ layout = dhc.Div(
                                             ),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Figure height: ", width=2),
@@ -394,14 +402,33 @@ layout = dhc.Div(
                                             ),
                                         ]
                                     ),
+                                    dhc.Br(),
+                                    dbc.Row(
+                                        [
+                                            dbc.Col("Color palette name: ", width=2),
+                                            dbc.Col(
+                                                dcc.Input(
+                                                    id="color-palette-name-longitudinal-stack",
+                                                    type="text",
+                                                    min=1,
+                                                    max=50,
+                                                    step=1,
+                                                    value="tab20",
+                                                ),
+                                                width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=8),
+                                        ]
+                                    ),
+                                    dhc.Br(),
                                 ]
                             ),
                             dcc.Loading(
-                                id="loading-2-3",
+                                id="loading-1-3",
                                 children=[
                                     dhc.Div(
                                         [
-                                            dhc.Div(id="page-2-display-value-3"),
+                                            dhc.Div(id="page-1-display-value-3"),
                                         ]
                                     )
                                 ],
@@ -455,6 +482,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Figure height: ", width=2),
@@ -488,15 +516,16 @@ layout = dhc.Div(
                                             ),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         dbc.Col(
                                             dcc.Loading(
-                                                id="loading-2-4",
+                                                id="loading-1-4",
                                                 children=[
                                                     dhc.Div(
                                                         [
                                                             dhc.Div(
-                                                                id="page-2-display-value-4"
+                                                                id="page-1-display-value-4"
                                                             ),
                                                         ]
                                                     )
@@ -541,6 +570,7 @@ layout = dhc.Div(
                                             dbc.Col(dhc.P(), width=8),
                                         ]
                                     ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Figure height: ", width=2),
@@ -579,7 +609,7 @@ layout = dhc.Div(
 
                             dhc.Br(),
                             dcc.Loading(
-                                id="loading-2-5",
+                                id="loading-1-5",
                                 children=[
                                     dhc.Div(
                                         [
@@ -593,7 +623,7 @@ layout = dhc.Div(
                                                     "textAlign": "left",
                                                 },
                                             ),
-                                            dhc.Div(id="page-2-display-value-5"),
+                                            dhc.Div(id="page-1-display-value-5"),
                                         ]
                                     )
                                 ],
@@ -610,7 +640,7 @@ layout = dhc.Div(
                             dhc.Br(),
                             dhc.Br(),
                             # dcc.Interval(
-                            #     id='page-2-main-interval-component',
+                            #     id='page-1-main-interval-component',
                             #     interval=INTERVAL, # in milliseconds
                             #     n_intervals=0,
                             #     max_intervals=MAX_INTERVALS

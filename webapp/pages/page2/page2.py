@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from utils.constants import methods_location
 
 layout = dhc.Div(
-    id="page-1-layout",
+    id="page-2-layout",
     children=[
         dbc.Container(
             [
@@ -59,8 +59,8 @@ layout = dhc.Div(
                 dbc.Row(
                     dbc.Col(
                         dcc.Loading(
-                            id="loading-1-1",
-                            children=dhc.Div(id="page-1-display-value-1"),
+                            id="loading-2-1",
+                            children=dhc.Div(id="page-2-display-value-1"),
                             type="default",
                         ),
                         width=12,

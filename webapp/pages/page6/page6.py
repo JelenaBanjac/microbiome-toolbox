@@ -76,6 +76,74 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     [
+                        dbc.Col("X-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="xaxis-delta-tick-intervention",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Y-axis Δtick: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="yaxis-delta-tick-intervention",
+                                type="number",
+                                min=1,
+                                # max=20,
+                                step=1,
+                                # value=1,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dhc.Br(),
+                dbc.Row(
+                    [
+                        dbc.Col("Figure height: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="height-intervention",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=900,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=1),
+                        dbc.Col("Figure width: ", width=2),
+                        dbc.Col(
+                            dcc.Input(
+                                id="width-intervention",
+                                type="number",
+                                min=500,
+                                # max=20,
+                                step=1,
+                                value=1200,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                            width=2,
+                        ),
+                    ]
+                ),
+                dhc.Br(),
+                dbc.Row(
+                    [
                         dbc.Col("Number of top bacteria: ", width=2),
                         dbc.Col(
                             dcc.Input(
