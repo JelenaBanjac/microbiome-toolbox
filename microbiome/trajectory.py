@@ -1029,17 +1029,27 @@ class MicrobiomeTrajectory:
         #     return
         if isinstance(fig, dict):
             fig = go.FigureWidget(fig)
+        
+        # traces = len(fig.data)
 
         def _inner(trace, points, selector):
             # if points.trace_name == "Samples":
+
             ret_val = ""
             config = None
+            # fig.data = fig.data[:traces]
 
             if trace["name"] == "Samples":
-                if hasattr(points, "point_inds"):
-                    i = points.point_inds[0]
-                else:
-                    i = points
+                try:
+                    if hasattr(points, "point_inds"):
+                        idx = points.point_inds[0]
+                    else:
+                        idx = points
+                except:
+                    pass
+
+                #print("trace", trace)
+                #print("points", points)
 
                 y = trace["x"]
                 y_pred = trace["y"]
@@ -1050,8 +1060,8 @@ class MicrobiomeTrajectory:
                     columns=self.feature_columns,
                 )
 
-                X_i = X.iloc[i]
-                y_i = y[i]
+                X_i = X.iloc[idx]
+                y_i = y[idx]
 
                 feature_importance = self.get_intervention_point(
                     X_i,
@@ -1062,7 +1072,7 @@ class MicrobiomeTrajectory:
 
                 ret_val = "<b>Intervention bacteria"
                 ret_val += (
-                    f"for Subject {subject_ids[i]}, Sample {sample_ids[i]}</b><br><br>"
+                    f"for Subject {subject_ids[idx]}, Sample {sample_ids[idx]}</b><br><br>"
                 )
                 ret_val += "<br>".join(
                     [
@@ -1079,11 +1089,11 @@ class MicrobiomeTrajectory:
                 X_i = X_i.values.reshape(1, -1)
                 sample_pred_new = self.estimator.predict(X_i)
 
-                sample_ids_new = np.append(sample_ids, sample_ids[i])
+                sample_ids_new = np.append(sample_ids, sample_ids[idx])
                 if len(sample_ids_new) == 1 + len(set(sample_ids_new)):
-                    y_new = np.append(y, y[i])
+                    y_new = np.append(y, y[idx])
                     y_pred_new = np.append(y_pred, sample_pred_new[0])
-                    subject_ids_new = np.append(subject_ids, subject_ids[i])
+                    subject_ids_new = np.append(subject_ids, subject_ids[idx])
                     X_all = np.append(X.values, X_i, axis=0)
 
                     # ["marker"]["color"]
@@ -1095,11 +1105,11 @@ class MicrobiomeTrajectory:
                     # customdata = list(trace.customdata) + [trace.customdata[i]]
 
                 else:
-                    y_new = np.append(y[:-1], y[i])
+                    y_new = np.append(y[:-1], y[idx])
                     y_pred_new = np.append(y_pred[:-1], sample_pred_new[0])
-                    subject_ids_new = np.append(subject_ids[:-1], subject_ids[i])
+                    subject_ids_new = np.append(subject_ids[:-1], subject_ids[idx])
                     X_all = np.append(X.values[:-1], X_i, axis=0)
-                    sample_ids_new = np.append(sample_ids[:-1], sample_ids[i])
+                    sample_ids_new = np.append(sample_ids[:-1], sample_ids[idx])
 
                     # colors = trace.marker.color
                     colors = trace["marker"]["line"]["color"]
@@ -1108,9 +1118,12 @@ class MicrobiomeTrajectory:
 
                     widths = trace["marker"]["line"]["width"]
                     # customdata = trace.customdata
+                    fig.data = fig.data[:-1]
                 customdata = [
                     (a, b, x) for a, b, x in zip(subject_ids_new, sample_ids_new, X_all)
                 ]
+
+                
 
                 with fig.batch_update():
                     # trace.line.color = line_colors
@@ -1124,42 +1137,62 @@ class MicrobiomeTrajectory:
                     trace["x"] = y_new
                     trace["y"] = y_pred_new
 
-                    y_pred_delta = (y_pred_new[-1] - y_pred[i]) * 10
+                    y_pred_delta = (y_pred_new[-1] - y_pred[idx]) #* fig.layout.height
+                    print(y_pred_delta)
 
-                    fig.update_layout(
-                        annotations=[
-                            dict(
-                                x=y_new[-1],
-                                y=y_pred_new[-1],
-                                # text="Intevention",
-                                # textangle=90,
-                                # font=dict(
-                                #     color="black",
-                                #     size=15
-                                # ),
-                                ax=0,
-                                ay=y_pred_delta,
-                                arrowcolor="black",
-                                arrowsize=2,
-                                arrowwidth=2,
-                                arrowhead=1,
-                            ),
-                            # dict(
-                            #     text=ret_val,
-                            #     align="left",
-                            #     font=dict(color="black", size=12),
-                            #     showarrow=False,
-                            #     xref="paper",
-                            #     yref="paper",
-                            #     x=0.01,
-                            #     y=0.99,
-                            #     bordercolor="black",
-                            #     bgcolor="white",
-                            #     borderwidth=0.5,
-                            #     borderpad=8,
-                            # ),
-                        ]
+                    fig.add_trace(
+                        go.Scatter(
+                            x=[y_new[-1], y_new[-1]],
+                            y=[y_pred[idx], y_pred_new[-1]],
+                            line_color="rgba(0,0,0,1)",
+                            name="Intervention",
+                            hoveron="points",
+                            mode="lines+markers",
+                            marker=dict(size=10, line=dict(width=2)),
+                            marker_symbol="circle-open",
+                            line={"width": 3},
+                            # visible="legendonly",
+                        )
                     )
+
+                    # fig.update_layout(
+                    #     annotations=[
+                    #         dict(
+                    #             x=y_new[-1],
+                    #             y=y_pred_new[-1],
+                    #             # text="Intevention",
+                    #             # textangle=90,
+                    #             # font=dict(
+                    #             #     color="black",
+                    #             #     size=15
+                    #             # ),
+                    #             ax=0,
+                    #             # xref="x domain",
+                    #             yref="y",
+                    #             # axref="x domain",
+                    #             # ayref="y",
+                    #             ay=y_pred_delta,
+                    #             arrowcolor="black",
+                    #             arrowsize=2,
+                    #             arrowwidth=2,
+                    #             arrowhead=1,
+                    #         ),
+                    #         # dict(
+                    #         #     text=ret_val,
+                    #         #     align="left",
+                    #         #     font=dict(color="black", size=12),
+                    #         #     showarrow=False,
+                    #         #     xref="paper",
+                    #         #     yref="paper",
+                    #         #     x=0.01,
+                    #         #     y=0.99,
+                    #         #     bordercolor="black",
+                    #         #     bgcolor="white",
+                    #         #     borderwidth=0.5,
+                    #         #     borderpad=8,
+                    #         # ),
+                    #     ]
+                    # )
                 config = {
                     "toImageButtonOptions": {
                         "format": "svg",  # one of png, svg, jpeg, webp
