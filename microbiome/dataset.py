@@ -20,7 +20,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from ipywidgets import VBox
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, cross_val_predict
 import re
 from collections import Counter
 from itertools import tee, count
@@ -1250,13 +1250,14 @@ def two_groups_differentiation(
     }
 
     rfc = RandomForestClassifier(**settings_final)
+    splits = GroupShuffleSplit(random_state=RANDOM_STATE)
     f1_scores = cross_val_score(
         rfc,
         X,
         y,
         scoring="f1",
         groups=groups,
-        cv=GroupShuffleSplit(random_state=RANDOM_STATE),
+        cv=splits,
     )
     accuracy_scores = cross_val_score(
         rfc,
@@ -1264,7 +1265,7 @@ def two_groups_differentiation(
         y,
         scoring="accuracy",
         groups=groups,
-        cv=GroupShuffleSplit(random_state=RANDOM_STATE),
+        cv=splits,
     )
 
     rfc.fit(X, y)
@@ -1272,7 +1273,6 @@ def two_groups_differentiation(
     fig, config, img_src = None, None, None
     if plot:
         max_display = 20
-        style = "dot"
         layout_settings_default = dict(
             height=1000,
             width=800,
@@ -1309,16 +1309,6 @@ def two_groups_differentiation(
         shap_values = explainer.shap_values(X)
         fig, ax = plt.subplots()
 
-        # # (137, 35)
-        # # (353, 141)
-        # print(X.shape)
-        # # (137, 35)
-        # # 141
-        # print("shap_values", type(shap_values), shap_values[0].shape)
-
-        # if not hasattr(shap_values, "shape"):
-        #     shap_values = shap_values[0]
-
         shap.summary_plot(
             shap_values[0],
             features=X,
@@ -1352,7 +1342,13 @@ def two_groups_differentiation(
         )
         fig.update_layout(**layout_settings_final)
 
-        y_pred = rfc.predict(X)
+        y_pred = cross_val_predict(
+            rfc, 
+            X=X, 
+            y=y,
+            groups=groups,
+            # cv=splits,
+        )
         cm = confusion_matrix(y_pred, y)
 
         img_src = plot_confusion_matrix(
