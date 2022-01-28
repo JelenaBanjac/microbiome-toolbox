@@ -1070,7 +1070,7 @@ class MicrobiomeTrajectory:
                     indices,
                 )
 
-                ret_val = "<b>Intervention bacteria"
+                ret_val = "<b>Intervention bacteria "
                 ret_val += (
                     f"for Subject {subject_ids[idx]}, Sample {sample_ids[idx]}</b><br><br>"
                 )

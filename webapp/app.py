@@ -23,7 +23,9 @@ app = DashProxy(
     # server=server,
     prevent_initial_callbacks=True,
     suppress_callback_exceptions=True,
-    external_stylesheets=[dbc.themes.COSMO],
+    external_stylesheets=[
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
+        dbc.themes.COSMO],
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
     long_callback_manager=long_callback_manager,
     transforms=[MultiplexerTransform()],

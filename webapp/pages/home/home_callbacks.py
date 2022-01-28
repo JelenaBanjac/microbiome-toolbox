@@ -30,6 +30,138 @@ def upload_file(file_name):
 
     return False, file_name[0], True
 
+@app.callback(
+    Output("mouse-data-modal", "is_open"),
+    [Input("mouse-data-info", "n_clicks"), 
+    Input("mouse-data-close", "n_clicks")],
+    [State("mouse-data-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("human-data-modal", "is_open"),
+    [Input("human-data-info", "n_clicks"), 
+    Input("human-data-close", "n_clicks")],
+    [State("human-data-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("custom-data-modal", "is_open"),
+    [Input("custom-data-info", "n_clicks"), 
+    Input("custom-data-close", "n_clicks")],
+    [State("custom-data-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("differentiation-score-modal", "is_open"),
+    [Input("differentiation-score-info", "n_clicks"), 
+    Input("differentiation-score-close", "n_clicks")],
+    [State("differentiation-score-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("feature-columns-dataset-modal", "is_open"),
+    [Input("feature-columns-dataset-info", "n_clicks"), 
+    Input("feature-columns-dataset-close", "n_clicks")],
+    [State("feature-columns-dataset-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("reference-group-modal", "is_open"),
+    [Input("reference-group-info", "n_clicks"), 
+    Input("reference-group-close", "n_clicks")],
+    [State("reference-group-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("time-unit-modal", "is_open"),
+    [Input("time-unit-info", "n_clicks"), 
+    Input("time-unit-close", "n_clicks")],
+    [State("time-unit-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("normalization-modal", "is_open"),
+    [Input("normalization-info", "n_clicks"), 
+    Input("normalization-close", "n_clicks")],
+    [State("normalization-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("log-ratio-modal", "is_open"),
+    [Input("log-ratio-info", "n_clicks"), 
+    Input("log-ratio-close", "n_clicks")],
+    [State("log-ratio-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("feature-columns-trajectory-modal", "is_open"),
+    [Input("feature-columns-trajectory-info", "n_clicks"), 
+    Input("feature-columns-trajectory-close", "n_clicks")],
+    [State("feature-columns-trajectory-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("anomaly-type-modal", "is_open"),
+    [Input("anomaly-type-info", "n_clicks"), 
+    Input("anomaly-type-close", "n_clicks")],
+    [State("anomaly-type-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("feature-extraction-modal", "is_open"),
+    [Input("feature-extraction-info", "n_clicks"), 
+    Input("feature-extraction-close", "n_clicks")],
+    [State("feature-extraction-modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
 
 @app.callback(
     [

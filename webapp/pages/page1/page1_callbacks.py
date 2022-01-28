@@ -319,7 +319,7 @@ def display_value(selectedData, dataset_path, fig):
                                         dhc.Br(),
                                         dhc.Br(),
                                         dhc.P(
-                                            "The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundamces and metadata information."
+                                            "The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundances and metadata information."
                                         ),
                                         dhc.P(f"Accuracy: {acccuracy:.2f}"),
                                         dhc.P(f"F1-score: {f1score:.2f}"),

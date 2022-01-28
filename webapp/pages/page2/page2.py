@@ -30,7 +30,7 @@ layout = dhc.Div(
                                 For the metric we use [Bray-Curtis distance](https://en.wikipedia.org/wiki/Bray%E2%80%93Curtis_dissimilarity).
                             The column for this property is called `reference_group` and it contails only `True`/`False` values.
 
-                            Bellow we also analyse the features important in each of the groups. 
+                            Below we also analyse the features important in each of the groups. 
                             To find the features that differentiate the two groups (reference vs non-reference group), we train the binary classification model (using supervised ensemble methods `XGBClassifier` or `RandomForestClassifier`) with confusion matrix.
                             The confusion matrix enables the insight on how good the separation between the two groups is.
                             """,
