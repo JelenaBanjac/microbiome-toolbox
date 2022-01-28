@@ -17,8 +17,9 @@ import numpy as np
     Input("width-abundances", "value"),
     Input("xaxis-delta-tick-abundances", "value"),
     Input("yaxis-delta-tick-abundances", "value"),
+    Input("button-refresh-abundances", "n_clicks"),
 )
-def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y_delta):
+def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y_delta, n_clicks):
     results = []
     if dataset_path:
         try:
@@ -67,8 +68,9 @@ def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y
     Input("heatmap-avg-fn", "value"),
     Input("height-heatmap", "value"),
     Input("width-heatmap", "value"),
+    Input("button-refresh-heatmap", "n_clicks"),
 )
-def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row, width):
+def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row, width, n_clicks):
     results = []
     if dataset_path:
         try:
@@ -118,8 +120,9 @@ def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row
     Input("xaxis-delta-tick-longitudinal-stack", "value"),
     Input("yaxis-delta-tick-longitudinal-stack", "value"),
     Input("color-palette-name-longitudinal-stack", "value"),
+    Input("button-refresh-longitudinal-stack", "n_clicks"),
 )
-def display_value(dataset_path, number_of_columns, number_of_bacteria, height, width, x_delta, y_delta, palette_name):
+def display_value(dataset_path, number_of_columns, number_of_bacteria, height, width, x_delta, y_delta, palette_name, n_clicks):
     results = []
     if dataset_path:
         try:
@@ -167,8 +170,9 @@ def display_value(dataset_path, number_of_columns, number_of_bacteria, height, w
     Input("embedding-method-type", "value"),
     Input("height-embedding", "value"),
     Input("width-embedding", "value"),
+    Input("button-refresh-embedding", "n_clicks"),
 )
-def display_value(dataset_path, embedding_dimension, embedding_method_type, height, width):
+def display_value(dataset_path, embedding_dimension, embedding_method_type, height, width, n_clicks):
     results = []
     if dataset_path:
         try:
@@ -208,8 +212,9 @@ def display_value(dataset_path, embedding_dimension, embedding_method_type, heig
     Input("embedding-method-type-interactive", "value"),
     Input("height-embedding-interactive", "value"),
     Input("width-embedding-interactive", "value"),
+    Input("button-refresh-embedding-interactive", "n_clicks"),
 )
-def display_value(dataset_path, embedding_method_type, height, width):
+def display_value(dataset_path, embedding_method_type, height, width, n_clicks):
     results = []
     if dataset_path:
         try:

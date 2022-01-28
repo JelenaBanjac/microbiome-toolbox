@@ -139,8 +139,9 @@ def display_value(trajectory_path):
     Input("width-reference-trajectory", "value"),
     Input("xaxis-delta-tick-reference-trajectory", "value"),
     Input("yaxis-delta-tick-reference-trajectory", "value"),
+    Input("button-refresh-reference-trajectory", "n_clicks"),
 )
-def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
+def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_clicks):
     results = []
     if trajectory_path:
         try:
@@ -188,8 +189,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
     Input("width-reference-groups", "value"),
     Input("xaxis-delta-tick-reference-groups", "value"),
     Input("yaxis-delta-tick-reference-groups", "value"),
+    Input("button-refresh-reference-groups", "n_clicks"),
 )
-def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
+def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_clicks):
     results = []
     if trajectory_path:
         try:
@@ -247,8 +249,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
     Input("width-groups", "value"),
     Input("xaxis-delta-tick-groups", "value"),
     Input("yaxis-delta-tick-groups", "value"),
+    Input("button-refresh-groups", "n_clicks"),
 )
-def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
+def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_clicks):
     results = []
     if trajectory_path:
         try:
@@ -297,8 +300,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
     Input("width-longitudinal", "value"),
     Input("xaxis-delta-tick-longitudinal", "value"),
     Input("yaxis-delta-tick-longitudinal", "value"),
+    Input("button-refresh-longitudinal", "n_clicks"),
 )
-def display_value(trajectory_path, degree, height, width, x_delta, y_delta):
+def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_clicks):
     results = []
     if trajectory_path:
         try:

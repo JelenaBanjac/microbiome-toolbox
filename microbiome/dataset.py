@@ -24,7 +24,7 @@ from sklearn.model_selection import cross_val_score, cross_val_predict
 import re
 from collections import Counter
 from itertools import tee, count
-import string
+from textwrap import wrap
 
 
 class MicrobiomeDataset:
@@ -549,7 +549,7 @@ class MicrobiomeDataset:
             rows=number_of_rows,
             cols=number_of_columns,
             horizontal_spacing=0.1,
-            subplot_titles=self.bacteria_columns,
+            subplot_titles=['<br>'.join(wrap(str(b), 50)) for b in list(self.bacteria_columns)],
         )
         # y_max = self.df[self.bacteria_columns].values.max()+1
         # y_min = self.df[self.bacteria_columns].values.min()-1

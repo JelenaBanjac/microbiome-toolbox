@@ -38,8 +38,9 @@ def display_value(trajectory_path, number_od_timeblocks):
     Input("width-intervention", "value"),
     Input("xaxis-delta-tick-intervention", "value"),
     Input("yaxis-delta-tick-intervention", "value"),
+    Input("button-refresh-intervention", "n_clicks"),
 )
-def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree, height, width, x_delta, y_delta):
+def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree, height, width, x_delta, y_delta, n_clicks):
     results = []
     anomaly_type = []
     if trajectory_path:

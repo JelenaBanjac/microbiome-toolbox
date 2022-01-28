@@ -60,9 +60,27 @@ layout = dhc.Div(
                             dhc.Hr(),
                             dhc.Br(),
                             dhc.H4("Taxa Abundances"),
+                            
                             dhc.Br(),
                             dbc.Container(
                                 [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col([
+                                                dbc.Button(
+                                                    "Refresh",
+                                                    outline=True,
+                                                    color="dark",
+                                                    id="button-refresh-abundances",
+                                                    n_clicks=0,
+                                                ),
+                                                dhc.I(title="Refresh plot if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
+                                                ], width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=10),
+                                        ]
+                                    ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Number of columns: ", width=2),
@@ -185,6 +203,23 @@ layout = dhc.Div(
                                 [
                                     dbc.Row(
                                         [
+                                            dbc.Col([
+                                                dbc.Button(
+                                                    "Refresh",
+                                                    outline=True,
+                                                    color="dark",
+                                                    id="button-refresh-heatmap",
+                                                    n_clicks=0,
+                                                ),
+                                                dhc.I(title="Refresh plot if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
+                                                ], width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=10),
+                                        ]
+                                    ),
+                                    dhc.Br(),
+                                    dbc.Row(
+                                        [
                                             dbc.Col("Values: ", width=2),
                                             dbc.Col(
                                                 dcc.RadioItems(
@@ -299,6 +334,23 @@ layout = dhc.Div(
                             dhc.Br(),
                             dbc.Container(
                                 [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col([
+                                                dbc.Button(
+                                                    "Refresh",
+                                                    outline=True,
+                                                    color="dark",
+                                                    id="button-refresh-longitudinal-stack",
+                                                    n_clicks=0,
+                                                ),
+                                                dhc.I(title="Refresh plot if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
+                                                ], width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=10),
+                                        ]
+                                    ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Number of columns: ", width=2),
@@ -443,6 +495,23 @@ layout = dhc.Div(
                                 [
                                     dbc.Row(
                                         [
+                                            dbc.Col([
+                                                dbc.Button(
+                                                    "Refresh",
+                                                    outline=True,
+                                                    color="dark",
+                                                    id="button-refresh-embedding",
+                                                    n_clicks=0,
+                                                ),
+                                                dhc.I(title="Refresh plot if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
+                                                ], width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=10),
+                                        ]
+                                    ),
+                                    dhc.Br(),
+                                    dbc.Row(
+                                        [
                                             dbc.Col("Embedding dimension: ", width=2),
                                             dbc.Col(
                                                 dcc.Input(
@@ -547,6 +616,23 @@ layout = dhc.Div(
                             
                             dbc.Container(
                                 [
+                                    dbc.Row(
+                                        [
+                                            dbc.Col([
+                                                dbc.Button(
+                                                    "Refresh",
+                                                    outline=True,
+                                                    color="dark",
+                                                    id="button-refresh-embedding-interactive",
+                                                    n_clicks=0,
+                                                ),
+                                                dhc.I(title="Refresh plot if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
+                                                ], width=2,
+                                            ),
+                                            dbc.Col(dhc.P(), width=10),
+                                        ]
+                                    ),
+                                    dhc.Br(),
                                     dbc.Row(
                                         [
                                             dbc.Col("Embedding method: ", width=2),

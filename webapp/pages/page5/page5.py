@@ -50,14 +50,22 @@ layout = dhc.Div(
                     )
                 ),
                 dhc.Br(),
-                # dhc.Hr(),
-                # dhc.Br(),
-                # dhc.H3(
-                #     "Reference trajectory",
-                #     style={
-                #         "textAlign": "center",
-                #     },
-                # ),
+                dbc.Row(
+                    [
+                        dbc.Col([
+                            dbc.Button(
+                                "Refresh",
+                                outline=True,
+                                color="dark",
+                                id="button-refresh-anomalies",
+                                n_clicks=0,
+                            ),
+                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
+                            ], width=2,
+                        ),
+                        dbc.Col(dhc.P(), width=10),
+                    ]
+                ),
                 dhc.Br(),
                 dcc.Markdown("<b>Plot settings</b>", dangerously_allow_html=True),
                 dbc.Row(

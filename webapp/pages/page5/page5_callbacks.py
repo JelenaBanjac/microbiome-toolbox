@@ -29,8 +29,9 @@ def display_value(trajectory_path):
     Input("width-anomalies", "value"),
     Input("xaxis-delta-tick-anomalies", "value"),
     Input("yaxis-delta-tick-anomalies", "value"),
+    Input("button-refresh-anomalies", "n_clicks"),
 )
-def display_value(trajectory_path, anomaly_type, degree, height, width, x_delta, y_delta):
+def display_value(trajectory_path, anomaly_type, degree, height, width, x_delta, y_delta, n_clicks):
     results = []
     if trajectory_path:
         try:
