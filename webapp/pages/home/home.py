@@ -350,10 +350,10 @@ feature_extraction_modal = dbc.Modal(
             """),
             dcc.Markdown("""
                Available options:  
-               1. `NONE`: there is no feature extraction, all feature columns are used, 
-               2. `NEAR_ZERO_VARIANCE`: remove features with near zero variance,  
-               3. `CORRELATION`: remove correlated features.  
-               4. `TOP_K_IMPORTANT`: use only top k important features to build microbiome trajectory.
+               1. `NONE`: there is no feature extraction, all feature columns are used,  
+               2. `NEAR_ZERO_VARIANCE`: remove features with near zero variance,   
+               3. `CORRELATION`: remove correlated features.   
+               4. `TOP_K_IMPORTANT`: use only top k important features to build microbiome trajectory.  
             """),
         ]),
         dbc.ModalFooter(
