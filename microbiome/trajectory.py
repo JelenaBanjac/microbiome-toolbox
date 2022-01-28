@@ -1533,7 +1533,7 @@ class MicrobiomeTrajectory:
             **yaxis_settings_final,
         )
         fig.update_layout(
-            title_text="Microbiome trajectory - trajectory per reference group",
+            title_text="Microbiome trajectory with reference samples",
             **layout_settings_final,
         )
 

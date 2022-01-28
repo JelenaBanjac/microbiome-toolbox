@@ -191,6 +191,7 @@ reference_group_modal = dbc.Modal(
                 The reference group is the group of samples that are going to be used as a reference for the microbiome trajectory creation.
                 The reference group is defined in `reference_group` column with `True` and `False` values.
                 The column is not mandatory, but if it is not specified, all samples will automatically be labeled to belong to the reference group (i.e. `reference_group=True`).
+                Information on reference group split analysis can be seen in Reference Definition card.
             """),
             dcc.Markdown("""
                 There are two options for the reference group:  

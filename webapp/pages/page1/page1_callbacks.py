@@ -266,7 +266,7 @@ def display_value(selectedData, dataset_path, fig):
             trigger = dash.callback_context.triggered[0]["prop_id"]
             # if trigger == 'graph.clickData':
             #     selection = [point["pointNumber"] for point in clickData["points"]]
-            if trigger == "interactive-embeddings.selectedData":
+            if trigger == "interactive-embeddings.selectedData" and selectedData is not None:
                 selection = [point["pointIndex"] for point in selectedData["points"]]
 
             if selection is not None:

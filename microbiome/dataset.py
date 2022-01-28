@@ -1061,20 +1061,20 @@ class MicrobiomeDataset:
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(l=0, r=0, b=0, pad=0),
-            title_text=f"Embedding in 2D space",
-            annotations=[
-                dict(
-                    x=0.5,
-                    y=1.05,
-                    align="right",
-                    valign="top",
-                    showarrow=False,
-                    xref="paper",
-                    yref="paper",
-                    xanchor="center",
-                    yanchor="top",
-                )
-            ],
+            title_text="Embedding in 2D space",
+            # annotations=[
+            #     dict(
+            #         x=0.5,
+            #         y=1.05,
+            #         align="right",
+            #         valign="top",
+            #         showarrow=False,
+            #         xref="paper",
+            #         yref="paper",
+            #         xanchor="center",
+            #         yanchor="top",
+            #     )
+            # ],
         )
         if layout_settings is None:
             layout_settings = {}
