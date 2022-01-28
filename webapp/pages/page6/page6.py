@@ -22,12 +22,27 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                            Click on one of the outliers below to see the suggestion for the intervention. 
-                            The intervention simulation consists of suggesting the taxa values to change (or log-ratio values to change) in order to bring back the sample to the reference microbiome trajectory.
-                            """,
-                                style={
-                                    "textAlign": "left",
-                                },
+                                Intervention simulation is a technique we propose to use in order to return an outlier back to the reference trajectory. 
+                                This is done by modifying the taxa of the outlier with values of the top important bacteria from reference samples.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                Click on one of the outliers below to see the suggestion for the intervention. The intervention simulation consists of suggesting the taxa values to change (or log-ratio values to change) in order to bring back the sample to the reference microbiome trajectory.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                If an outlier is not back on the reference trajectory, possible reasons are:
+                                - The time block in which the outlier is located is not wide or small enough.
+                                - The reference samples have samples that should not be considered reference samples.
+                                - Number of top important bacteria to consider is not high enough to help an outlier to become a reference sample.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                The examples that are not in the dashboard can be found in the [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox) repository.
+                                """,
                             ),
                         ]
                     )

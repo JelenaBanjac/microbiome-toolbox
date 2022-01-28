@@ -23,28 +23,29 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                            * Detecting the outlier depending on outlier definition (in healthy reference data)
-                                - *Prediction Interval:* outside 95% prediction interval (healthy trajectory interval)
-                                - Other ways of detecting outliers - *longitudinal anomaly detection* - implemented rolling average:
-                                    - *z-score on the trajectory*: Anomaly detection with z-scores and ones that pass 2xSTD
-                                    - *Isolation Forest (IF):* unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous
-                            * Exploring trajectory outliers and finding the *commonalities - reference analysis*:
-                                - Looking across different outliers, are there common features that are *off/FALSE* in most of these? Gives a common intervention angle
-                                - Build a supervised model (`XGBoost`) and get the `SHAP` values in order to explain the anomalies.
-                            * What do we do with these outliers that are detected in a healthy reference?
-                                - Returning the (one) outlier back to the healthy region by changing the bacteria abundances that are not in normal range (healthy reference data)
-                                - Remove these outliers and retrain the model with updated reference dataset
-                            * Importance of different bacteria and their abundances across time boxes on non-healthy data (but model trained on healthy samples).
-                            """,
-                                style={
-                                    "textAlign": "left",
-                                },
+                                There is a support for detecting anomalies in three different ways:
+                                1. `PREDICTION_INTERVAL`: samples outside the PI are considered to be anomalies,  
+                                2. `LOW_PASS_FILTER`: the samples passing 2 standard deviations of the mean are considered to be anomalies,  
+                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous. 
+                                By default, anomaly is a sample that is outside the prediction interval of microbiome trajectory that is built on reference samples.
+                                The anomaly type can be chosen on Home page under the Trajectory settings or below. If anomaly type is chosen below, it won’t affect the dataset available in other cards.
+
+                                """,
                             ),
                             dcc.Markdown(
-                                "The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.",
-                                style={
-                                    "textAlign": "left",
-                                },
+                                """ 
+                                Some of the available plot options:
+                                - If plot is not loaded, click Refresh button.
+                                - Hovering above the plot shows more information on the samples.
+                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
+                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
+                                - Plots can be downloaded in SVG format.
+                                """
+                            ),
+                            dcc.Markdown(
+                                """
+                                The examples that are not in the dashboard can be found in the [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox) repository.
+                                """,
                             ),
                         ]
                     )

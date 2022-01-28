@@ -22,31 +22,86 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                            * Data handling (hunting for the plateau of performance reached, so we can use less number of features):  
-                                - top K important features selection based on the smallest MAE error (i.e. how does trajectory performance looks like when only working with top 5 or top 10 bacteria used for the model)  
-                                - remove near zero variance features  
-                                - remove correlated features  
-                            * Microbiome Trajectory - all the combinations below
-                                - only mean line  
-                                - only line with prediction interval and confidence interval  
-                                - line with samples  
-                                - longitudinal data, every subject  
-                                - coloring per group (e.g. per country)  
-                                - red-color dots or stars-shapes are outliers  
-                            * Measuring the trajectory performance (all before plateau area):  
-                                - MAE  (goal: *smaller*)  
-                                - R^2 score (goal: *bigger*), percent of variance captured  
-                                - Pearson correlation (MMI, age_at_collection)  
-                                - Prediction Interval (PI) - mean and median = prediction interval 95% = the interval in which we expect the healthy reference to fall in (goal: *smaller*)  
-                                - Standard deviation of the error  
-                                - Visual check
-                            * Testing difference between different trajectories using linear regression statistical analysis and spline:  
-                                - Testing **universality** across different groups  
-                                - Testing **differentiation** of 2 trajectories (e.g. healthy vs. non-healthy) - spline p-values, linear regression p-values  
-                            """,
-                                style={
-                                    "textAlign": "left",
-                                },
+                                Microbiome trajectory is often used in the microbiome research as a visualization showing the microbiome development with time.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                The microbiome trajectory is influenced by many factors. 
+                                For example, nutrition is a critical modulator of the microbiome since it can affect the microbiome present in the subjects.
+                                The microbiome trajectory is built based on the reference samples.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                With the visualizations below we hope to discover the microbiome trajectory of a given dataset.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                We expect to see the trajectory where the only linear part is the initial part until some point (in human microbiome it is usually until 2 years).
+                                After that, the trajectory plateaus.
+                                This means that it becomes much harder to determine infant's age based on its microbiota status if the infants is older than 2 years.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                Available techniques to decrease the size of the model while still keeping its performance are:
+                                - top K important features selection based on the smallest MAE error (i.e. how does trajectory performance looks like when only working with top 5 or top 10 bacteria used for the model),
+                                - remove near zero variance features,
+                                - remove correlated features.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                To make sure the performance is still good, we show the plots in Feature extraction part.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                Microbiome trajectory plots contain following information:
+                                - only mean line
+                                - only line with prediction interval and confidence interval
+                                - line with samples
+                                - longitudinal data, every subject
+                                - coloring per group (e.g. per country)
+                                - red-color dots or stars-shapes are outliers
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                Measuring the trajectory performance (all before plateau area):
+                                - MAE (goal: smaller),
+                                - R^2 score (goal: bigger), percent of variance captured,
+                                - Pearson correlation (MMI, age_at_collection),
+                                - Prediction Interval (PI) is prediction interval 95%, the interval in which we expect the healthy reference to fall in (goal: smaller),
+                                - Standard deviation of the error,
+                                - Visual check.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                We used two different statistical analysis tools that are used to compare the significant difference between two trajectories.
+                                1. _Splinectomy longitudinal statistical analysis tools_: The 3 methods used are translated from R to Python and accommodated for our project. The original package is called [`splinectomeR`](https://github.com/RRShieldsCutler/splinectomeR), implemented in R. For more details please check [Shields-Cutler et al. SplinectomeR Enables Group Comparisons in Longitudinal Microbiome Studies](https://www.frontiersin.org/articles/10.3389/fmicb.2018.00785/full). In short, the test compares whether the area between two polynomial lines is significantly different. Our trajectory lines are the polynomial lines with degrees 2 or 3.
+                                2. _Linear regression statistical analysis tools_: A statistical method based on comparing the two linear lines (line y=k*x+n). To compare two linear lines, we compare the significant difference in the two coefficients that represent the line k (slope) and n (y-axis intersection).
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                Some of the available plot options:
+                                - If plot is not loaded, click Refresh button.
+                                - Hovering above the plot shows more information on the samples.
+                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
+                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
+                                - Plots can be downloaded in SVG format.
+                                - A p-value less than 0.05 (typically ≤ 0.05) is statistically significant (i.e. lines are different). A p-value higher than 0.05 (> 0.05) is not statistically significant and indicates strong evidence for the null hypothesis (H0: two lines have similar slope/intersection/etc.). This means we retain the null hypothesis and reject the alternative hypothesis.
+
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                The examples that are not in the dashboard can be found in the [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox) repository.
+                                """,
                             ),
                         ]
                     )
@@ -57,26 +112,15 @@ layout = dhc.Div(
                 dhc.Br(),
                 dhc.H3("Feature extraction"),
                 dhc.Br(),
-                # dcc.Markdown("<b>Plot settings</b>", dangerously_allow_html=True),
-                # dbc.Row(
-                #     [
-                #         dbc.Col("Polynomial degree: ", width=2),
-                #         dbc.Col(
-                #             dcc.Input(
-                #                 id="polynomial-degree-reference-trajectory",
-                #                 type="number",
-                #                 min=1,
-                #                 max=20,
-                #                 step=1,
-                #                 value=1,
-                #             ),
-                #             width=2,
-                #         ),
-                #         dbc.Col(dhc.P(), width=8),
-                #     ]
-                # ),
-                # dhc.Br(),
-                # dhc.Br(),
+                dcc.Markdown(
+                    """
+                    Metrics used to evaluate the performances of different model sizes are:
+                    - [`mean_squared_error`](https://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values)
+                    - [`R2`](https://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values)
+                    The x-axis shows the number of features used to train the model, y-axis shows the performance value.
+                    Below we see the feature importance for the microbiome trajectory (sorted from the most important to the least important feature).
+                    """,
+                ),
 
                 dbc.Row(
                     [
@@ -126,6 +170,13 @@ layout = dhc.Div(
                 dhc.Hr(),
                 dhc.Br(),
                 dhc.H3("Reference trajectory"),
+                dhc.Br(),
+                dcc.Markdown(
+                    """
+                    The microbiome trajectory is built on the reference samples.
+                    The plot below shows reference samples, its prediction and confidence intervals with mean.
+                    """,
+                ),
                 dhc.Br(),
 
                 dbc.Row(
@@ -255,6 +306,12 @@ layout = dhc.Div(
                 dhc.Br(),
                 dhc.H3("Reference groups"),
                 dhc.Br(),
+                dcc.Markdown(
+                    """
+                    If dataset has reference and non-reference samples, both lines will be visualized separately with their corresponding samples, prediction and confidence intervals with mean.
+                    """,
+                ),
+                dhc.Br(),
                 dbc.Row(
                     [
                         dbc.Col([
@@ -382,6 +439,12 @@ layout = dhc.Div(
                 dhc.Br(),
                 dhc.H3("Groups"),
                 dhc.Br(),
+                dcc.Markdown(
+                    """
+                    If dataset has several groups, all lines will be visualized separately with their corresponding samples, prediction and confidence intervals with mean.
+                    """,
+                ),
+                dhc.Br(),
                 dbc.Row(
                     [
                         dbc.Col([
@@ -508,6 +571,12 @@ layout = dhc.Div(
                 dhc.Hr(),
                 dhc.Br(),
                 dhc.H3("Longitudinal information"),
+                dhc.Br(),
+                dcc.Markdown(
+                    """
+                    Animated longitudinal information of reference samples.
+                    """,
+                ),
                 dhc.Br(),
                 dbc.Row(
                     [

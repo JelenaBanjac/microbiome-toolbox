@@ -31,35 +31,44 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                        Some of the methods for data analysis and exploration provided are:
-                        - Sampling statistics
-                        - Heatmap of taxa abundances w.r.t. time
-                        - Taxa abundance errorbars
-                        - Dense longitudinal data
-                        - Shannon diversity index and Simpson dominance index
-                        - Embeddings (different algorithms that we used in 2D and 3D space) with interactive selection and reference analysis.
-                        """,
-                                style={
-                                    "textAlign": "left",
-                                },
+                                Some of the methods for data analysis and exploration provided are:
+                                - Sampling statistics,
+                                - Heatmap of taxa abundances w.r.t. time,
+                                - Taxa abundance errorbars,
+                                - Dense longitudinal data,
+                                - Shannon diversity index and Simpson dominance index (in the Github repository microbiome-toolbox),
+                                - Embeddings (different algorithms that we used in 2D and 3D space) with interactive selection and reference analysis.
+                                """,
                             ),
-                            # # Loaded table
-                            # dhc.Hr(),
-                            # dhc.H4("Loaded data table"),
-                            # dhc.Br(),
-                            # # dhc.Div(id='page-1-display-value-0', children=loading_img),
-                            # # dhc.Div(id='page-1-display-value-0-hidden', hidden=True),
-                            # dcc.Loading(
-                            #     id="loading-1-0",
-                            #     children=[dhc.Div([dhc.Div(id='page-1-display-value-0'),])],
-                            #     type="default",
-                            # ),
-                            # dhc.Br(),
+                            dcc.Markdown(
+                                """
+                                Some of the available plot options:
+                                - If plot is not loaded, click Refresh button.
+                                - Hovering above the plot shows more information on the samples.
+                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
+                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
+                                - Plots can be downloaded in SVG format.
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
+                                The examples that are not in the dashboard can be found in the [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox) repository.
+                                """,
+                            ),
+                            
                             dhc.Br(),
                             # Abundance plot in general
                             dhc.Hr(),
                             dhc.Br(),
                             dhc.H4("Taxa Abundances"),
+                            dhc.Br(),
+                            dcc.Markdown(
+                                """
+                                Plot bacteria abundance mean and standard deviation w.r.t. time. 
+                                One plot corresponds to one bacteria with bacteria name specified in the title.
+                                The bacteria can be turned on/of by clicking on its corresponding label in the legend.
+                                """,
+                            ),
                             
                             dhc.Br(),
                             dbc.Container(
@@ -199,6 +208,14 @@ layout = dhc.Div(
                             dhc.Br(),
                             dhc.H4("Taxa Abundances Heatmap"),
                             dhc.Br(),
+                            dcc.Markdown(
+                                """
+                                Another way to visualize taxa abundances is by using the heatmap.
+                                All taxa is visualized on one plot: y-axis shows bacteria name and x-axis shows the time point.
+                                Color intensity indicates the abundance value.
+                                """,
+                            ),
+                            dhc.Br(),
                             dbc.Container(
                                 [
                                     dbc.Row(
@@ -331,6 +348,15 @@ layout = dhc.Div(
                             # Dense longitudinal data
                             dhc.Hr(),
                             dhc.H4("Dense Longitudinal Data"),
+                            dhc.Br(),
+                            dcc.Markdown(
+                                """
+                                One subplot corresponds to longitudinal bacteria data of one subject.
+                                Bacteria abundances are stacked on top of each other.  
+                                One color corresponds to one bacteria. 
+                                If there are more bacteria than colors in a color palette (`tab20`), you can specify another color palette, see available options [here](https://matplotlib.org/stable/tutorials/colors/colormaps.html).
+                                """,
+                            ),
                             dhc.Br(),
                             dbc.Container(
                                 [
@@ -491,6 +517,14 @@ layout = dhc.Div(
                             dhc.Hr(),
                             dhc.H4("Embedding in 2D space"),
                             dhc.Br(),
+                            dcc.Markdown(
+                                """
+                                In order to visualize samples with lots of feature columns (columns used to build a microbiome trajectory), we use embedding methods like `PCA` to embed the high-dimensional sample to a lower dimension (2-dim or 3-dim). 
+                                With this type of visualization we hope to catch patterns or clusters that cannot be seen otherwise.
+                                If dataset has `groups` column, we will be able to distinguish samples based on the group they belong to.
+                                """,
+                            ),
+                            dhc.Br(),
                             dbc.Container(
                                 [
                                     dbc.Row(
@@ -613,7 +647,23 @@ layout = dhc.Div(
                             dhc.Hr(),
                             dhc.H4("Embedding in 2D space - Interactive Analysis"),
                             dhc.Br(),
-                            
+                            dhc.Br(),
+                            dcc.Markdown(
+                                """
+                                Interactive version of embedding samples to a low-dimensional space.
+                                Here we have a support for 2D samples selection.
+                                After the selection, we build a binary classifier that tries to differentiate between selected and non-selected samples on 2D plot. 
+                                The confusion matrix and F1-score are reported as indicators of these two-groups differentiation. 
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """To use an interactive option:   
+                                - click on `Lasso Select` on the plot toolbox,  
+                                - select the samples you want to group,  
+                                - wait for the explanatory information to load (with confusion matrix).  
+                                """,
+                            ),
+                            dhc.Br(),
                             dbc.Container(
                                 [
                                     dbc.Row(
@@ -696,23 +746,7 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Loading(
                                 id="loading-1-5",
-                                children=[
-                                    dhc.Div(
-                                        [
-                                            dcc.Markdown(
-                                                """To use an interactive option:   
-                                - click on `Lasso Select` on the plot toolbox,  
-                                - select the samples you want to group,  
-                                - wait for the explainatory information to load (with confusion matrix).  
-                                """,
-                                                style={
-                                                    "textAlign": "left",
-                                                },
-                                            ),
-                                            dhc.Div(id="page-1-display-value-5"),
-                                        ]
-                                    )
-                                ],
+                                children=dhc.Div(id="page-1-display-value-5"),
                                 type="default",
                             ),
                             dhc.Br(),

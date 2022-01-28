@@ -22,22 +22,33 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                            * Importance of different bacteria and their abundances across time blocks (reference data) - resolution (i.e. box width) can be chosen (in the dashboard it is fixed)
-                                - bacteria importance are stacked vertically where the size of the each bacteria sub-block represents its importance in that time block
-                                - values in the box represent mean and standard deviation of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want.)
-                                - total height of the box is fixed in all time blocks
-                                - can choose number of important bacteria for time interval
-                            * Importance of different bacteria and their abundances across time blocks on non-reference data (but model trained on reference data).
-                            """,
-                                style={
-                                    "textAlign": "left",
-                                },
+                                This type of the plot is useful if we are interested to see what bacteria is important in what time block for a microbiome trajectory that is built on the reference samples.
+                                """,
                             ),
                             dcc.Markdown(
-                                "The examples that are not in the dashboard can be found in the `microbiome-toolbox` repository.",
-                                style={
-                                    "textAlign": "left",
-                                },
+                                """
+                                Importance of different bacteria and their abundances across time blocks 
+                                - bacteria importance are stacked vertically where the size of the each bacteria sub-block represents its importance in that time block,
+                                - values in the box represent mean and standard deviation of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want),
+                                - total height of the box is fixed in all time blocks,
+                                - can choose number of important bacteria for time interval.
+                                """
+                            ),
+                            dcc.Markdown(
+                                """
+                                Some of the available plot options:
+                                - If plot is not loaded, click Refresh button.
+                                - Hovering above the plot shows more information on the samples.
+                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
+                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
+                                - Plots can be downloaded in SVG format.
+                                - Time block widths can be modified by sliding the circles in the Time block ranges option.
+                                """
+                            ),
+                            dcc.Markdown(
+                                """
+                                The examples that are not in the dashboard can be found in the [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox) repository.
+                                """,
                             ),
                         ]
                     )

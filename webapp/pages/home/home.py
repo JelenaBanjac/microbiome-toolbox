@@ -102,7 +102,7 @@ custom_data_modal = dbc.Modal(
             """
             ),
             dcc.Markdown("""
-                **Important**: the uploaded dataset should be in a csv file.
+                **Important**: the uploaded dataset should be in a csv file. In addition, we tested the dashboard with datasets that have less than 100kB. Therefore, if your dataset is bigger, the server might not be able to process it fast enough (there is also a limit of 30 seconds for every request). In this case, we suggest you to upload your dataset in a smaller chunk or run the dashboard locally on your computer.
             """),
 
 
