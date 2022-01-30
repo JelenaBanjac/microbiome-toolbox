@@ -73,4 +73,4 @@ If you notice any issues, please report them at [Github issues](https://github.c
 The project is licensed under the [MIT license](./LICENCE).
 
 ## Authors
-[Jelena Banjac](msjelenabanjac@gmail.com), [Shaillay Kumar Dogra](ShaillayKumar.Dogra@rd.nestle.com), [Norbert Sprenger](norbert.sprenger@rdls.nestle.com)
+[Jelena Banjac](https://jelenabanjac.com/), [Shaillay Kumar Dogra](ShaillayKumar.Dogra@rd.nestle.com), [Norbert Sprenger](norbert.sprenger@rdls.nestle.com)
