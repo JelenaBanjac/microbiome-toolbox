@@ -816,7 +816,7 @@ def serve_dataset_settings():
                     [
                         dbc.Col(
                             [
-                                "Feature columns (for the novelty detection):",
+                                "Feature columns <br>(for the novelty detection):",
                                 dhc.I(
                                     title="More information",
                                     id="feature-columns-dataset-info",
@@ -1013,7 +1013,7 @@ def serve_trajectory_settings():
                     [
                         dbc.Col(
                             [
-                                "Feature columns (for the trajectory model):",
+                                "Feature columns <br>(for the trajectory model):",
                                 dhc.I(
                                     title="More information",
                                     id="feature-columns-trajectory-info",
