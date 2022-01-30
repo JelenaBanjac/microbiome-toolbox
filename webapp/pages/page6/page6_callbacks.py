@@ -1,11 +1,12 @@
-from dash.dependencies import Input, Output, State
+import traceback
+
+import dash_bootstrap_components as dbc
+import numpy as np
 from app import app
-from pages.home.home_data import get_trajectory
 from dash import dcc
 from dash import html as dhc
-import numpy as np
-import traceback
-import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output, State
+from pages.home.home_data import get_trajectory
 
 
 @app.callback(
@@ -40,7 +41,17 @@ def display_value(trajectory_path, number_od_timeblocks):
     Input("yaxis-delta-tick-intervention", "value"),
     Input("button-refresh-intervention", "n_clicks"),
 )
-def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree, height, width, x_delta, y_delta, n_clicks):
+def display_value(
+    trajectory_path,
+    time_block_ranges,
+    num_top_bacteria,
+    degree,
+    height,
+    width,
+    x_delta,
+    y_delta,
+    n_clicks,
+):
     results = []
     anomaly_type = []
     if trajectory_path:

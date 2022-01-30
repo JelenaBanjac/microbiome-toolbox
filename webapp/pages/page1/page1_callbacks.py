@@ -1,13 +1,16 @@
-from dash.dependencies import Input, Output, State
-from app import app
-from pages.home.home_data import get_dataset
-from dash import dcc
-from dash import html as dhc
+import traceback
+
 import dash
 import dash_bootstrap_components as dbc
-import traceback
-from microbiome.enumerations import EmbeddingModelType
 import numpy as np
+from app import app
+from dash import dcc
+from dash import html as dhc
+from dash.dependencies import Input, Output, State
+from pages.home.home_data import get_dataset
+
+from microbiome.enumerations import EmbeddingModelType
+
 
 @app.callback(
     Output("page-1-display-value-1", "children"),
@@ -19,7 +22,9 @@ import numpy as np
     Input("yaxis-delta-tick-abundances", "value"),
     Input("button-refresh-abundances", "n_clicks"),
 )
-def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y_delta, n_clicks):
+def display_value(
+    dataset_path, number_of_columns, height_row, width, x_delta, y_delta, n_clicks
+):
     results = []
     if dataset_path:
         try:
@@ -28,7 +33,7 @@ def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y
             number_of_rows = len(dataset.bacteria_columns) // number_of_columns + 1
 
             layout_settings = dict(
-                height=height_row*number_of_rows,
+                height=height_row * number_of_rows,
                 width=width,
             )
             xaxis_settings = dict(
@@ -53,7 +58,9 @@ def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -70,7 +77,9 @@ def display_value(dataset_path, number_of_columns, height_row, width, x_delta, y
     Input("width-heatmap", "value"),
     Input("button-refresh-heatmap", "n_clicks"),
 )
-def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row, width, n_clicks):
+def display_value(
+    dataset_path, relative_values, empty_cells, avg_fn, height_row, width, n_clicks
+):
     results = []
     if dataset_path:
         try:
@@ -79,15 +88,15 @@ def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row
             number_of_bacteria = len(dataset.bacteria_columns)
 
             layout_settings = dict(
-                height=height_row*number_of_bacteria,
+                height=height_row * number_of_bacteria,
                 width=width,
             )
 
             result = dataset.plot_bacteria_abundance_heatmaps(
-                relative_values=relative_values=="relative",
-                fillna=empty_cells=="fill",
-                dropna=empty_cells=="drop",
-                avg_fn=np.median if avg_fn=="median" else np.mean,
+                relative_values=relative_values == "relative",
+                fillna=empty_cells == "fill",
+                dropna=empty_cells == "drop",
+                avg_fn=np.median if avg_fn == "median" else np.mean,
                 layout_settings=layout_settings,
             )
 
@@ -122,7 +131,17 @@ def display_value(dataset_path, relative_values, empty_cells, avg_fn, height_row
     Input("color-palette-name-longitudinal-stack", "value"),
     Input("button-refresh-longitudinal-stack", "n_clicks"),
 )
-def display_value(dataset_path, number_of_columns, number_of_bacteria, height, width, x_delta, y_delta, palette_name, n_clicks):
+def display_value(
+    dataset_path,
+    number_of_columns,
+    number_of_bacteria,
+    height,
+    width,
+    x_delta,
+    y_delta,
+    palette_name,
+    n_clicks,
+):
     results = []
     if dataset_path:
         try:
@@ -156,7 +175,9 @@ def display_value(dataset_path, number_of_columns, number_of_bacteria, height, w
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -172,7 +193,9 @@ def display_value(dataset_path, number_of_columns, number_of_bacteria, height, w
     Input("width-embedding", "value"),
     Input("button-refresh-embedding", "n_clicks"),
 )
-def display_value(dataset_path, embedding_dimension, embedding_method_type, height, width, n_clicks):
+def display_value(
+    dataset_path, embedding_dimension, embedding_method_type, height, width, n_clicks
+):
     results = []
     if dataset_path:
         try:
@@ -183,7 +206,9 @@ def display_value(dataset_path, embedding_dimension, embedding_method_type, heig
                 width=width,
             )
 
-            embedding_model = EmbeddingModelType[embedding_method_type].value(n_components=embedding_dimension)
+            embedding_model = EmbeddingModelType[embedding_method_type].value(
+                n_components=embedding_dimension
+            )
 
             result = dataset.embedding_to_latent_space(
                 embedding_dimension=embedding_dimension,
@@ -199,7 +224,9 @@ def display_value(dataset_path, embedding_dimension, embedding_method_type, heig
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -225,7 +252,9 @@ def display_value(dataset_path, embedding_method_type, height, width, n_clicks):
                 width=width,
             )
 
-            embedding_model = EmbeddingModelType[embedding_method_type].value(n_components=2)
+            embedding_model = EmbeddingModelType[embedding_method_type].value(
+                n_components=2
+            )
 
             result = dataset.embeddings_interactive_selection_notebook(
                 embedding_model=embedding_model,
@@ -235,7 +264,9 @@ def display_value(dataset_path, embedding_method_type, height, width, n_clicks):
             config = result["config"]
 
             results = [
-                dcc.Graph(figure=vbox.children[0], id="interactive-embeddings", config=config),
+                dcc.Graph(
+                    figure=vbox.children[0], id="interactive-embeddings", config=config
+                ),
                 dhc.Div(id="interactive-embeddings-info"),
                 dhc.Br(),
             ]
@@ -244,7 +275,9 @@ def display_value(dataset_path, embedding_method_type, height, width, n_clicks):
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -271,7 +304,10 @@ def display_value(selectedData, dataset_path, fig):
             trigger = dash.callback_context.triggered[0]["prop_id"]
             # if trigger == 'graph.clickData':
             #     selection = [point["pointNumber"] for point in clickData["points"]]
-            if trigger == "interactive-embeddings.selectedData" and selectedData is not None:
+            if (
+                trigger == "interactive-embeddings.selectedData"
+                and selectedData is not None
+            ):
                 selection = [point["pointIndex"] for point in selectedData["points"]]
 
             if selection is not None:
@@ -320,7 +356,9 @@ def display_value(selectedData, dataset_path, fig):
                                 dbc.Col(
                                     [
                                         dhc.Br(),
-                                        dhc.H5("Groups discrimination performance results"),
+                                        dhc.H5(
+                                            "Groups discrimination performance results"
+                                        ),
                                         dhc.Br(),
                                         dhc.Br(),
                                         dhc.P(
@@ -341,7 +379,9 @@ def display_value(selectedData, dataset_path, fig):
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )

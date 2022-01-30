@@ -1,14 +1,14 @@
-import dash_bootstrap_components as dbc
-from flask_caching import Cache
-from dash.long_callback import DiskcacheLongCallbackManager
 from uuid import uuid4
-import flask
-import diskcache
-import dash_uploader as du
-from dash_extensions.enrich import DashProxy, MultiplexerTransform
 
-from layout.layout import layout
+import dash_bootstrap_components as dbc
+import dash_uploader as du
+import diskcache
+import flask
+from dash.long_callback import DiskcacheLongCallbackManager
+from dash_extensions.enrich import DashProxy, MultiplexerTransform
 from environment.settings import UPLOAD_FOLDER_ROOT
+from flask_caching import Cache
+from layout.layout import layout
 
 server = flask.Flask(__name__)  # define flask app.server
 launch_uid = uuid4()
@@ -24,8 +24,9 @@ app = DashProxy(
     prevent_initial_callbacks=True,
     suppress_callback_exceptions=True,
     external_stylesheets=[
-        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
-        dbc.themes.COSMO],
+        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
+        dbc.themes.COSMO,
+    ],
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
     long_callback_manager=long_callback_manager,
     transforms=[MultiplexerTransform()],

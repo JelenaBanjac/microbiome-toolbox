@@ -1,35 +1,38 @@
+import copy
+import itertools
 import math
 import os
 import pickle
-import itertools
+import re
+from collections import Counter
+from itertools import count, tee
+from textwrap import wrap
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import shap
+from ipywidgets import VBox
+from plotly.subplots import make_subplots
+from plotly.tools import mpl_to_plotly
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import (
+    GroupShuffleSplit,
+    cross_val_predict,
+    cross_val_score,
+)
+from sklearn.neighbors import LocalOutlierFactor
+
 from microbiome.enumerations import (
+    FeatureColumnsType,
     Normalization,
     ReferenceGroup,
     TimeUnit,
-    FeatureColumnsType,
 )
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.ensemble import RandomForestClassifier
-from plotly.subplots import make_subplots
-import plotly.express as px
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-from ipywidgets import VBox
-from sklearn.model_selection import cross_val_score, cross_val_predict
-import re
-from collections import Counter
-from itertools import tee, count
-from textwrap import wrap
-from sklearn.metrics import confusion_matrix
-from plotly.tools import mpl_to_plotly
-import shap
-from collections import Counter
-import copy
 
 RANDOM_STATE = 42
 

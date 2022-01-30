@@ -1,30 +1,35 @@
-from sklearn.model_selection import cross_val_score
-from sklearn.ensemble import RandomForestRegressor
-import pandas as pd
-import numpy as np
-from collections import defaultdict
-from sklearn.model_selection import GroupShuffleSplit, GroupKFold, GridSearchCV
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-from sklearn.feature_selection import VarianceThreshold
 import copy
-import scipy.stats as stats
-import scipy as sp
-import plotly.express as px
-from microbiome.statistical_analysis import regliner, permuspliner
+import itertools
+from collections import defaultdict
 from itertools import combinations
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import scipy as sp
+import scipy.stats as stats
+import shap
+from natsort import natsorted
+from plotly.subplots import make_subplots
+from sklearn.ensemble import IsolationForest, RandomForestRegressor
+from sklearn.feature_selection import VarianceThreshold
 from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.model_selection import (
+    GridSearchCV,
+    GroupKFold,
+    GroupShuffleSplit,
+    cross_val_score,
+)
+from sklearn.preprocessing import StandardScaler
+
 from microbiome.enumerations import (
     AnomalyType,
+    FeatureColumnsType,
     FeatureExtraction,
     TimeUnit,
-    FeatureColumnsType,
 )
-from natsort import natsorted
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import IsolationForest
-import shap
-import itertools
+from microbiome.statistical_analysis import permuspliner, regliner
 
 RANDOM_STATE = 42
 
@@ -126,8 +131,6 @@ class MicrobiomeTrajectory:
                 y=1,
             ),
         )
-
-        
 
         self.color_reference = "26,150,65"
         self.color_non_reference = "255,150,65"
@@ -990,7 +993,7 @@ class MicrobiomeTrajectory:
             results = self.selection_update_trace(
                 fig, time_block_ranges, number_of_changes, indices
             )(trace, points, selector)
-            
+
         # we need to add the on_click event to each trace separately
         for i in range(len(fig.data)):
             fig.data[i].on_click(_update_trace)
@@ -1006,13 +1009,13 @@ class MicrobiomeTrajectory:
         #     return
         if isinstance(fig, dict):
             fig = go.FigureWidget(fig)
-        
+
         # traces = len(fig.data)
 
         def _inner(trace, points, selector):
             ret_val = ""
             config = None
-            
+
             if trace["name"] == "Samples":
                 try:
                     if hasattr(points, "point_inds"):
@@ -1042,9 +1045,7 @@ class MicrobiomeTrajectory:
                 )
 
                 ret_val = "<b>Intervention bacteria "
-                ret_val += (
-                    f"for Subject {subject_ids[idx]}, Sample {sample_ids[idx]}</b><br><br>"
-                )
+                ret_val += f"for Subject {subject_ids[idx]}, Sample {sample_ids[idx]}</b><br><br>"
                 ret_val += "<br>".join(
                     [
                         f"<b>{self.dataset.nice_name(x[0])}</b>: {x[1]:.5f} → {x[2]:.5f}"
@@ -1097,7 +1098,7 @@ class MicrobiomeTrajectory:
                     trace["x"] = y_new
                     trace["y"] = y_pred_new
 
-                    y_pred_delta = (y_pred_new[-1] - y_pred[idx]) #* fig.layout.height
+                    y_pred_delta = y_pred_new[-1] - y_pred[idx]  # * fig.layout.height
                     print(y_pred_delta)
 
                     fig.add_trace(

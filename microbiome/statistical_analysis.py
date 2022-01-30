@@ -21,9 +21,9 @@ import matplotlib
 
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import statsmodels.api as sm
 
 

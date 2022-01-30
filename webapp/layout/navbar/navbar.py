@@ -1,6 +1,6 @@
 import dash_bootstrap_components as dbc
-from dash import html as dhc
 from dash import dcc
+from dash import html as dhc
 from utils.constants import home_location
 
 navbar = dbc.Navbar(

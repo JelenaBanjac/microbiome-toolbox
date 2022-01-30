@@ -1,7 +1,7 @@
 # from dash import html as dhc
+import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html as dhc
-import dash_bootstrap_components as dbc
 from utils.constants import methods_location
 
 layout = dhc.Div(
@@ -56,16 +56,22 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     [
-                        dbc.Col([
-                            dbc.Button(
-                                "Refresh",
-                                outline=True,
-                                color="dark",
-                                id="button-refresh-timeblocks",
-                                n_clicks=0,
-                            ),
-                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
-                            ], width=2,
+                        dbc.Col(
+                            [
+                                dbc.Button(
+                                    "Refresh",
+                                    outline=True,
+                                    color="dark",
+                                    id="button-refresh-timeblocks",
+                                    n_clicks=0,
+                                ),
+                                dhc.I(
+                                    title="Refresh plots if not loaded",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                            ],
+                            width=2,
                         ),
                         dbc.Col(dhc.P(), width=10),
                     ]
@@ -170,7 +176,6 @@ layout = dhc.Div(
                         ),
                     ]
                 ),
-
                 dhc.Br(),
                 dbc.Row(
                     [
@@ -247,7 +252,7 @@ layout = dhc.Div(
                 dhc.Br(),
                 dhc.Br(),
                 dcc.Link(
-                    "Back", 
+                    "Back",
                     href=methods_location,
                     style={
                         "textAlign": "center",

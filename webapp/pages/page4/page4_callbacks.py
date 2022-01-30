@@ -1,11 +1,12 @@
-from dash.dependencies import Input, Output
-from app import app
-from pages.home.home_data import get_trajectory
-from dash import dcc
-from dash import html as dhc
+import traceback
+
 import dash_bootstrap_components as dbc
 import numpy as np
-import traceback
+from app import app
+from dash import dcc
+from dash import html as dhc
+from dash.dependencies import Input, Output
+from pages.home.home_data import get_trajectory
 
 
 @app.callback(
@@ -40,7 +41,17 @@ def display_value(trajectory_path, number_od_timeblocks):
     Input("yaxis-delta-tick-timeblocks", "value"),
     Input("button-refresh-timeblocks", "n_clicks"),
 )
-def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree, height, width, x_delta, y_delta, n_clicks):
+def display_value(
+    trajectory_path,
+    time_block_ranges,
+    num_top_bacteria,
+    degree,
+    height,
+    width,
+    x_delta,
+    y_delta,
+    n_clicks,
+):
     results = []
     anomaly_type = []
     if trajectory_path:
@@ -79,7 +90,9 @@ def display_value(trajectory_path, time_block_ranges, num_top_bacteria, degree, 
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )

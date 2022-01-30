@@ -37,7 +37,7 @@ setuptools.setup(
         #"kiwisolver==1.2.0",
         #"libpng==1.6.37",
         #"libxgboost==0.90",
-        "matplotlib==2.2.2",
+        "matplotlib",  #==2.2.2
         "pyparsing",
         # "sip==4.19.24",
         # "backcall",
@@ -100,5 +100,8 @@ setuptools.setup(
         "multiprocess",
         "natsort",
         "umap-learn",
+        "black",
+        "isort",
+        "flake8",
     ]
 )

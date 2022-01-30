@@ -1,7 +1,7 @@
 # from dash import html as dhc
+import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html as dhc
-import dash_bootstrap_components as dbc
 from utils.constants import methods_location
 
 layout = dhc.Div(
@@ -121,25 +121,29 @@ layout = dhc.Div(
                     Below we see the feature importance for the microbiome trajectory (sorted from the most important to the least important feature).
                     """,
                 ),
-
                 dbc.Row(
                     [
-                        dbc.Col([
-                            dbc.Button(
-                                "Refresh",
-                                outline=True,
-                                color="dark",
-                                id="button-refresh-feature-extraction",
-                                n_clicks=0,
-                            ),
-                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
-                            ], width=2,
+                        dbc.Col(
+                            [
+                                dbc.Button(
+                                    "Refresh",
+                                    outline=True,
+                                    color="dark",
+                                    id="button-refresh-feature-extraction",
+                                    n_clicks=0,
+                                ),
+                                dhc.I(
+                                    title="Refresh plots if not loaded",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                            ],
+                            width=2,
                         ),
                         dbc.Col(dhc.P(), width=10),
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     dbc.Col(
                         dcc.Loading(
@@ -151,18 +155,20 @@ layout = dhc.Div(
                     ),
                 ),
                 dhc.Br(),
-                dbc.Row([
-                    dbc.Col(dhc.P(), width=3),
-                    dbc.Col(
-                        dcc.Loading(
-                            id="loading-3-0-table",
-                            children=dhc.Div(id="page-3-display-value-0-table"),
-                            type="default",
+                dbc.Row(
+                    [
+                        dbc.Col(dhc.P(), width=3),
+                        dbc.Col(
+                            dcc.Loading(
+                                id="loading-3-0-table",
+                                children=dhc.Div(id="page-3-display-value-0-table"),
+                                type="default",
+                            ),
+                            width=6,
                         ),
-                        width=6,
-                    ),
-                    dbc.Col(dhc.P(), width=3),
-                ]),
+                        dbc.Col(dhc.P(), width=3),
+                    ]
+                ),
                 dhc.Br(),
                 dhc.Br(),
                 # Reference trajectory
@@ -178,19 +184,24 @@ layout = dhc.Div(
                     """,
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
-                        dbc.Col([
-                            dbc.Button(
-                                "Refresh",
-                                outline=True,
-                                color="dark",
-                                id="button-refresh-reference-trajectory",
-                                n_clicks=0,
-                            ),
-                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
-                            ], width=2,
+                        dbc.Col(
+                            [
+                                dbc.Button(
+                                    "Refresh",
+                                    outline=True,
+                                    color="dark",
+                                    id="button-refresh-reference-trajectory",
+                                    n_clicks=0,
+                                ),
+                                dhc.I(
+                                    title="Refresh plots if not loaded",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                            ],
+                            width=2,
                         ),
                         dbc.Col(dhc.P(), width=10),
                     ]
@@ -217,7 +228,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("X-axis Δtick: ", width=2),
@@ -252,7 +262,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("Figure height: ", width=2),
@@ -314,16 +323,22 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     [
-                        dbc.Col([
-                            dbc.Button(
-                                "Refresh",
-                                outline=True,
-                                color="dark",
-                                id="button-refresh-reference-groups",
-                                n_clicks=0,
-                            ),
-                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
-                            ], width=2,
+                        dbc.Col(
+                            [
+                                dbc.Button(
+                                    "Refresh",
+                                    outline=True,
+                                    color="dark",
+                                    id="button-refresh-reference-groups",
+                                    n_clicks=0,
+                                ),
+                                dhc.I(
+                                    title="Refresh plots if not loaded",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                            ],
+                            width=2,
                         ),
                         dbc.Col(dhc.P(), width=10),
                     ]
@@ -350,7 +365,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("X-axis Δtick: ", width=2),
@@ -385,7 +399,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("Figure height: ", width=2),
@@ -447,16 +460,22 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     [
-                        dbc.Col([
-                            dbc.Button(
-                                "Refresh",
-                                outline=True,
-                                color="dark",
-                                id="button-refresh-groups",
-                                n_clicks=0,
-                            ),
-                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
-                            ], width=2,
+                        dbc.Col(
+                            [
+                                dbc.Button(
+                                    "Refresh",
+                                    outline=True,
+                                    color="dark",
+                                    id="button-refresh-groups",
+                                    n_clicks=0,
+                                ),
+                                dhc.I(
+                                    title="Refresh plots if not loaded",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                            ],
+                            width=2,
                         ),
                         dbc.Col(dhc.P(), width=10),
                     ]
@@ -483,7 +502,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("X-axis Δtick: ", width=2),
@@ -518,7 +536,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("Figure height: ", width=2),
@@ -580,16 +597,22 @@ layout = dhc.Div(
                 dhc.Br(),
                 dbc.Row(
                     [
-                        dbc.Col([
-                            dbc.Button(
-                                "Refresh",
-                                outline=True,
-                                color="dark",
-                                id="button-refresh-longitudinal",
-                                n_clicks=0,
-                            ),
-                            dhc.I(title="Refresh plots if not loaded", className="fa fa-info-circle", style={"marginLeft": "10px"}),
-                            ], width=2,
+                        dbc.Col(
+                            [
+                                dbc.Button(
+                                    "Refresh",
+                                    outline=True,
+                                    color="dark",
+                                    id="button-refresh-longitudinal",
+                                    n_clicks=0,
+                                ),
+                                dhc.I(
+                                    title="Refresh plots if not loaded",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                            ],
+                            width=2,
                         ),
                         dbc.Col(dhc.P(), width=10),
                     ]
@@ -616,7 +639,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("X-axis Δtick: ", width=2),
@@ -651,7 +673,6 @@ layout = dhc.Div(
                     ]
                 ),
                 dhc.Br(),
-
                 dbc.Row(
                     [
                         dbc.Col("Figure height: ", width=2),
@@ -700,7 +721,7 @@ layout = dhc.Div(
                 dhc.Br(),
                 dhc.Br(),
                 dcc.Link(
-                    "Back", 
+                    "Back",
                     href=methods_location,
                     style={
                         "textAlign": "center",

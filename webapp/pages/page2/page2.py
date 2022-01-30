@@ -1,7 +1,7 @@
 # from dash import html as dhc
+import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html as dhc
-import dash_bootstrap_components as dbc
 from utils.constants import methods_location
 
 layout = dhc.Div(
@@ -68,7 +68,7 @@ layout = dhc.Div(
                 dhc.Br(),
                 dhc.Br(),
                 dcc.Link(
-                    "Back", 
+                    "Back",
                     href=methods_location,
                     style={
                         "textAlign": "center",

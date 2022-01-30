@@ -1,11 +1,11 @@
-from dash.dependencies import Input, Output
-from app import app
-from pages.home.home_data import get_trajectory
-from dash import dcc
-from dash import html as dhc
 import traceback
+
 import dash_bootstrap_components as dbc
-from dash import dash_table
+from app import app
+from dash import dash_table, dcc
+from dash import html as dhc
+from dash.dependencies import Input, Output
+from pages.home.home_data import get_trajectory
 
 
 @app.callback(
@@ -21,7 +21,9 @@ def display_value(trajectory_path, n_clicks):
 
             if trajectory.feature_columns_plot is None:
                 results = [
-                    dcc.Markdown("Feature extraction has not been used. All features in the dataset are used to build the trajectory."),
+                    dcc.Markdown(
+                        "Feature extraction has not been used. All features in the dataset are used to build the trajectory."
+                    ),
                     dcc.Markdown(
                         "Select one option from the dropdown menu in Trajectory Settings section of home page."
                     ),
@@ -29,7 +31,8 @@ def display_value(trajectory_path, n_clicks):
             else:
                 results = [
                     dcc.Markdown(
-                        trajectory.feature_columns_plot_ret_val, dangerously_allow_html=True
+                        trajectory.feature_columns_plot_ret_val,
+                        dangerously_allow_html=True,
                     ),
                     dhc.Br(),
                     dcc.Graph(
@@ -42,7 +45,9 @@ def display_value(trajectory_path, n_clicks):
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -62,43 +67,42 @@ def display_value(trajectory_path):
 
             data = trajectory.feature_importance.to_dict("records")
             columns = [
-                {"name": i, "id": i, "deletable": True, "renamable": True} for i in trajectory.feature_importance.columns
+                {"name": i, "id": i, "deletable": True, "renamable": True}
+                for i in trajectory.feature_importance.columns
             ]
             tooltip_header = {i: i for i in trajectory.feature_importance.columns}
-            tooltip_data=[
+            tooltip_data = [
                 {
-                    column: {'value': str(value), 'type': 'markdown'}
+                    column: {"value": str(value), "type": "markdown"}
                     for column, value in row.items()
-                } for row in trajectory.feature_importance.to_dict('records')
+                }
+                for row in trajectory.feature_importance.to_dict("records")
             ]
 
             table = dash_table.DataTable(
-                id='datatable-important-features',
+                id="datatable-important-features",
                 # style_data={
                 #     'width': f'{max(df_dummy.columns, key=len)}%',
                 #     'minWidth': '50px',
                 #     'maxWidth': '500px',
                 # },
-                style_table={
-                    'height': 300, 
-                    'overflowX': 'auto'
-                },
+                style_table={"height": 300, "overflowX": "auto"},
                 style_cell={
-                    'height': 'auto',
+                    "height": "auto",
                     # all three widths are needed
-                    'minWidth': '200px', 
+                    "minWidth": "200px",
                     # 'width': f'{max(df_dummy.columns, key=len)}%',
-                    'maxWidth': '200px',
-                    'whiteSpace': 'normal'
+                    "maxWidth": "200px",
+                    "whiteSpace": "normal",
                 },
                 # Style headers with a dotted underline to indicate a tooltip
                 style_header={
-                    'textDecoration': 'underline',
-                    'textDecorationStyle': 'dotted',
+                    "textDecoration": "underline",
+                    "textDecorationStyle": "dotted",
                 },
-                editable=True, 
-                export_format='csv',
-                export_headers='display',
+                editable=True,
+                export_format="csv",
+                export_headers="display",
                 merge_duplicate_headers=True,
                 tooltip_delay=0,
                 tooltip_duration=None,
@@ -119,17 +123,20 @@ def display_value(trajectory_path):
                 table,
                 dhc.Br(),
             ]
-            
+
         except Exception as e:
             results = dbc.Alert(
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
     return results
+
 
 @app.callback(
     Output("page-3-display-value-1", "children"),
@@ -174,7 +181,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -234,7 +243,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -285,7 +296,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
@@ -319,7 +332,6 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                 dtick=y_delta,
             )
 
-
             result = trajectory.plot_animated_longitudinal_information(
                 degree=degree,
                 layout_settings=layout_settings,
@@ -337,7 +349,9 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )

@@ -1,10 +1,9 @@
-from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
+from app import app
 
 # from dash import html as dhc
 from dash import html as dhc
-
-from app import app
+from dash.dependencies import Input, Output
 from utils.constants import (
     home_location,
     page1_location,

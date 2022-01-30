@@ -1,11 +1,12 @@
 # from dash.dependencies import Input, Output
-from dash_extensions.enrich import Output, Input
+import traceback
+
+import dash_bootstrap_components as dbc
 from app import app
-from pages.home.home_data import get_dataset
 from dash import dcc
 from dash import html as dhc
-import dash_bootstrap_components as dbc
-import traceback
+from dash_extensions.enrich import Input, Output
+from pages.home.home_data import get_dataset
 
 
 @app.callback(
@@ -58,7 +59,6 @@ def display_value(dataset_path, n_clicks):
                             ]
                         )
                     ),
-                  
                     dhc.Br(),
                 ]
         except Exception as e:
@@ -66,7 +66,9 @@ def display_value(dataset_path, n_clicks):
                 children=[
                     dcc.Markdown("Microbiome trajectory error: " + str(e)),
                     dcc.Markdown(traceback.format_exc()),
-                    dcc.Markdown("Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."),
+                    dcc.Markdown(
+                        "Open an [issue on GitHub](https://github.com/JelenaBanjac/microbiome-toolbox/issues) or send an email to <msjelenabanjac@gmail.com>."
+                    ),
                 ],
                 color="danger",
             )
