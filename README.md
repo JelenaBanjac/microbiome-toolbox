@@ -33,7 +33,8 @@ Features:
 
 ## Installation
 The microbiome toolbox has a [PyPi package](https://pypi.org/project/microbiome-toolbox/) available.
-```
+
+```bash
 # create environment
 conda env create -f environment.yml
 
@@ -46,7 +47,8 @@ pip install microbiome-toolbox --user
 
 ## Run dashboard locally (on your computer)
 After you successfully installed the microbiome-toolbox and activated the environment, just execute the following commands:
-```
+
+```bash
 # set up the development environment (on Linux)
 source webapp/environment/.evv.development
 
