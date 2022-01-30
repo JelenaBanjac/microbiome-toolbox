@@ -59,9 +59,13 @@ After that, you can run the server on Windows.
 ## Examples
 
 For the toolbox usage, checkout the notebooks:
-- [1. Mouse Dataset (example data)](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mousedata_test.ipynb)
-- [2. Data Analysis and Exploration](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mouse_16S_healthy_reference_definition.ipynb)
-- [3. Microbiome trajectory and Outlier Detection with Intervention Simulation](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mouse_analysis_16S.ipynb)
+- [1. Mouse dataset](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/tree/main/notebooks/Mouse_16S/microbiome_dataset.ipynb)
+- [2. Mouse trajectory](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/microbiome_trajectory.ipynb)
+- [3. Human infants dataset](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/tree/main/notebooks/Human_Subramanian/microbiome_dataset.ipynb)
+- [4. Human infants trajectory](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Human_Subramanian/microbiome_trajectory.ipynb)
+
+## Issues
+If you notice any issues, please report them at [Github issues](https://github.com/JelenaBanjac/microbiome-toolbox/issues).
 
 ## Licence 
 The project is licensed under the [MIT license](./LICENCE).
