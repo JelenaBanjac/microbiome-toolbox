@@ -78,8 +78,6 @@ class MicrobiomeTrajectory:
         if train_indices is None:
             train_indices = (self.dataset.df.reference_group == True).values
 
-        # df_train = self.dataset.df[self.dataset.df.reference_group == True]
-        # df_test = self.dataset.df[self.dataset.df.reference_group == False]
         df_train = self.dataset.df.iloc[train_indices]
         df_test = self.dataset.df.iloc[~train_indices]
 
@@ -107,15 +105,12 @@ class MicrobiomeTrajectory:
             self.dataset.df.loc[df_test.index, "MMI"] = y_test_pred
 
         self.reference_groups = self.dataset.df.reference_group.values.astype(bool)
-        # indices = reference_groups == True
-        # df_indices = self.dataset.df.iloc[indices]
         self.X = self.dataset.df[self.feature_columns]
         self.y = self.dataset.df.age_at_collection.values.astype(float)
         self.y_pred = self.dataset.df.MMI.values.astype(float)
         self.sample_ids = self.dataset.df.sampleID.values.astype(str)
         self.subject_ids = self.dataset.df.subjectID.values.astype(str)
         self.groups = self.dataset.df.group.values.astype(str)
-        # reference_groups = df_indices.reference_group.values.astype(bool)
         self.x = np.linspace(np.min(self.y), np.max(self.y), 100)
 
         self.layout_settings_default = dict(
@@ -129,22 +124,7 @@ class MicrobiomeTrajectory:
             legend=dict(
                 x=1.01,
                 y=1,
-                # traceorder='normal',
             ),
-            # annotations=[go.layout.Annotation(
-            #     text=ret_val,
-            #     align='left',
-            #     showarrow=False,
-            #     xref='paper',
-            #     yref='paper',
-            #     x=1.53,
-            #     y=1,
-            #     width=330,
-            #     bordercolor='black',
-            #     bgcolor='white',
-            #     borderwidth=0.5,
-            #     borderpad=8,
-            # )]
         )
 
         
@@ -152,9 +132,7 @@ class MicrobiomeTrajectory:
         self.color_reference = "26,150,65"
         self.color_non_reference = "255,150,65"
         self.color_anomaly = "255,0,0"
-        # colors = px.colors.sequential.Greys
         colors = px.colors.qualitative.Plotly
-        # colors = sns.color_palette("Paired").as_hex()
         colors_rgb = [
             tuple(int(h.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)) for h in colors
         ]
@@ -913,7 +891,7 @@ class MicrobiomeTrajectory:
         fig : plotly.graph_objects.Figure
             Figure with added time boxes.
         """
-        current_time = time_block_ranges[0]  # time_start
+        current_time = time_block_ranges[0]
         box_height = self._get_axis_max_limit(fig, "y") // 3
 
         legend_labels = []
@@ -1012,8 +990,7 @@ class MicrobiomeTrajectory:
             results = self.selection_update_trace(
                 fig, time_block_ranges, number_of_changes, indices
             )(trace, points, selector)
-            # fig = results["fig"]
-
+            
         # we need to add the on_click event to each trace separately
         for i in range(len(fig.data)):
             fig.data[i].on_click(_update_trace)
@@ -1033,12 +1010,9 @@ class MicrobiomeTrajectory:
         # traces = len(fig.data)
 
         def _inner(trace, points, selector):
-            # if points.trace_name == "Samples":
-
             ret_val = ""
             config = None
-            # fig.data = fig.data[:traces]
-
+            
             if trace["name"] == "Samples":
                 try:
                     if hasattr(points, "point_inds"):
@@ -1047,9 +1021,6 @@ class MicrobiomeTrajectory:
                         idx = points
                 except:
                     pass
-
-                #print("trace", trace)
-                #print("points", points)
 
                 y = trace["x"]
                 y_pred = trace["y"]
@@ -1096,14 +1067,9 @@ class MicrobiomeTrajectory:
                     subject_ids_new = np.append(subject_ids, subject_ids[idx])
                     X_all = np.append(X.values, X_i, axis=0)
 
-                    # ["marker"]["color"]
-                    # colors = [trace["marker"]["color"]] * len(y) + ["gray"]
                     colors = [trace["marker"]["line"]["color"]] * len(y) + ["gray"]
-                    # line_colors = trace.line.color
                     widths = [trace["marker"]["line"]["width"]] * len(y) + [5]
                     sizes = [trace["marker"]["size"]] * len(y) + [20]
-                    # customdata = list(trace.customdata) + [trace.customdata[i]]
-
                 else:
                     y_new = np.append(y[:-1], y[idx])
                     y_pred_new = np.append(y_pred[:-1], sample_pred_new[0])
@@ -1111,22 +1077,16 @@ class MicrobiomeTrajectory:
                     X_all = np.append(X.values[:-1], X_i, axis=0)
                     sample_ids_new = np.append(sample_ids[:-1], sample_ids[idx])
 
-                    # colors = trace.marker.color
                     colors = trace["marker"]["line"]["color"]
-                    # line_colors = trace.line.color
                     sizes = trace["marker"]["size"]
 
                     widths = trace["marker"]["line"]["width"]
-                    # customdata = trace.customdata
                     fig.data = fig.data[:-1]
                 customdata = [
                     (a, b, x) for a, b, x in zip(subject_ids_new, sample_ids_new, X_all)
                 ]
 
-                
-
                 with fig.batch_update():
-                    # trace.line.color = line_colors
                     trace["marker"]["line"]["color"] = colors
                     trace["marker"]["size"] = sizes
 
@@ -1151,48 +1111,9 @@ class MicrobiomeTrajectory:
                             marker=dict(size=10, line=dict(width=2)),
                             marker_symbol="circle-open",
                             line={"width": 3},
-                            # visible="legendonly",
                         )
                     )
 
-                    # fig.update_layout(
-                    #     annotations=[
-                    #         dict(
-                    #             x=y_new[-1],
-                    #             y=y_pred_new[-1],
-                    #             # text="Intevention",
-                    #             # textangle=90,
-                    #             # font=dict(
-                    #             #     color="black",
-                    #             #     size=15
-                    #             # ),
-                    #             ax=0,
-                    #             # xref="x domain",
-                    #             yref="y",
-                    #             # axref="x domain",
-                    #             # ayref="y",
-                    #             ay=y_pred_delta,
-                    #             arrowcolor="black",
-                    #             arrowsize=2,
-                    #             arrowwidth=2,
-                    #             arrowhead=1,
-                    #         ),
-                    #         # dict(
-                    #         #     text=ret_val,
-                    #         #     align="left",
-                    #         #     font=dict(color="black", size=12),
-                    #         #     showarrow=False,
-                    #         #     xref="paper",
-                    #         #     yref="paper",
-                    #         #     x=0.01,
-                    #         #     y=0.99,
-                    #         #     bordercolor="black",
-                    #         #     bgcolor="white",
-                    #         #     borderwidth=0.5,
-                    #         #     borderpad=8,
-                    #         # ),
-                    #     ]
-                    # )
                 config = {
                     "toImageButtonOptions": {
                         "format": "svg",  # one of png, svg, jpeg, webp
@@ -1990,12 +1911,10 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
         fig.update_layout(
@@ -2057,7 +1976,7 @@ class MicrobiomeTrajectory:
                 - "config" : dict
                     Dictionary for the plotly export image options.
         """
-        indices = self.reference_groups == True  # & (self.anomaly == False)
+        indices = self.reference_groups == True
         anomaly_type = anomaly_type or self.anomaly_type
 
         ret_val = "<b>Performance Information</b><br>"
@@ -2109,12 +2028,10 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            # range=(0.0, self._get_axis_max_limit(fig, "x")),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            # range=(0.0, self._get_axis_max_limit(fig, "y")),
             **yaxis_settings_final,
         )
         fig.update_layout(
@@ -2239,12 +2156,10 @@ class MicrobiomeTrajectory:
 
         fig.update_xaxes(
             title=f"Age at collection [{self.dataset.time_unit.name}]",
-            # range=(0.0, y.max()),
             **xaxis_settings_final,
         )
         fig.update_yaxes(
             title=f"Microbiome Maturation Index [{self.dataset.time_unit.name}]",
-            # range=(0.0, y_pred.max()),
             **yaxis_settings_final,
         )
         fig.update_layout(

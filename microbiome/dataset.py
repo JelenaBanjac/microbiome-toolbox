@@ -25,6 +25,13 @@ import re
 from collections import Counter
 from itertools import tee, count
 from textwrap import wrap
+from sklearn.metrics import confusion_matrix
+from plotly.tools import mpl_to_plotly
+import shap
+from collections import Counter
+import copy
+
+RANDOM_STATE = 42
 
 
 class MicrobiomeDataset:
@@ -46,13 +53,8 @@ class MicrobiomeDataset:
     def __init__(self, file_name=None, feature_columns=FeatureColumnsType.BACTERIA):
 
         if file_name == "mouse_data":
-            # file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata_default.csv"
-            # TODO: remove two classification columns
-            # file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.csv"
             file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.csv"
         elif file_name == "human_data":
-            # file_name = "INPUT_FILES/website_humandata.xls"
-            # file_name = "/home/jelena/Desktop/microbiome2021/ssh/microbiome-toolbox/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
             file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
 
         # create dataframe regardless of delimiter (sep)
@@ -156,28 +158,12 @@ class MicrobiomeDataset:
             legend=dict(
                 x=1.01,
                 y=1,
-                # traceorder='normal',
             ),
-            # annotations=[go.layout.Annotation(
-            #     text=ret_val,
-            #     align='left',
-            #     showarrow=False,
-            #     xref='paper',
-            #     yref='paper',
-            #     x=1.53,
-            #     y=1,
-            #     width=330,
-            #     bordercolor='black',
-            #     bgcolor='white',
-            #     borderwidth=0.5,
-            #     borderpad=8,
-            # )]
         )
 
         self.axis_settings_default = dict(
             tick0=0,
             mirror=True,
-            # dtick=2,
             showline=True,
             linecolor="lightgrey",
             gridcolor="lightgrey",
@@ -522,7 +508,13 @@ class MicrobiomeDataset:
         ).tolist()
         return column_zscore
 
-    def plot_bacteria_abundances(self, number_of_columns=3, layout_settings=None, xaxis_settings=None, yaxis_settings=None):
+    def plot_bacteria_abundances(
+        self,
+        number_of_columns=3,
+        layout_settings=None,
+        xaxis_settings=None,
+        yaxis_settings=None,
+    ):
         number_of_rows = len(self.bacteria_columns) // number_of_columns + 1
 
         layout_settings_default = dict(
@@ -549,10 +541,10 @@ class MicrobiomeDataset:
             rows=number_of_rows,
             cols=number_of_columns,
             horizontal_spacing=0.1,
-            subplot_titles=['<br>'.join(wrap(str(b), 50)) for b in list(self.bacteria_columns)],
+            subplot_titles=[
+                "<br>".join(wrap(str(b), 50)) for b in list(self.bacteria_columns)
+            ],
         )
-        # y_max = self.df[self.bacteria_columns].values.max()+1
-        # y_min = self.df[self.bacteria_columns].values.min()-1
         for idx, bacteria_name in enumerate(self.bacteria_columns):
             df = self.df[["age_at_collection", bacteria_name]]
             fig.add_trace(
@@ -591,9 +583,9 @@ class MicrobiomeDataset:
                 **yaxis_settings_final,
             )
 
-        for i in fig['layout']['annotations']:
-            i['font'] = dict(size=10)
-        
+        for i in fig["layout"]["annotations"]:
+            i["font"] = dict(size=10)
+
         fig.update_layout(**layout_settings_final)
 
         config = {
@@ -608,8 +600,6 @@ class MicrobiomeDataset:
         results = {"fig": fig, "config": config}
 
         return results
-
-    
 
     def plot_bacteria_abundance_heatmaps(
         self,
@@ -632,7 +622,6 @@ class MicrobiomeDataset:
         # replace long bacteria names with nice names
         # df = df.rename({b: self.nice_name(b) for b in self.bacteria_columns}, axis=1)
         # update the bacteria_names with short names
-        
 
         def fill_collected(row):
             """Ïf we use bigger time units, then we need to find a median when collapsing all the samples in that time interval into one box in the heatmap"""
@@ -642,7 +631,9 @@ class MicrobiomeDataset:
             row["bacteria_value"] = avg_fn(val) if len(val) != 0 else np.nan
             return row
 
-        x, y = np.meshgrid(self.bacteria_columns, range(int(max(df.age_at_collection)) + 1))
+        x, y = np.meshgrid(
+            self.bacteria_columns, range(int(max(df.age_at_collection)) + 1)
+        )
 
         df_heatmap = pd.DataFrame(
             data={
@@ -657,7 +648,6 @@ class MicrobiomeDataset:
         df_heatmap = df_heatmap.fillna(0)
         df_heatmap = df_heatmap.apply(lambda row: fill_collected(row), axis=1)
 
-        
         # create new column bacteria_name_cat in order to sort dataframe by bacteria importance
         df_heatmap["bacteria_name_cat"] = pd.Categorical(
             df_heatmap["bacteria_name"],
@@ -680,13 +670,16 @@ class MicrobiomeDataset:
             ["age_at_collection", "bacteria_name_cat", "bacteria_value"]
         ]
         bacteria_names = list(map(self.nice_name, self.bacteria_columns))
-        uniquify(bacteria_names, suffs=(f'_{x!s}' for x in range(1, 100)) )
+        uniquify(bacteria_names, suffs=(f"_{x!s}" for x in range(1, 100)))
         bacteria_names = np.array(bacteria_names)
-        bacteria_names_mapping = {k:v for k,v in zip(self.bacteria_columns, bacteria_names)}
+        bacteria_names_mapping = {
+            k: v for k, v in zip(self.bacteria_columns, bacteria_names)
+        }
 
         def _rename_bacteria(row):
             row["bacteria_name_cat"] = bacteria_names_mapping[row["bacteria_name_cat"]]
             return row
+
         df_heatmap = df_heatmap.apply(lambda row: _rename_bacteria(row), axis=1)
 
         df_heatmap_pivot = df_heatmap.pivot(
@@ -695,11 +688,11 @@ class MicrobiomeDataset:
 
         if fillna:
             df_heatmap_pivot = df_heatmap_pivot.fillna(0)
-        
-        if dropna:
-            df_heatmap_pivot = df_heatmap_pivot.dropna(axis = 1, how = 'all')
 
-        xaxis_mapping = {v:k for k,v in enumerate(df_heatmap_pivot.columns.tolist())}
+        if dropna:
+            df_heatmap_pivot = df_heatmap_pivot.dropna(axis=1, how="all")
+
+        xaxis_mapping = {v: k for k, v in enumerate(df_heatmap_pivot.columns.tolist())}
         fig = px.imshow(
             df_heatmap_pivot.values,
             labels=dict(
@@ -713,8 +706,8 @@ class MicrobiomeDataset:
         if dropna:
             fig.update_xaxes(
                 side="bottom",
-                tickvals = [xaxis_mapping[i] for i in df_heatmap_pivot.columns.tolist()],
-                ticktext = df_heatmap_pivot.columns.tolist()
+                tickvals=[xaxis_mapping[i] for i in df_heatmap_pivot.columns.tolist()],
+                ticktext=df_heatmap_pivot.columns.tolist(),
             )
 
         config = {
@@ -809,8 +802,8 @@ class MicrobiomeDataset:
                     )
 
                     fig.update_xaxes(
-                        title=infant, 
-                        row=i + 1, 
+                        title=infant,
+                        row=i + 1,
                         col=j + 1,
                         **xaxis_settings_final,
                     )
@@ -840,8 +833,9 @@ class MicrobiomeDataset:
                         col=j + 1,
                     )
 
-                    fig.update_xaxes(title=infant, 
-                        row=i + 1, 
+                    fig.update_xaxes(
+                        title=infant,
+                        row=i + 1,
                         col=j + 1,
                         **xaxis_settings_final,
                     )
@@ -1062,19 +1056,6 @@ class MicrobiomeDataset:
             paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(l=0, r=0, b=0, pad=0),
             title_text="Embedding in 2D space",
-            # annotations=[
-            #     dict(
-            #         x=0.5,
-            #         y=1.05,
-            #         align="right",
-            #         valign="top",
-            #         showarrow=False,
-            #         xref="paper",
-            #         yref="paper",
-            #         xanchor="center",
-            #         yanchor="top",
-            #     )
-            # ],
         )
         if layout_settings is None:
             layout_settings = {}
@@ -1200,16 +1181,6 @@ class MicrobiomeDataset:
             return results
 
         return _inner
-
-
-### HELPERS for datasets?
-from sklearn.metrics import confusion_matrix
-from plotly.tools import mpl_to_plotly
-import shap
-from collections import Counter
-import copy
-
-RANDOM_STATE = 42
 
 
 def two_groups_differentiation(
@@ -1343,8 +1314,8 @@ def two_groups_differentiation(
         fig.update_layout(**layout_settings_final)
 
         y_pred = cross_val_predict(
-            rfc, 
-            X=X, 
+            rfc,
+            X=X,
             y=y,
             groups=groups,
             # cv=splits,
@@ -1420,17 +1391,17 @@ def plot_confusion_matrix(cm, classes, title):
     fig = go.Figure(data=data, layout=layout)
     return fig
 
+
 def uniquify(seq, suffs=None):
     """Make all the items unique by adding a suffix (1, 2, etc).
 
     `seq` is mutable sequence of strings.
     `suffs` is an optional alternative suffix iterable.
     """
-    
-    not_unique = [k for k,v in Counter(seq).items() if v>1]
+    not_unique = [k for k, v in Counter(seq).items() if v > 1]
     # suffix generator dict - e.g., {'name': <my_gen>, 'zip': <my_gen>}
-    suff_gens = dict(zip(not_unique, tee(suffs, len(not_unique))))  
-    for idx,s in enumerate(seq):
+    suff_gens = dict(zip(not_unique, tee(suffs, len(not_unique))))
+    for idx, s in enumerate(seq):
         try:
             suffix = str(next(suff_gens[s]))
         except KeyError:
