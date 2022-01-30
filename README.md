@@ -1,6 +1,6 @@
 <div align="center">
   <p>
-  <img src="https://image.freepik.com/free-vector/pathogen-microorganisms-set_74855-5909.jpg" alt="https://www.freepik.com/pch-vector" width="270" />
+  <img src="https://www.insideprecisionmedicine.com/wp-content/uploads/2019/07/Jul1_2019_GettyImages_927406508_BacterialMicrooginism-1.jpg" alt="Alexander Mikhailov / iStock / Getty Images" width="270" />
   </p>
   <p>
     <a href="">

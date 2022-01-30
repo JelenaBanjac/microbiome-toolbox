@@ -816,13 +816,15 @@ def serve_dataset_settings():
                     [
                         dbc.Col(
                             [
-                                "Feature columns <br>(for the novelty detection):",
+                                "Feature columns",
                                 dhc.I(
                                     title="More information",
                                     id="feature-columns-dataset-info",
                                     className="fa fa-info-circle",
                                     style={"marginLeft": "10px"},
                                 ),
+                                dhc.Br(),
+                                "(for the novelty detection):",
                                 feature_columns_dataset_modal,
                             ],
                             width=3,
