@@ -44,10 +44,22 @@ conda activate microbiome
 pip install microbiome-toolbox --user
 ```
 
+## Run dashboard locally (on your computer)
+After you successfully installed the microbiome-toolbox and activated the environment, just execute the following commands:
+```
+# set up the development environment (on Linux)
+source webapp/environment/.evv.development
+
+# run the server
+python webapp/index.py
+```
+The only step that differs for Windows is that you should modify the environment variables with values indicated in file `webapp/environment/.evv.development`. 
+After that, you can run the server on Windows.
+
 ## Examples
 
 For the toolbox usage, checkout the notebooks:
-- [1. Mouse Data Extraction (example data)](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mousedata_test.ipynb)
+- [1. Mouse Dataset (example data)](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mousedata_test.ipynb)
 - [2. Data Analysis and Exploration](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mouse_16S_healthy_reference_definition.ipynb)
 - [3. Microbiome trajectory and Outlier Detection with Intervention Simulation](https://nbviewer.jupyter.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/mouse_analysis_16S.ipynb)
 

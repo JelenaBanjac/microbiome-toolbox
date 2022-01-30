@@ -59,6 +59,8 @@ class MicrobiomeDataset:
             file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.csv"
         elif file_name == "human_data":
             file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
+        else:
+            raise Exception("Specify a valid file name. Or choose existing options: `mouse_data` or `human_data`")
 
         # create dataframe regardless of delimiter (sep)
         self.df = pd.read_csv(file_name, sep=None, engine="python")
@@ -402,7 +404,7 @@ class MicrobiomeDataset:
     @log_ratio_bacteria.setter
     def log_ratio_bacteria(self, val):
         bacteria_columns_all = self.__df.columns[
-            self.df.columns.str.startswith("bacteria_")
+            self.__df.columns.str.startswith("bacteria_")
         ].to_numpy()
         self._log_ratio_bacteria = val
         features = self.__df[bacteria_columns_all].values
