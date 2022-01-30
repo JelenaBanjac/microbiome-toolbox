@@ -1015,13 +1015,15 @@ def serve_trajectory_settings():
                     [
                         dbc.Col(
                             [
-                                "Feature columns <br>(for the trajectory model):",
+                                "Feature columns",
                                 dhc.I(
                                     title="More information",
                                     id="feature-columns-trajectory-info",
                                     className="fa fa-info-circle",
                                     style={"marginLeft": "10px"},
                                 ),
+                                dhc.Br(),
+                                "(for the trajectory model):",
                                 feature_columns_trajectory_modal,
                             ],
                             width=3,
