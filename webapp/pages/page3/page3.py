@@ -54,12 +54,12 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 Microbiome trajectory plots contain following information:
-                                - only mean line
-                                - only line with prediction interval and confidence interval
-                                - line with samples
-                                - longitudinal data, every subject
-                                - coloring per group (e.g. per country)
-                                - red-color dots or stars-shapes are outliers
+                                - only mean line,
+                                - only line with prediction interval and confidence interval,
+                                - line with samples,
+                                - longitudinal data, every subject,
+                                - coloring per group (e.g. per country),
+                                - red-color dots or stars-shapes are outliers.
                                 """,
                             ),
                             dcc.Markdown(
