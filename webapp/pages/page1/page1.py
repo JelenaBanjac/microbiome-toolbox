@@ -65,7 +65,7 @@ layout = dhc.Div(
                                 """
                                 Plot bacteria abundance mean and standard deviation w.r.t. time. 
                                 One plot corresponds to one bacteria with bacteria name specified in the title.
-                                The bacteria can be turned on/of by clicking on its corresponding label in the legend.
+                                The bacteria can be turned on/off by clicking on its corresponding label in the legend.
                                 """,
                             ),
                             dhc.Br(),

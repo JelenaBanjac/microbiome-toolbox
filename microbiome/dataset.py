@@ -5,9 +5,10 @@ import os
 import pickle
 import re
 from collections import Counter
-from itertools import count, tee
+from itertools import tee
 from textwrap import wrap
-
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -59,7 +60,7 @@ class MicrobiomeDataset:
             file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Mouse_16S/INPUT_FILES/website_mousedata.csv"
         elif file_name == "human_data":
             file_name = "https://raw.githubusercontent.com/JelenaBanjac/microbiome-toolbox/main/notebooks/Human_Subramanian/INPUT_FILES/subramanian_et_al_l2_ELM_website.csv"
-        else:
+        elif file_name is None:
             raise Exception("Specify a valid file name. Or choose existing options: `mouse_data` or `human_data`")
 
         # create dataframe regardless of delimiter (sep)
@@ -1328,7 +1329,7 @@ def two_groups_differentiation(
         cm = confusion_matrix(y_pred, y)
 
         img_src = plot_confusion_matrix(
-            cm, [f"non-{y_column}", y_column], "Confusion matrix"
+            cm, [y_column, f"non-{y_column}"], "Confusion matrix"
         )
 
         config = {
@@ -1365,15 +1366,16 @@ def plot_confusion_matrix(cm, classes, title):
 
     annotations = []
 
-    cm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+    cm = np.divide(cm.astype("float"), cm.sum())#[:, np.newaxis]
     fmt = ".1%"
+    
     thresh = cm.max() / 2.0
 
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         annotations.append(
             {
-                "x": classes[i],
-                "y": classes[j],
+                "x": classes[j],
+                "y": classes[i],
                 "font": {
                     "color": "white" if cm[i, j] > thresh else "black",
                     "size": 20,

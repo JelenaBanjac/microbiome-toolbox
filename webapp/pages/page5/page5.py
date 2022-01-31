@@ -24,12 +24,12 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                                There is a support for detecting anomalies in three different ways:
-                                1. `PREDICTION_INTERVAL`: samples outside the PI are considered to be anomalies,  
+                                There is a support for detecting anomalies in three different ways:  
+                                1. `PREDICTION_INTERVAL`: samples outside the PI are considered to be anomalies,   
                                 2. `LOW_PASS_FILTER`: the samples passing 2 standard deviations of the mean are considered to be anomalies,  
-                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous. 
+                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous.   
                                 By default, anomaly is a sample that is outside the prediction interval of microbiome trajectory that is built on reference samples.
-                                The anomaly type can be chosen on Home page under the Trajectory settings or below. If anomaly type is chosen below, it won’t affect the dataset available in other cards.
+                                The anomaly type can be chosen on Home page under the Trajectory settings or below. If anomaly type is chosen below, it will not affect the dataset available in other sections (methods).
 
                                 """,
                             ),

@@ -18,13 +18,12 @@ In the microbiome trajectory, the only linear part is the part where infant is y
 trajectory plateaus, therefore, this test can be used only before 2 years. 
 """
 import matplotlib
-
 matplotlib.use("agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import statsmodels.api as sm
+from matplotlib.figure import Figure
 
 
 def permuspliner(
@@ -312,7 +311,8 @@ def permuspliner_plot_permdistance(data, xlabel=None, ylabel=""):
     elif num_perms < 100:
         alpha_level = 0.25
 
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig = Figure(figsize=(10, 7), dpi=200)
+    ax = fig.subplots()
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     for p in dists.permutation.unique():

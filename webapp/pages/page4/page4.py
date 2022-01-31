@@ -27,22 +27,22 @@ layout = dhc.Div(
                             ),
                             dcc.Markdown(
                                 """
-                                Importance of different bacteria and their abundances across time blocks 
-                                - bacteria importance are stacked vertically where the size of the each bacteria sub-block represents its importance in that time block,
-                                - values in the box represent mean and standard deviation of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want),
-                                - total height of the box is fixed in all time blocks,
-                                - can choose number of important bacteria for time interval.
+                                Importance of different bacteria and their abundances across time blocks:   
+                                - bacteria importance are stacked vertically where the size of the each bacteria sub-block represents its importance in that time block,  
+                                - values in the box represent mean and standard deviation of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want),  
+                                - total height of the box is fixed in all time blocks,  
+                                - can choose number of important bacteria for time interval.  
                                 """
                             ),
                             dcc.Markdown(
                                 """
-                                Some of the available plot options:
-                                - If plot is not loaded, click Refresh button.
-                                - Hovering above the plot shows more information on the samples.
-                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
-                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
-                                - Plots can be downloaded in SVG format.
-                                - Time block widths can be modified by sliding the circles in the Time block ranges option.
+                                Some of the available plot options:  
+                                - If plot is not loaded, click Refresh button.  
+                                - Hovering above the plot shows more information on the samples.  
+                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.  
+                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.  
+                                - Plots can be downloaded in SVG format.  
+                                - Time block widths can be modified by sliding the circles in the Time block ranges option.  
                                 """
                             ),
                             dcc.Markdown(
@@ -225,7 +225,7 @@ layout = dhc.Div(
                                 id="time-block-ranges",
                                 min=0,
                                 # max=30,
-                                # value=[8, 10, 15, 17, 20],
+                                value=[8, 10, 15, 17, 20],
                                 pushable=1,
                                 allowCross=False,
                                 tooltip={"placement": "bottom", "always_visible": True},

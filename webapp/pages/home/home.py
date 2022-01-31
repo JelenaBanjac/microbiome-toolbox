@@ -47,10 +47,10 @@ mouse_data_modal = dbc.Modal(
             """
                 ),
                 dhc.Br(),
-                dhc.Img(
-                    src="https://www.ncbi.nlm.nih.gov/pmc/articles/instance/2894525/bin/nihms209492f1.jpg",
-                    width="100%",
-                ),
+                # dhc.Img(
+                #     src="https://www.ncbi.nlm.nih.gov/pmc/articles/instance/2894525/bin/nihms209492f1.jpg",
+                #     width="100%",
+                # ),
                 dcc.Markdown(
                     """
                 **Design of human microbiota transplant experiments** (A) The initial (first-generation) humanization procedure, including the diet shift. Brown arrows indicate fecal collection time points. (B) Reciprocal microbiota transplantations. Microbiota from first-generation humanized mice fed LF/PP or Western diets were transferred to LF/PP or Western diet-fed germ-free recipients. (C) Colonization of germ-free mice starting with a frozen human fecal sample. (D) Characterization of the postnatal assembly and daily variation of the humanized mouse gut microbiota. (E) Sampling of the humanized mouse gut microbiota along the length of the gastrointestinal tract. [Source](https://pubmed.ncbi.nlm.nih.gov/20368178/#&gid=article-figures&pid=fig-1-uid-0)
@@ -91,8 +91,8 @@ human_data_modal = dbc.Modal(
                References:  
                (1) [Subramanian et al. Persistent Gut Microbiota Immaturity in Malnourished Bangladeshi Children](https://gordonlab.wustl.edu/supplemental-data/supplemental-data-portal/subramanian-et-al-2014/), raw data.  
                (2) [The effects of exclusive breastfeeding on infant gut microbiota: a meta-analysis across populations](https://zenodo.org/record/1304367#.YfMX3ITMIkl), some processing included on raw data.  
-               (3) [Meta-analysis of effects of exclusive breastfeeding on infant gut microbiota across populations dataset](https://github.com/nhanhocu/metamicrobiome_breastfeeding)
-               (4) [Ho NT, et al., Meta-analysis of effects of exclusive breastfeeding on infant gut microbiota across populations](https://www.nature.com/articles/s41467-018-06473-x).  
+               (3) [Meta-analysis of effects of exclusive breastfeeding on infant gut microbiota across populations dataset](https://github.com/nhanhocu/metamicrobiome_breastfeeding)  
+               (4) [Ho NT, et al., Meta-analysis of effects of exclusive breastfeeding on infant gut microbiota across populations](https://www.nature.com/articles/s41467-018-06473-x).   
             """
                 ),
             ]
@@ -480,7 +480,7 @@ def serve_upload(session_id):
         ),
         dhc.Br(),
         dcc.Markdown(
-            """The Microbiome Toolbox implements methods that can be used for microbiome dataset analysis and microbiome trajectory prediction. The dashboard offers a wide variety of interactive visualizations.\
+            """The Microbiome Toolbox implements methods that can be used for microbiome dataset analysis and microbiome trajectory calculation. The dashboard offers a wide variety of interactive visualizations.\
             If you are just interested in seeing what methods are covered, you can use demo datasets (mouse data, human infants data) which enables the toolbox options below (by clicking the button).\
             You can also upload your own dataset (by clicking or drag-and-dropping the file into the area below). More methods and specific details of method implementations can be seen in the Github repository [`microbiome-toolbox`](https://github.com/JelenaBanjac/microbiome-toolbox).
         """

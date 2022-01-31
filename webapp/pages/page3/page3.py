@@ -23,27 +23,21 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 Microbiome trajectory is often used in the microbiome research as a visualization showing the microbiome development with time.
-                                """,
-                            ),
-                            dcc.Markdown(
-                                """
-                                The microbiome trajectory is influenced by many factors. 
-                                For example, nutrition is a critical modulator of the microbiome since it can affect the microbiome present in the subjects.
-                                The microbiome trajectory is built based on the reference samples.
-                                """,
-                            ),
-                            dcc.Markdown(
-                                """
+                                The reference samples are the samples that are used to build the microbiome trajectory.
+                                Using machine learning algorithms, we predict a Microbiome Maturation Index (MMI) as a function of time for each sample.
+                                A smooth fit is then used to obtain the trajectory.
                                 With the visualizations below we hope to discover the microbiome trajectory of a given dataset.
                                 """,
                             ),
-                            dcc.Markdown(
-                                """
-                                We expect to see the trajectory where the only linear part is the initial part until some point (in human microbiome it is usually until 2 years).
-                                After that, the trajectory plateaus.
-                                This means that it becomes much harder to determine infant's age based on its microbiota status if the infants is older than 2 years.
-                                """,
-                            ),
+                            # dcc.Markdown(
+                            #     """
+                            #     The microbiome trajectory is influenced by many factors. 
+                            #     For example, nutrition is a critical modulator of the microbiome since it can affect the microbiome present in the subjects.
+                            #     We expect to see the trajectory where the only linear part is the initial part until some point (in human microbiome it is usually until 2 years).
+                            #     After that, the trajectory plateaus.
+                            #     This means that it becomes much harder to determine infant's age based on its microbiota status if the infants is older than 2 years.
+                            #     """,
+                            # ),
                             dcc.Markdown(
                                 """
                                 Available techniques to decrease the size of the model while still keeping its performance are:
@@ -81,9 +75,9 @@ layout = dhc.Div(
                             ),
                             dcc.Markdown(
                                 """
-                                We used two different statistical analysis tools that are used to compare the significant difference between two trajectories.
-                                1. _Splinectomy longitudinal statistical analysis tools_: The 3 methods used are translated from R to Python and accommodated for our project. The original package is called [`splinectomeR`](https://github.com/RRShieldsCutler/splinectomeR), implemented in R. For more details please check [Shields-Cutler et al. SplinectomeR Enables Group Comparisons in Longitudinal Microbiome Studies](https://www.frontiersin.org/articles/10.3389/fmicb.2018.00785/full). In short, the test compares whether the area between two polynomial lines is significantly different. Our trajectory lines are the polynomial lines with degrees 2 or 3.
-                                2. _Linear regression statistical analysis tools_: A statistical method based on comparing the two linear lines (line y=k*x+n). To compare two linear lines, we compare the significant difference in the two coefficients that represent the line k (slope) and n (y-axis intersection).
+                                We used two different statistical analysis tools that are used to compare the significant difference between two trajectories:  
+                                - _Splinectomy longitudinal statistical analysis tools_: The 3 methods used are translated from R to Python and accommodated for our project. The original package is called [`splinectomeR`](https://github.com/RRShieldsCutler/splinectomeR), implemented in R. For more details please check [Shields-Cutler et al. SplinectomeR Enables Group Comparisons in Longitudinal Microbiome Studies](https://www.frontiersin.org/articles/10.3389/fmicb.2018.00785/full). In short, the test compares whether the area between two polynomial lines is significantly different. Our trajectory lines are the polynomial lines with degrees 2 or 3.  
+                                - _Linear regression statistical analysis tools_: A statistical method based on comparing the two linear lines (line y=k*x+n). To compare two linear lines, we compare the significant difference in the two coefficients that represent the line k (slope) and n (y-axis intersection).  
                                 """,
                             ),
                             dcc.Markdown(
@@ -114,9 +108,13 @@ layout = dhc.Div(
                 dhc.Br(),
                 dcc.Markdown(
                     """
-                    Metrics used to evaluate the performances of different model sizes are:
-                    - [`mean_squared_error`](https://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values)
-                    - [`R2`](https://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values)
+                    Metrics used to evaluate the performances of different model sizes are:  
+                    - [`mean_squared_error`](https://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values)  
+                    - [`R2`](https://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values)  
+                    """,
+                ),
+                dcc.Markdown(
+                    """
                     The x-axis shows the number of features used to train the model, y-axis shows the performance value.
                     Below we see the feature importance for the microbiome trajectory (sorted from the most important to the least important feature).
                     """,

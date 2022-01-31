@@ -49,7 +49,10 @@ def display_value(dataset_path, n_clicks):
                                             "Reference groups differentiation can be seen below."
                                         ),
                                         dcc.Markdown(
-                                            "The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. This would mean that the two groups can be easily separated knowing their taxa abundances and/or metadata information."
+                                            """
+                                            The ideal separation between two groups (reference vs. non-reference) will have 100% of values detected on the second diagonal. 
+                                            This would mean that the two groups can be easily separated knowing their taxa abundances and/or metadata information.
+                                            """
                                         ),
                                         dcc.Markdown(f"Accuracy: {acccuracy*100:.2f}"),
                                         dcc.Markdown(f"F1-score: {f1score:.2f}"),

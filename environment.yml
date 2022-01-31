@@ -75,7 +75,7 @@ dependencies:
     - catboost
     - statsmodels
     - numpy
-    - celery
+    # - celery
     - redis
     # - scikit-bio
     - shap
