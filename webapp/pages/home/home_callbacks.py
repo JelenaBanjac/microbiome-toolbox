@@ -441,7 +441,7 @@ def dataset_buttons_click(
 from dash_extensions.snippets import send_file
 @app.callback(
     Output("download", "data"), 
-    [Input("btn", "n_clicks")],
+    [Input("download-btn", "n_clicks")],
     [State("microbiome-dataset-location", "data"),]
 )
 def func(n_clicks, dataset_path):

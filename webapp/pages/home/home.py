@@ -562,12 +562,17 @@ def serve_upload(session_id):
                                     style={"marginLeft": "10px"},
                                 ),
                                 custom_data_modal,
-                                dhc.Div(
+                                dhc.Div([
                                     dhc.Small(
-                                        "Upload your CSV dataset to enable the button."
+                                        """
+                                        Upload your CSV dataset to enable the button.
+                                        """,
+                                        id="small-upload-info-text",
+                                        hidden=False,
                                     ),
-                                    id="small-upload-info-text",
-                                    hidden=False,
+                                    
+                                    ],
+                                    
                                 ),
                             ]
                         ),
@@ -588,6 +593,11 @@ def serve_upload(session_id):
                                         filetypes=["csv"],
                                         upload_id=session_id,
                                     )
+                                ),
+                                dhc.Small(
+                                    """
+                                    Note: This option is experimental and doesn't cover all use-cases.
+                                    """
                                 ),
                             ],
                             width=6,
