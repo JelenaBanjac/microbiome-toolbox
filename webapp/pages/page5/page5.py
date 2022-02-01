@@ -28,19 +28,22 @@ layout = dhc.Div(
                                 1. `PREDICTION_INTERVAL`: samples outside the PI are considered to be anomalies,   
                                 2. `LOW_PASS_FILTER`: the samples passing 2 standard deviations of the mean are considered to be anomalies,  
                                 3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous.   
+                                """,
+                            ),
+                            dcc.Markdown(
+                                """
                                 By default, anomaly is a sample that is outside the prediction interval of microbiome trajectory that is built on reference samples.
                                 The anomaly type can be chosen on Home page under the Trajectory settings or below. If anomaly type is chosen below, it will not affect the dataset available in other sections (methods).
-
                                 """,
                             ),
                             dcc.Markdown(
                                 """ 
                                 Some of the available plot options:
-                                - If plot is not loaded, click Refresh button.
-                                - Hovering above the plot shows more information on the samples.
-                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
-                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
-                                - Plots can be downloaded in SVG format.
+                                - if plot is not loaded, click Refresh button,
+                                - hovering above the plot shows more information on the samples,
+                                - clicking on the labels on the legend can show/hide the clicked item from the plot,
+                                - reset plot to initial state is enabled by clicking Home option or Refresh button,
+                                - plots can be downloaded in SVG format.
                                 """
                             ),
                             dcc.Markdown(

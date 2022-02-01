@@ -34,9 +34,9 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 If an outlier is not back on the reference trajectory, possible reasons are:
-                                - The time block in which the outlier is located is not wide or small enough.
-                                - The reference samples have samples that should not be considered reference samples.
-                                - Number of top important bacteria to consider is not high enough to help an outlier to become a reference sample.
+                                - the time block in which the outlier is located is not wide or small enough,
+                                - the reference samples have samples that should not be considered reference samples,
+                                - the number of top important bacteria to consider is not high enough to help an outlier to become a reference sample.
                                 """,
                             ),
                             dcc.Markdown(

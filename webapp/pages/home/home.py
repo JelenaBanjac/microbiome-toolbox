@@ -51,11 +51,11 @@ mouse_data_modal = dbc.Modal(
                 #     src="https://www.ncbi.nlm.nih.gov/pmc/articles/instance/2894525/bin/nihms209492f1.jpg",
                 #     width="100%",
                 # ),
-                dcc.Markdown(
-                    """
-                **Design of human microbiota transplant experiments** (A) The initial (first-generation) humanization procedure, including the diet shift. Brown arrows indicate fecal collection time points. (B) Reciprocal microbiota transplantations. Microbiota from first-generation humanized mice fed LF/PP or Western diets were transferred to LF/PP or Western diet-fed germ-free recipients. (C) Colonization of germ-free mice starting with a frozen human fecal sample. (D) Characterization of the postnatal assembly and daily variation of the humanized mouse gut microbiota. (E) Sampling of the humanized mouse gut microbiota along the length of the gastrointestinal tract. [Source](https://pubmed.ncbi.nlm.nih.gov/20368178/#&gid=article-figures&pid=fig-1-uid-0)
-            """
-                ),
+            #     dcc.Markdown(
+            #         """
+            #     **Design of human microbiota transplant experiments** (A) The initial (first-generation) humanization procedure, including the diet shift. Brown arrows indicate fecal collection time points. (B) Reciprocal microbiota transplantations. Microbiota from first-generation humanized mice fed LF/PP or Western diets were transferred to LF/PP or Western diet-fed germ-free recipients. (C) Colonization of germ-free mice starting with a frozen human fecal sample. (D) Characterization of the postnatal assembly and daily variation of the humanized mouse gut microbiota. (E) Sampling of the humanized mouse gut microbiota along the length of the gastrointestinal tract. [Source](https://pubmed.ncbi.nlm.nih.gov/20368178/#&gid=article-figures&pid=fig-1-uid-0)
+            # """
+            #     ),
                 dhc.Br(),
                 dcc.Markdown(
                     """
@@ -63,6 +63,7 @@ mouse_data_modal = dbc.Modal(
                (1) [Joseph Nathaniel Paulson, 2016, metagenomeSeq: Statistical analysis for sparse high-throughput sequencing](https://bioconductor.org/packages/release/bioc/vignettes/metagenomeSeq/inst/doc/metagenomeSeq.pdf).  
                (2) Package page: [`metagenomeSeq`](https://bioconductor.org/packages/release/bioc/html/metagenomeSeq.html).  
                (3) [Turnbaugh PJ, Ridaura VK, Faith JJ, Rey FE, Knight R, Gordon JI. The effect of diet on the human gut microbiome: a metagenomic analysis in humanized gnotobiotic mice](https://pubmed.ncbi.nlm.nih.gov/20368178/).  
+               (4) Description of deign of human microbiota transplant experiments [here](https://pubmed.ncbi.nlm.nih.gov/20368178/#&gid=article-figures&pid=fig-1-uid-0).
             """
                 ),
             ]
@@ -83,7 +84,7 @@ human_data_modal = dbc.Modal(
             [
                 dcc.Markdown(
                     """
-                Dataset we used is taken from (3) and only around 80 samples are selected to be used on the web dashboard due to its size.
+                Dataset we used is taken from (3) and only around 66 samples are selected to be used on the web dashboard due to its size.
             """
                 ),
                 dcc.Markdown(
@@ -162,7 +163,7 @@ differentiation_score_modal = dbc.Modal(
                 dcc.Markdown(
                     """
                Differentiation score tells us how good the samples from a reference group are separable from the samples from the non-reference group.
-               The measure we use is [F1-score](https://deepai.org/machine-learning-glossary-and-terms/f-score#:~:text=The%20F%2Dscore%2C%20also%20called,positive'%20or%20'negative'.) since the underlaying model is a binary classifier.
+               The measure we use is [F1-score](https://deepai.org/machine-learning-glossary-and-terms/f-score#:~:text=The%20F%2Dscore%2C%20also%20called,positive'%20or%20'negative'.) since the underlying model is a binary classifier.
                Under the hood, we train a binary classifier to differentiate between two groups of samples (reference and non-reference). The result of this classification is the F1-score. 
             """
                 ),
@@ -629,6 +630,17 @@ def serve_dataset_table():
     unique_groups = dhc.Div(id="upload-unique-groups")
     number_of_reference_samples = dhc.Div(id="upload-number-of-reference-samples")
     differentiation_score = dhc.Div(id="upload-differentiation-score")
+
+    from dash_extensions import Download
+    download_btn = dhc.Div([
+        dbc.Button("Export", 
+                    outline=True,
+                    color="dark",
+                    id="download-btn",
+        ), 
+        Download(id="download")
+    ])
+
     table = dash_table.DataTable(
         id="upload-datatable",
         # style_data={
@@ -651,8 +663,8 @@ def serve_dataset_table():
             "textDecorationStyle": "dotted",
         },
         editable=True,
-        export_format="csv",
-        export_headers="display",
+        # export_format="csv",  # doesn't work for some reason, I implement custom Export
+        # export_headers="display",
         merge_duplicate_headers=True,
         tooltip_delay=0,
         tooltip_duration=None,
@@ -730,6 +742,7 @@ def serve_dataset_table():
             className="md-12",
             # style={"height": 250},
         ),
+        download_btn,
         dcc.Loading(table, id="upload-datatable-loading", type="default"),
         dhc.Br(),
     ]

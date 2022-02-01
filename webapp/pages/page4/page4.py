@@ -37,12 +37,12 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 Some of the available plot options:  
-                                - If plot is not loaded, click Refresh button.  
-                                - Hovering above the plot shows more information on the samples.  
-                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.  
-                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.  
-                                - Plots can be downloaded in SVG format.  
-                                - Time block widths can be modified by sliding the circles in the Time block ranges option.  
+                                - if plot is not loaded, click Refresh button,  
+                                - hovering above the plot shows more information on the samples,  
+                                - clicking on the labels on the legend can show/hide the clicked item from the plot,  
+                                - reset plot to initial state is enabled by clicking Home option or Refresh button,  
+                                - plots can be downloaded in SVG format,  
+                                - time block widths can be modified by sliding the circles in the Time block ranges option.  
                                 """
                             ),
                             dcc.Markdown(

@@ -32,22 +32,22 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 Some of the methods for data analysis and exploration provided are:
-                                - Sampling statistics,
-                                - Heatmap of taxa abundances w.r.t. time,
-                                - Taxa abundance errorbars,
-                                - Dense longitudinal data,
+                                - sampling statistics,
+                                - heatmap of taxa abundances w.r.t. time,
+                                - taxa abundance errorbars,
+                                - dense longitudinal data,
                                 - Shannon diversity index and Simpson dominance index (in the Github repository microbiome-toolbox),
-                                - Embeddings (different algorithms that we used in 2D and 3D space) with interactive selection and reference analysis.
+                                - embeddings (different algorithms that we used in 2D and 3D space) with interactive selection and reference analysis.
                                 """,
                             ),
                             dcc.Markdown(
                                 """
                                 Some of the available plot options:
-                                - If plot is not loaded, click Refresh button.
-                                - Hovering above the plot shows more information on the samples.
-                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
-                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
-                                - Plots can be downloaded in SVG format.
+                                - if plot is not loaded, click Refresh button,
+                                - hovering above the plot shows more information on the samples,
+                                - clicking on the labels on the legend can show/hide the clicked item from the plot,
+                                - reset plot to initial state is enabled by clicking Home option or Refresh button,
+                                - plots can be downloaded in SVG format.
                                 """,
                             ),
                             dcc.Markdown(

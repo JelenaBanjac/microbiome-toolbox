@@ -69,8 +69,8 @@ layout = dhc.Div(
                                 - R^2 score (goal: bigger), percent of variance captured,
                                 - Pearson correlation (MMI, age_at_collection),
                                 - Prediction Interval (PI) is prediction interval 95%, the interval in which we expect the healthy reference to fall in (goal: smaller),
-                                - Standard deviation of the error,
-                                - Visual check.
+                                - standard deviation of the error,
+                                - visual check.
                                 """,
                             ),
                             dcc.Markdown(
@@ -83,13 +83,12 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 Some of the available plot options:
-                                - If plot is not loaded, click Refresh button.
-                                - Hovering above the plot shows more information on the samples.
-                                - Clicking on the labels on the legend can show/hide the clicked item from the plot.
-                                - Reset plot to initial state is enabled by clicking Home option or Refresh button.
-                                - Plots can be downloaded in SVG format.
-                                - A p-value less than 0.05 (typically ≤ 0.05) is statistically significant (i.e. lines are different). A p-value higher than 0.05 (> 0.05) is not statistically significant and indicates strong evidence for the null hypothesis (H0: two lines have similar slope/intersection/etc.). This means we retain the null hypothesis and reject the alternative hypothesis.
-
+                                - if plot is not loaded, click Refresh button,
+                                - hovering above the plot shows more information on the samples,
+                                - clicking on the labels on the legend can show/hide the clicked item from the plot,
+                                - reset plot to initial state is enabled by clicking Home option or Refresh button,
+                                - plots can be downloaded in SVG format,
+                                - a p-value less than 0.05 (typically ≤ 0.05) is statistically significant (i.e. lines are different). A p-value higher than 0.05 (> 0.05) is not statistically significant and indicates strong evidence for the null hypothesis (H0: two lines have similar slope/intersection/etc.). This means we retain the null hypothesis and reject the alternative hypothesis.
                                 """,
                             ),
                             dcc.Markdown(

@@ -15,6 +15,7 @@ def set_dataset(dataset, path):
     # path = path_dir / f"{button_id}-dataset.pickle"
     with open(path, "wb") as f:
         dill.dump(dataset, f)
+        dataset.df.to_csv(path.replace(".pickle", ".csv"), index=False)
     return path
 
 

@@ -66,6 +66,8 @@ class MicrobiomeDataset:
         # create dataframe regardless of delimiter (sep)
         self.df = pd.read_csv(file_name, sep=None, engine="python")
 
+        print("columns", self.df.columns)
+
         # collect all columns that are missing
         missing_columns = []
 
@@ -80,7 +82,8 @@ class MicrobiomeDataset:
 
         # check if there is at least one column with bacteria
         bacteria_columns = self.df.columns[
-            (~self.df.columns.isin(self.specific_columns))
+            # (~self.df.columns.isin(self.specific_columns))
+            (~self.df.columns.str.contains('|'.join(self.specific_columns)))
             & (~self.df.columns.isin(self.future_columns))
             & (~self.df.columns.str.startswith("meta_"))
             & (~self.df.columns.str.startswith("id_"))
@@ -95,16 +98,17 @@ class MicrobiomeDataset:
                 },
                 axis=1,
             )
-            self.df = self.df.apply(lambda row: self._fix_zeros(row), axis=1)
-
         else:
             missing_columns.append("bacteria_*")
 
+        print("bacteria_columns", self.bacteria_columns)
         if len(missing_columns) > 0:
             raise Exception(
                 "There was an error processing this file! Missing columns: "
                 + ",".join(missing_columns)
             )
+        
+        self.df = self.df.apply(lambda row: self._fix_zeros(row), axis=1)
 
         # preprocess df
         self.df.sampleID = self.df.sampleID.astype(str)
@@ -1319,13 +1323,30 @@ def two_groups_differentiation(
         )
         fig.update_layout(**layout_settings_final)
 
-        y_pred = cross_val_predict(
+        f1_scores = cross_val_score(
             rfc,
-            X=X,
-            y=y,
+            X,
+            y,
+            scoring="f1",
             groups=groups,
             # cv=splits,
         )
+        accuracy_scores = cross_val_score(
+            rfc,
+            X,
+            y,
+            scoring="accuracy",
+            groups=groups,
+            # cv=splits,
+        )
+        y_pred = cross_val_predict(
+            rfc,
+            X,
+            y,
+            groups=groups,
+            # cv=splits,
+        )
+        
         cm = confusion_matrix(y_pred, y)
 
         img_src = plot_confusion_matrix(
