@@ -14,7 +14,7 @@ layout = dhc.Div(
                         [
                             dcc.Link("Back", href=methods_location),
                             dhc.H3(
-                                "Bacteria Importance with Time",
+                                "Importance with Time",
                                 style={
                                     "textAlign": "center",
                                 },

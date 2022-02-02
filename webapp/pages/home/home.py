@@ -565,7 +565,7 @@ def serve_upload(session_id):
                                 dhc.Div([
                                     dhc.Small(
                                         """
-                                        Upload your CSV dataset to enable the button.
+                                        After uploading your file, please click on the "Custom data" button above to activate your dataset for further analyses.
                                         """,
                                         id="small-upload-info-text",
                                         hidden=False,
@@ -596,7 +596,7 @@ def serve_upload(session_id):
                                 ),
                                 dhc.Small(
                                     """
-                                    Note: This option is experimental and doesn't cover all use-cases.
+                                    Note: This option is experimental and doesn't cover all use-cases (or handle all exceptions related to data-formatting issues).
                                     """
                                 ),
                             ],
@@ -1256,7 +1256,7 @@ def serve_methods():
                 ),
                 dbc.CardBody(
                     [
-                        dhc.H4("Bacteria Importance with Time", className="card-title"),
+                        dhc.H4("Importance with Time", className="card-title"),
                         # dhc.P(
                         #     "Some quick example text to build on the card title and "
                         #     "make up the bulk of the card's content.",
@@ -1383,6 +1383,44 @@ def serve_layout():
     trajectory_settings = serve_trajectory_settings()
     methods = serve_methods()
 
+    known_issues = dbc.Container(
+        dbc.Row(
+            dbc.Col(
+                # dbc.Button(
+                #     [
+                #         "Known issues",
+                #         dhc.I(
+                #             title="Known issues",
+                #             className="fa fa-bug",
+                #             style={"marginLeft": "10px"},
+                #         ),
+                #     ],
+                #     outline=True,
+                #     color="dark",
+                #     href='https://github.com/JelenaBanjac/microbiome-toolbox/issues'
+                # ), 
+                dcc.Link(
+                    [
+                        "Known issues",
+                        dhc.I(
+                            title="Known issues",
+                            className="fa fa-bug",
+                            style={"marginLeft": "10px"},
+                        ),
+                    ],
+                    href='https://github.com/JelenaBanjac/microbiome-toolbox/issues',
+                    target="_blank",
+                ), 
+            style={"textAlign": "center"},
+            width=12)
+        )
+    )
+    # dbc.Button("Export", 
+    #             outline=True,
+    #             color="dark",
+    #             id="download-btn",
+    # )
+
     layout = dhc.Div(
         id="home-layout",
         children=[
@@ -1428,6 +1466,8 @@ def serve_layout():
                                     "zIndex": "1000",
                                 },
                             ),
+                            dhc.Br(),
+                            known_issues,
                             dhc.Br(),
                         ]
                     ),
