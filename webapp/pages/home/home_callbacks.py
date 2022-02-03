@@ -212,6 +212,8 @@ def toggle_modal(n1, n2, is_open):
         # Update dropdown options for dataset settings
         Output("settings-feature-columns-choice-dataset", "value"),
         Output("settings-reference-group-choice", "value"),
+        Output("settings-reference-group-novelty-metric", "value"),
+        Output("settings-reference-group-novelty-n-neighbors", "value"),
         Output("settings-time-unit-choice", "value"),
         Output("settings-normalized-choice", "value"),
         Output("settings-log-ratio-bacteria-choice", "value"),
@@ -223,6 +225,7 @@ def toggle_modal(n1, n2, is_open):
         # Disable reference group choice if references are all samples
         Output("settings-reference-group-choice", "disabled"),
         Output("card-2-btn", "disabled"),
+        # Output("reference-group-novelty-settings-container", "hidden")
     ],
     [
         Input("button-mouse-data", "n_clicks"),
@@ -269,6 +272,8 @@ def dataset_buttons_click(
     card_6_btn_disabled = True
 
     reference_group = None
+    metric = "braycurtis"
+    n_neighbors = 2
     time_unit = None
     feature_columns = None
     normalized = None
@@ -277,7 +282,7 @@ def dataset_buttons_click(
     anomaly_type = None
     feature_extraction = None
     log_ratio_bacteria_choices = []
-
+    novelty_settings_hidden = True
     two_references_not_available = False
 
     if (
@@ -324,7 +329,7 @@ def dataset_buttons_click(
             )
 
     if dataset is not None:
-
+        # set all default values
         reference_group = ReferenceGroup.USER_DEFINED.name
         time_unit = TimeUnit.DAY.name
         feature_columns = FeatureColumnsType.BACTERIA.name
@@ -336,7 +341,13 @@ def dataset_buttons_click(
 
         dataset.time_unit = TimeUnit[time_unit]
         dataset.feature_columns = FeatureColumnsType[feature_columns]
-        dataset.reference_group_choice = ReferenceGroup[reference_group]
+        if ReferenceGroup[reference_group] == ReferenceGroup.NOVELTY_DETECTION:
+            settings = {"metric": metric, "n_neighbors": n_neighbors}
+            # novelty_settings_hidden = False
+        else:
+            settings = None
+            # novelty_settings_hidden = True
+        dataset.set_reference_group_choice(ReferenceGroup[reference_group], settings)
         dataset.log_ratio_bacteria = log_ratio_bacteria
         dataset.normalized = Normalization[normalized]
 
@@ -425,6 +436,8 @@ def dataset_buttons_click(
         # Update dropdown options for dataset settings
         feature_columns,
         reference_group,
+        metric,
+        n_neighbors,
         time_unit,
         normalized,
         log_ratio_bacteria,
@@ -436,6 +449,7 @@ def dataset_buttons_click(
         # Disable
         two_references_not_available,
         two_references_not_available,
+        # novelty_settings_hidden,
     )
 
 from dash_extensions.snippets import send_file
@@ -446,6 +460,17 @@ from dash_extensions.snippets import send_file
 )
 def func(n_clicks, dataset_path):
     return send_file(dataset_path.replace(".pickle", ".csv"))
+
+@app.callback(
+    Output("reference-group-novelty-settings-container", "hidden"), 
+    [Input("settings-reference-group-choice", "value")],
+)
+def novelty_settings(reference_group):
+    reference_group = reference_group or ReferenceGroup.USER_DEFINED.name
+    if ReferenceGroup[reference_group] == ReferenceGroup.NOVELTY_DETECTION:
+        return False
+    else:
+        return True
 
 @app.callback(
     [
@@ -463,6 +488,8 @@ def func(n_clicks, dataset_path):
         # Get dropdown options for log-bacteria
         State("settings-feature-columns-choice-dataset", "value"),
         State("settings-reference-group-choice", "value"),
+        State("settings-reference-group-novelty-metric", "value"),
+        State("settings-reference-group-novelty-n-neighbors", "value"),
         State("settings-time-unit-choice", "value"),
         State("settings-normalized-choice", "value"),
         State("settings-log-ratio-bacteria-choice", "value"),
@@ -473,6 +500,8 @@ def update_dataset(
     dataset_path,
     feature_columns,
     reference_group,
+    metric,
+    n_neighbors,
     time_unit,
     normalized,
     log_ratio_bacteria,
@@ -493,7 +522,11 @@ def update_dataset(
 
         dataset.time_unit = TimeUnit[time_unit]
         dataset.feature_columns = FeatureColumnsType[feature_columns]
-        dataset.reference_group_choice = ReferenceGroup[reference_group]
+        if ReferenceGroup[reference_group] == ReferenceGroup.USER_DEFINED:
+            settings = None
+        else:
+            settings = {"metric": metric, "n_neighbors": n_neighbors}
+        dataset.set_reference_group_choice(ReferenceGroup[reference_group], settings)
         dataset.log_ratio_bacteria = log_ratio_bacteria
         dataset.normalized = Normalization[normalized]
 

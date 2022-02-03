@@ -25,9 +25,22 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 There is a support for detecting anomalies in three different ways:  
-                                1. `PREDICTION_INTERVAL`: samples outside the Prediction Interval (PI) are considered to be anomalies,   
-                                2. `LOW_PASS_FILTER`: the samples passing 2 standard deviations of the mean are considered to be anomalies,  
-                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data to obtain what samples are anomalous.   
+                                1. `PREDICTION_INTERVAL`: samples outside the Prediction Interval (PI) are considered to be anomalies; fixed parameter for the algorithm is the degree of polynomial line, where `degree = 3` (i.e. the microbiome trajectory approximation line is non-linear),   
+                                2. `LOW_PASS_FILTER`: the samples passing 2 standard deviations of the mean are considered to be anomalies; fixed parameters for the algorithm are `window = 10` (window size for the filter, see [here](https://www.google.com/search?q=filter+window+size&oq=filter+window+size&aqs=chrome..69i57j0i22i30l9.3346j0j7&sourceid=chrome&ie=UTF-8)) and `number_of_std = 2` (i.e. samples that are outside 2 standard deviations of the mean are considered to be anomalies),  
+                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data to obtain what samples are anomalous. The algorithm that isolates observations by randomly selecting a feature and then randomly selecting a split value between the maximum and minimum values of the selected feature; fixed parameters for the algorithm are `window = 5` (used to calculate moving average) and `outlier_fraction = 0.1` (i.e. we expect to have around 10% of anomalies in the dataset).   
+                                """,
+                            ),
+                            dcc.Markdown(
+                                    """
+                                References:  
+                                (1) Isolation forest [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html),   
+                                (2) Liu, Fei Tony, Ting, Kai Ming and Zhou, Zhi-Hua. “Isolation forest.” Data Mining, 2008. ICDM’08. Eighth IEEE International Conference,  
+                                (3) Liu, Fei Tony, Ting, Kai Ming and Zhou, Zhi-Hua. “Isolation-based anomaly detection.” ACM Transactions on Knowledge Discovery from Data (TKDD) 6.1 (2012).  
+                            """
+                                ),
+                             dcc.Markdown(
+                                """
+                                Note: currently there is no option to modify fixed parameters of the anomaly algorithms within the dashboard. To modify these parameters, please use the toolbox locally.
                                 """,
                             ),
                             dcc.Markdown(

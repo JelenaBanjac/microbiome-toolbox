@@ -150,7 +150,7 @@ class MicrobiomeDataset:
         self.normalized = Normalization.NON_NORMALIZED
 
         self.time_unit = TimeUnit.DAY
-        self.reference_group_choice = ReferenceGroup.USER_DEFINED
+        self.set_reference_group_choice(ReferenceGroup.USER_DEFINED)
         self.nice_name = (
             lambda x: re.sub(" +", "|", re.sub("[kpcofgs]__|\.|_", " ", x[9:]).strip())
             if x.startswith("bacteria_")
@@ -236,12 +236,12 @@ class MicrobiomeDataset:
     def nice_name(self, val):
         self._nice_name = val
 
-    @property
-    def reference_group_choice(self):
+    # @property
+    def get_reference_group_choice(self):
         return self._reference_group_choice
 
-    @reference_group_choice.setter
-    def reference_group_choice(self, val):
+    # @reference_group_choice.setter
+    def set_reference_group_choice(self, val, novelty_settings=None):
         """Modify reference_group column"""
         if val not in ReferenceGroup:
             raise ValueError(
@@ -256,7 +256,7 @@ class MicrobiomeDataset:
         groups = self.df.subjectID.values
 
         if val == ReferenceGroup.NOVELTY_DETECTION:
-            reference_group = self._find_best_novelty_reference_group(X, y, groups)
+            reference_group = self._find_best_novelty_reference_group(X, y, groups, settings=novelty_settings)
         elif val == ReferenceGroup.USER_DEFINED:
             reference_group = self.__reference_group
         else:
@@ -291,64 +291,88 @@ class MicrobiomeDataset:
         self.reference_group_f1score = results["f1score"]
         self.reference_group_config = results["config"]
 
-    def _find_best_novelty_reference_group(self, X, y, groups, novelty_settings=None):
+    def _find_best_novelty_reference_group(self, X, y, groups, settings=None):
 
-        if novelty_settings is None:
-            c = Counter(groups)
-            n_neighbors_min = 1
-            n_neighbors_max = c.most_common(1)[0][1]
-            n_neighbors_list = set(
-                [
-                    n_neighbors_min,
-                    (n_neighbors_min + n_neighbors_max) // 2 + 1,
-                    n_neighbors_max,
-                ]
-            )
+        # if novelty_settings is None:
+        #     c = Counter(groups)
+        #     n_neighbors_min = 1
+        #     n_neighbors_max = c.most_common(1)[0][1]
+        #     n_neighbors_list = set(
+        #         [
+        #             n_neighbors_min,
+        #             (n_neighbors_min + n_neighbors_max) // 2 + 1,
+        #             n_neighbors_max,
+        #         ]
+        #     )
 
-            novelty_settings = []
-            for n_neighbors in n_neighbors_list:
-                novelty_settings.append({"n_neighbors": n_neighbors})
+        #     novelty_settings = []
+        #     for n_neighbors in n_neighbors_list:
+        #         novelty_settings.append({"n_neighbors": n_neighbors})
 
-        f1score_best = 0
-        settings_best = None
-        reference_group_best = None
-        for settings in novelty_settings:
-            # initialize reference group with the given start values
-            reference_group = copy.deepcopy(y)
-            # novelty detection
-            settings_final = {
-                "metric": "braycurtis",
-                "n_neighbors": 2,
-                **settings,
-            }
+        # f1score_best = 0
+        # settings_best = None
+        # reference_group_best = None
+        # for settings in novelty_settings:
+        #     # initialize reference group with the given start values
+        #     reference_group = copy.deepcopy(y)
+        #     # novelty detection
+        #     settings_final = {
+        #         "metric": "braycurtis",
+        #         "n_neighbors": 2,
+        #         **settings,
+        #     }
 
-            X_train = X[reference_group == True]
-            X_test = X[reference_group == False]
+        #     X_train = X[reference_group == True]
+        #     X_test = X[reference_group == False]
 
-            # find outliers (ones that shall not be in the reference)
-            lof = LocalOutlierFactor(novelty=True, **settings_final)
-            lof.fit(X_train)
-            y_test = lof.predict(X_test)
+        #     # find outliers (ones that shall not be in the reference)
+        #     lof = LocalOutlierFactor(novelty=True, **settings_final)
+        #     lof.fit(X_train)
+        #     y_test = lof.predict(X_test)
 
-            # modify reference
-            reference_group[reference_group == False] = y_test == 1
+        #     # modify reference
+        #     reference_group[reference_group == False] = y_test == 1
 
-            # calculate new f1score
-            results = two_groups_differentiation(
-                X, copy.deepcopy(reference_group), groups
-            )
-            f1score = results["f1score"]
-            print(f"Novelty settings: {settings_final}")
-            print(f"Novelty f1score: {f1score}")
-            print(pd.Series(reference_group).value_counts())
-            if not all(reference_group):
-                if f1score > f1score_best:
-                    f1score_best = f1score
-                    settings_best = settings
-                    reference_group_best = copy.deepcopy(reference_group)
-        print(f"BEST Novelty settings: {settings_best}")
-        print(f"BEST Novelty f1score: {f1score_best}")
-        return reference_group_best
+        #     # calculate new f1score
+        #     results = two_groups_differentiation(
+        #         X, copy.deepcopy(reference_group), groups
+        #     )
+        #     f1score = results["f1score"]
+        #     print(f"Novelty settings: {settings_final}")
+        #     print(f"Novelty f1score: {f1score}")
+        #     print(pd.Series(reference_group).value_counts())
+        #     if not all(reference_group):
+        #         if f1score > f1score_best:
+        #             f1score_best = f1score
+        #             settings_best = settings
+        #             reference_group_best = copy.deepcopy(reference_group)
+        # print(f"BEST Novelty settings: {settings_best}")
+        # print(f"BEST Novelty f1score: {f1score_best}")
+        # return reference_group_best
+        
+        # initialize reference group with the given start values
+        reference_group = copy.deepcopy(y)
+        # novelty detection
+        if settings is None:
+            settings = {}
+        settings_final = {
+            "metric": "braycurtis",
+            "n_neighbors": 2,
+            **settings,
+        }
+
+        X_train = X[reference_group == True]
+        X_test = X[reference_group == False]
+
+        # find outliers (ones that shall not be in the reference)
+        lof = LocalOutlierFactor(novelty=True, **settings_final)
+        lof.fit(X_train)
+        y_test = lof.predict(X_test)
+
+        # modify reference
+        reference_group[reference_group == False] = y_test == 1
+
+        return reference_group
 
     @property
     def differentiation_score(self):
@@ -438,15 +462,24 @@ class MicrobiomeDataset:
 
     @normalized.setter
     def normalized(self, val):
+        """Normalize all bacteria and metadata columns to 0-1 range.
+
+        Normalization is performed both for novelty and trajectory features.
+
+        Parameters
+        ----------
+        val : Normalization
+            Value indicates whether to normalize or not (NORMALIZED or NON_NORMALIZED).
+        """
         self._normalized = val
-        features = self.__df[self.feature_columns].values
+        features = self.__df[self.bacteria_and_metadata_columns].values
 
         if val == Normalization.NORMALIZED:
             from sklearn.preprocessing import normalize
 
             features = normalize(features, axis=0)
 
-        for i, feature_column in enumerate(self.feature_columns):
+        for i, feature_column in enumerate(self.bacteria_and_metadata_columns):
             self.df.loc[:, feature_column] = features[:, i]
 
     def set_log_ratio_bacteria_with_least_crossings(self):

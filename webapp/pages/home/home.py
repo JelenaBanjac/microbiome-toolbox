@@ -164,7 +164,7 @@ differentiation_score_modal = dbc.Modal(
                     """
                Differentiation score tells us how good the samples from a reference group are separable from the samples from the non-reference group.
                The measure we use is [F1-score](https://deepai.org/machine-learning-glossary-and-terms/f-score#:~:text=The%20F%2Dscore%2C%20also%20called,positive'%20or%20'negative'.) since the underlying model is a binary classifier.
-               Under the hood, we train a binary classifier to differentiate between two groups of samples (reference and non-reference). The result of this classification is the F1-score. 
+               Under the hood, we train a binary classifier to differentiate between two groups of samples (reference and non-reference). The binary classification model is [`RandomForestClassifier`](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html) and we also perform cross validation with [`GroupShuffleSplit`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupShuffleSplit.html). The parameters we use for the classifier are `n_estimators=140` and `max_samples=0.8`, and they are fixed. To change these values for parameters, you would need to play with the toolbox locally. The result of this classification is the F1-score. 
             """
                 ),
                 dcc.Markdown(
@@ -267,6 +267,11 @@ reference_group_modal = dbc.Modal(
                 dcc.Markdown(
                     """
                 This can be finetuned further by specifying the feature columns to be used for novelty detection (above drop down option).
+            """
+                ),
+                dcc.Markdown(
+                    """
+                By modifying this option, you can observe the change in the number of reference samples in the Dataset table section above. 
             """
                 ),
             ]
@@ -787,6 +792,23 @@ def serve_dataset_settings():
         persistence_type="session",
     )
 
+    reference_group_novelty_settings_metric = dcc.Input(
+        id="settings-reference-group-novelty-metric",
+        type="text",
+        # value="braycurtis",
+        persistence=True,
+        persistence_type="session",
+    )
+    reference_group_novelty_settings_n_neighbors = dcc.Input(
+        id="settings-reference-group-novelty-n-neighbors",
+        type="number",
+        min=1,
+        step=1,
+        # value=2,
+        persistence=True,
+        persistence_type="session",
+    )
+
     time_unit_choice = dcc.Dropdown(
         id="settings-time-unit-choice",
         optionHeight=20,
@@ -855,25 +877,7 @@ def serve_dataset_settings():
                         dbc.Col(feature_columns_choice, width=6),
                     ]
                 ),
-                dhc.Br(),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                "Reference group:",
-                                dhc.I(
-                                    title="More information",
-                                    id="reference-group-info",
-                                    className="fa fa-info-circle",
-                                    style={"marginLeft": "10px"},
-                                ),
-                                reference_group_modal,
-                            ],
-                            width=3,
-                        ),
-                        dbc.Col(reference_group_choice, width=6),
-                    ]
-                ),
+                
                 dhc.Br(),
                 dbc.Row(
                     [
@@ -931,6 +935,49 @@ def serve_dataset_settings():
                         dbc.Col(log_ratio_bacteria_choice, width=6),
                     ]
                 ),
+                dhc.Br(),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                "Reference group:",
+                                dhc.I(
+                                    title="More information",
+                                    id="reference-group-info",
+                                    className="fa fa-info-circle",
+                                    style={"marginLeft": "10px"},
+                                ),
+                                reference_group_modal,
+                            ],
+                            width=3,
+                        ),
+                        dbc.Col(reference_group_choice, width=6),
+                    ]
+                ),
+                dhc.Br(),
+                dcc.Loading(dhc.Div([
+                    dbc.Row(
+                        [
+                            dbc.Col(width=3),
+                            dbc.Col(dcc.Markdown("Algorithm:"), width=3),
+                            dbc.Col(dcc.Markdown("[`LocalOutlierFactor`](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.LocalOutlierFactor.html)"), width=3)
+                        ]
+                    ),
+                    dbc.Row(
+                        [
+                            dbc.Col(width=3),
+                            dbc.Col(dcc.Markdown("`metric`:"), width=3),
+                            dbc.Col(reference_group_novelty_settings_metric, width=3)
+                        ]
+                    ),
+                    dbc.Row(
+                        [
+                            dbc.Col(width=3),
+                            dbc.Col(dcc.Markdown("`n_neighbors`:"), width=3),
+                            dbc.Col(reference_group_novelty_settings_n_neighbors, width=3)
+                        ]
+                    )], id="reference-group-novelty-settings-container", hidden=True,
+                )),
                 dhc.Br(),
                 dbc.Row(
                     [
@@ -1358,7 +1405,8 @@ def serve_methods():
                     dbc.Col(
                         [
                             dhc.Br(),
-                            dhc.Div(dhc.H3("Trajectory methods")),
+                            dhc.Br(),
+                            dhc.Div(dhc.H3("Methods")),
                             dhc.Br(),
                         ],
                         className="md-12",
