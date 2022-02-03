@@ -22,21 +22,21 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                                Intervention simulation is a technique we propose to use in order to return an outlier back to the reference trajectory. 
-                                This is done by modifying the taxa of the outlier with values of the top important bacteria from reference samples.
+                                Intervention simulation is a technique we propose to use in order to return an anomaly back to the reference trajectory. 
+                                For the anomaly, this is done by modifying the values of those bacteria that were found to be top important for reference samples. In other words, the values of these bacteria for the anomaly are substituted by the mean values from the reference samples.
                                 """,
                             ),
                             dcc.Markdown(
                                 """
-                                Click on one of the outliers below to see the suggestion for the intervention. The intervention simulation consists of suggesting the taxa values to change (or log-ratio values to change) in order to bring back the sample to the reference microbiome trajectory.
+                                Click on one of the anomalies below to see the suggestion for the intervention. The intervention simulation consists of suggesting the bacteria values to change (or log-ratio values to change) in order to bring back the sample to the reference microbiome trajectory.
                                 """,
                             ),
                             dcc.Markdown(
                                 """
-                                If an outlier is not back on the reference trajectory, possible reasons are:
-                                - the time block in which the outlier is located is not wide or small enough,
-                                - the reference samples have samples that should not be considered reference samples,
-                                - the number of top important bacteria to consider is not high enough to help an outlier to become a reference sample.
+                                If an anomaly is not back on the reference trajectory, some of the possible reasons are:
+                                - the time block in which the anomaly is located is not wide or small enough,
+                                - the reference samples have samples that should not be considered as reference samples,
+                                - the number of top important bacteria to consider is not is not sufficient to help an anomaly to become a reference sample.
                                 """,
                             ),
                             dcc.Markdown(

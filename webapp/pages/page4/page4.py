@@ -22,14 +22,14 @@ layout = dhc.Div(
                             dhc.Br(),
                             dcc.Markdown(
                                 """
-                                This type of the plot is useful if we are interested to see what bacteria is important in what time block for a microbiome trajectory that is built on the reference samples.
+                                This type of plot is useful if we are interested to see which bacteria are important in what time block for a microbiome trajectory that is built on the reference samples.
                                 """,
                             ),
                             dcc.Markdown(
                                 """
                                 Importance of different bacteria and their abundances across time blocks:   
                                 - bacteria importance are stacked vertically where the size of the each bacteria sub-block represents its importance in that time block,  
-                                - values in the box represent mean and standard deviation of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want),  
+                                - values shown on mouse hover the box represent mean and standard deviation of its abundance in that time block (Note: we tested mean, geometric mean, and robust mean, and median represented data the best for our data. In this toolbox, we have a support for any *average function* a user may want),  
                                 - total height of the box is fixed in all time blocks,  
                                 - can choose number of important bacteria for time interval.  
                                 """

@@ -326,7 +326,7 @@ def permuspliner_plot_permdistance(data, xlabel=None, ylabel=""):
 
     true_dist = data["true_distance"]
     ax.plot(true_dist["x"].values, true_dist["abs_dist"].values, color="r")
-    plt.show()
+    fig.show()
 
 
 def permuspliner_plot_permsplines(
@@ -379,7 +379,8 @@ def permuspliner_plot_permsplines(
     elif num_perms < 100:
         alpha_level = 0.31
 
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig = Figure(figsize=(10, 7), dpi=200)
+    ax = fig.subplots()
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     for p in permsplines.permutation.unique():
@@ -397,7 +398,7 @@ def permuspliner_plot_permsplines(
     sns.lineplot(
         x="x", y="y", data=true_data, hue="Group", ci=None, palette=["r", "b"], ax=ax
     )
-    plt.show()
+    fig.show()
 
 
 ##############

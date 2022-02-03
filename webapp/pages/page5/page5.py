@@ -25,9 +25,9 @@ layout = dhc.Div(
                             dcc.Markdown(
                                 """
                                 There is a support for detecting anomalies in three different ways:  
-                                1. `PREDICTION_INTERVAL`: samples outside the PI are considered to be anomalies,   
+                                1. `PREDICTION_INTERVAL`: samples outside the Prediction Interval (PI) are considered to be anomalies,   
                                 2. `LOW_PASS_FILTER`: the samples passing 2 standard deviations of the mean are considered to be anomalies,  
-                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data and get what samples are anomalous.   
+                                3. `ISOLATION_FOREST`: unsupervised anomaly detection algorithm on longitudinal data to obtain what samples are anomalous.   
                                 """,
                             ),
                             dcc.Markdown(
@@ -43,6 +43,7 @@ layout = dhc.Div(
                                 - hovering above the plot shows more information on the samples,
                                 - clicking on the labels on the legend can show/hide the clicked item from the plot,
                                 - reset plot to initial state is enabled by clicking Home option or Refresh button,
+                                - red-color dots or stars-shapes are outliers,
                                 - plots can be downloaded in SVG format.
                                 """
                             ),
