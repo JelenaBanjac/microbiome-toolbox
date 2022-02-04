@@ -360,6 +360,7 @@ def dataset_buttons_click(
                 duration=2000,
             )
             infobox.append(note_on_reference_group)
+        # TODO: do the same for groups
 
         log_ratio_bacteria_choices = [
             {"label": e, "value": e} for e in dataset.bacteria_columns

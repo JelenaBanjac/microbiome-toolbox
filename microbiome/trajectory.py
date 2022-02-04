@@ -95,7 +95,8 @@ class MicrobiomeTrajectory:
         # estimator.fit(X, y)
         parameters_gridsearch = {"n_estimators": [50, 100, 150]}
         rfr = RandomForestRegressor(random_state=RANDOM_STATE)
-        gkf = list(GroupKFold(n_splits=5).split(X_train, y_train, groups=groups_train))
+        n_splits = 5 if len(np.unique(groups_train)) > 5 else len(np.unique(groups_train))
+        gkf = list(GroupKFold(n_splits=n_splits).split(X_train, y_train, groups=groups_train))
         search = GridSearchCV(rfr, parameters_gridsearch, cv=gkf)
         search.fit(X_train, y_train)
         self.estimator = search.best_estimator_
