@@ -1504,11 +1504,8 @@ class MicrobiomeTrajectory:
                 - "config" : dict
                     Dictionary for the plotly export image options.
         """
-        if len(self.dataset.df.reference_group.unique()) != 2:
-            raise ValueError(
-                "Reference groups is available, but no samples for non-reference."
-            )
-
+        assert len(self.dataset.df.reference_group.unique()) == 2, "Reference groups is available, but no samples for non-reference."
+        
         ret_val = "<b>Performance Information</b><br>"
         indices = self.reference_groups == True
         ret_val += f"MAE reference: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
@@ -1543,6 +1540,7 @@ class MicrobiomeTrajectory:
 
         # plot reference trajectory
         indices = self.reference_groups == True
+        
         fig = self.add_trajectory(
             fig=fig,
             indices=indices,
@@ -1634,12 +1632,14 @@ class MicrobiomeTrajectory:
                 - "config" : dict
                     Dictionary for the plotly export image options.
         """
+        assert len(self.dataset.df.group.unique()) >= 2, "There are no at least 2 groups to compare."
+        group_vals = np.unique(self.groups)
         ret_val = "<b>Performance Information</b><br>"
-        for group in np.unique(self.groups):
+        for group in group_vals:
             indices = self.groups == group
             ret_val += f"MAE {group}: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
             ret_val += f"R^2 {group}: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
-        group_vals = np.unique(self.groups)
+        
         comb = combinations(group_vals, 2)
         for c in list(comb):
             indices = (self.groups == c[0]) | (self.groups == c[1])
@@ -1668,7 +1668,6 @@ class MicrobiomeTrajectory:
         yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
         fig = go.FigureWidget()
-
         for i, group in enumerate(natsorted(np.unique(self.groups))):
             indices = self.groups == group
 

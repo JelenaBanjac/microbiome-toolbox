@@ -77,6 +77,10 @@ class MicrobiomeDataset:
                     # if this column doesn't exist, create it s.t.
                     # all samples are in reference by default
                     self.df["reference_group"] = True
+                elif col == "group":
+                    # if this column doesn't exist, create it s.t.
+                    # all samples are in one group by default
+                    self.df["group"] = 'none'
                 else:
                     missing_columns.append(col)
 

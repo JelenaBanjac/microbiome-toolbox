@@ -238,6 +238,14 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                     dhc.Br(),
                     dcc.Graph(figure=result["fig"], config=result["config"]),
                 ]
+        except AssertionError as e:
+            results = dbc.Alert(
+                children=[
+                    dcc.Markdown("Dataset limitation: " + str(e)),
+                    dcc.Markdown(traceback.format_exc()),
+                ],
+                color="info",
+            )
         except Exception as e:
             results = dbc.Alert(
                 children=[
@@ -291,6 +299,14 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
                 dhc.Br(),
                 dcc.Graph(figure=result["fig"], config=result["config"]),
             ]
+        except AssertionError as e:
+            results = dbc.Alert(
+                children=[
+                    dcc.Markdown("Dataset limitation: " + str(e)),
+                    dcc.Markdown(traceback.format_exc()),
+                ],
+                color="info",
+            )
         except Exception as e:
             results = dbc.Alert(
                 children=[
