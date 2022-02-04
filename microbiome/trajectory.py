@@ -663,7 +663,7 @@ class MicrobiomeTrajectory:
 
         group_values = np.unique(groups)
 
-        assert len(group_values) == 2, "Needs to have only 2 unique groups to compare"
+        assert len(group_values) == 2, f"Needs to have only 2 unique groups to compare, has {len(group_values)}"
 
         df_stats = pd.DataFrame(
             data={
@@ -706,7 +706,7 @@ class MicrobiomeTrajectory:
 
         group_values = np.unique(groups)
 
-        assert len(group_values) == 2, "Needs to have only 2 unique groups to compare"
+        assert len(group_values) == 2, f"Needs to have only 2 unique groups to compare, has {len(group_values)}"
 
         df_stats = pd.DataFrame(
             data={
@@ -1513,11 +1513,11 @@ class MicrobiomeTrajectory:
         ret_val += (
             f"R^2 reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
         )
-        indices = self.reference_groups == False
+        indices = self.reference_groups != True
         ret_val += f"MAE non-reference: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
         ret_val += f"R^2 non-reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
 
-        indices = (self.reference_groups == True) | (self.reference_groups == False)
+        indices = (self.reference_groups == True) | (self.reference_groups != True)
         if degree == 1:
             ret_val += "<b>Linear p-value (k, n)</b>:"
             pval_k, pval_n = self.get_pvalue_linear(indices=indices)
@@ -1556,7 +1556,7 @@ class MicrobiomeTrajectory:
         )
 
         # plot non-reference trajectory
-        indices = self.reference_groups == False
+        indices = self.reference_groups != True
         fig = self.add_trajectory(
             fig=fig,
             indices=indices,
