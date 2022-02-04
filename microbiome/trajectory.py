@@ -634,7 +634,7 @@ class MicrobiomeTrajectory:
 
         return anomalies
 
-    def get_pvalue_linear(self, indices):
+    def get_pvalue_linear(self, column, indices):
         """Get p-value for linear lines.
 
         Parameters
@@ -659,11 +659,12 @@ class MicrobiomeTrajectory:
         """
         y = self.y[indices]
         y_pred = self.y_pred[indices]
-        groups = self.groups[indices]
+        groups = getattr(self, column)[indices]
 
         group_values = np.unique(groups)
+        print("group_values", group_values)
 
-        assert len(group_values) == 2, f"Needs to have only 2 unique groups to compare, has {len(group_values)}"
+        assert len(group_values) == 2, f"Needs to have only 2 unique groups to compare, has {group_values}"
 
         df_stats = pd.DataFrame(
             data={
@@ -676,7 +677,7 @@ class MicrobiomeTrajectory:
         result = regliner(df_stats, {group_values[0]: 0, group_values[1]: 1})
         return result["k"], result["n"]
 
-    def get_pvalue_spline(self, indices, degree=2):
+    def get_pvalue_spline(self, column, indices, degree=2):
         """Get p-value for spline lines.
 
         Parameters
@@ -701,12 +702,12 @@ class MicrobiomeTrajectory:
         """
         y = self.y[indices]
         y_pred = self.y_pred[indices]
-        groups = self.groups[indices]
+        groups = getattr(self, column)[indices]
         sample_ids = self.sample_ids[indices]
 
         group_values = np.unique(groups)
 
-        assert len(group_values) == 2, f"Needs to have only 2 unique groups to compare, has {len(group_values)}"
+        assert len(group_values) == 2, f"Needs to have only 2 unique groups to compare, has {group_values}"
 
         df_stats = pd.DataFrame(
             data={
@@ -1518,13 +1519,14 @@ class MicrobiomeTrajectory:
         ret_val += f"R^2 non-reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
 
         indices = (self.reference_groups == True) | (self.reference_groups != True)
+        print("indices", len(self.dataset.df), len(indices))
         if degree == 1:
             ret_val += "<b>Linear p-value (k, n)</b>:"
-            pval_k, pval_n = self.get_pvalue_linear(indices=indices)
+            pval_k, pval_n = self.get_pvalue_linear(column="reference_groups", indices=indices)
             ret_val += f"<br>Reference vs. Non-reference: ({pval_k:.3f}, {pval_n:.3f})"
         else:
             ret_val += "<b>Spline p-value</b>:"
-            pval = self.get_pvalue_spline(indices=indices, degree=degree)
+            pval = self.get_pvalue_spline(column="reference_groups", indices=indices, degree=degree)
             ret_val += f"<br>Reference vs. Non-reference: {pval:.3f}"
 
         if layout_settings is None:
@@ -1647,12 +1649,14 @@ class MicrobiomeTrajectory:
             if degree == 1:
                 ret_val += "<b>Linear p-value (k, n)</b>:"
                 pval_k, pval_n = self.get_pvalue_linear(
+                    column="groups",
                     indices=indices,
                 )
                 ret_val += f"<br>{c[0]} vs. {c[1]}: ({pval_k:.3f}, {pval_n:.3f})"
             else:
                 ret_val += "<b>Spline p-value</b>:"
                 pval = self.get_pvalue_spline(
+                    column="groups",
                     indices=indices,
                     degree=degree,
                 )
