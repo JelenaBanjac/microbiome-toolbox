@@ -206,38 +206,29 @@ def display_value(trajectory_path, degree, height, width, x_delta, y_delta, n_cl
         try:
             trajectory = get_trajectory(trajectory_path)
 
-            if len(trajectory.dataset.df.reference_group.unique()) != 2:
-                results = [
-                    dcc.Markdown("Reference groups are not available."),
-                    dcc.Markdown(
-                        "Dataset contains only samples from a reference. Please modify the reference_group (with True, False values) column in your dataset to correspond to the reference groups."
-                    ),
-                ]
-            else:
+            layout_settings = dict(
+                height=height,
+                width=width,
+            )
+            xaxis_settings = dict(
+                dtick=x_delta,
+            )
+            yaxis_settings = dict(
+                dtick=y_delta,
+            )
 
-                layout_settings = dict(
-                    height=height,
-                    width=width,
-                )
-                xaxis_settings = dict(
-                    dtick=x_delta,
-                )
-                yaxis_settings = dict(
-                    dtick=y_delta,
-                )
+            result = trajectory.plot_reference_groups(
+                degree=degree,
+                layout_settings=layout_settings,
+                xaxis_settings=xaxis_settings,
+                yaxis_settings=yaxis_settings,
+            )
 
-                result = trajectory.plot_reference_groups(
-                    degree=degree,
-                    layout_settings=layout_settings,
-                    xaxis_settings=xaxis_settings,
-                    yaxis_settings=yaxis_settings,
-                )
-
-                results = [
-                    dcc.Markdown(result["ret_val"], dangerously_allow_html=True),
-                    dhc.Br(),
-                    dcc.Graph(figure=result["fig"], config=result["config"]),
-                ]
+            results = [
+                dcc.Markdown(result["ret_val"], dangerously_allow_html=True),
+                dhc.Br(),
+                dcc.Graph(figure=result["fig"], config=result["config"]),
+            ]
         except AssertionError as e:
             results = dbc.Alert(
                 children=[

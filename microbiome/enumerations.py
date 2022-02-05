@@ -11,6 +11,7 @@ class ReferenceGroup(Enum):
 
 
 class TimeUnit(Enum):
+    HOUR = 1/24
     DAY = 1
     MONTH = 30
     YEAR = 365

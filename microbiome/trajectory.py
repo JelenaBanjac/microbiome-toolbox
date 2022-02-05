@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import scipy as sp
 import scipy.stats as stats
 import shap
+import math
 from natsort import natsorted
 from plotly.subplots import make_subplots
 from sklearn.ensemble import IsolationForest, RandomForestRegressor
@@ -140,7 +141,8 @@ class MicrobiomeTrajectory:
         colors_rgb = [
             tuple(int(h.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)) for h in colors
         ]
-        self.colors_rgb = [str(x)[1:-1] for x in colors_rgb]
+        colors_rgb = [str(x)[1:-1] for x in colors_rgb]
+        self.colors_rgb = colors_rgb
 
         self.bacteria_colors = {}
         self.group_colors = {}
@@ -1510,18 +1512,23 @@ class MicrobiomeTrajectory:
         
         ret_val = "<b>Performance Information</b><br>"
         indices = self.reference_groups == True
-        ret_val += f"MAE reference: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
-        ret_val += (
-            f"R^2 reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
-        )
+        _mae = mean_absolute_error(self.y[indices], self.y_pred[indices])
+        _r2 = r2_score(self.y[indices], self.y_pred[indices])
+        if _mae != 0 and not math.isnan(_r2):
+            ret_val += f"MAE reference: {_mae:.3f}<br>"
+            ret_val += f"R^2 reference: {_r2:.3f}<br>"
+
         indices = self.reference_groups != True
-        ret_val += f"MAE non-reference: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
-        ret_val += f"R^2 non-reference: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+        _mae = mean_absolute_error(self.y[indices], self.y_pred[indices])
+        _r2 = r2_score(self.y[indices], self.y_pred[indices])
+        if _mae != 0 and not math.isnan(_r2):
+            ret_val += f"MAE non-reference: {_mae:.3f}<br>"
+            ret_val += f"R^2 non-reference: {_r2:.3f}<br>"
 
         indices = (self.reference_groups == True) | (self.reference_groups != True)
-        print("indices", len(self.dataset.df), len(indices))
+
         if degree == 1:
-            ret_val += "<b>Linear p-value (k, n)</b>:"
+            ret_val += "<br><b>Linear p-value (k, n)</b>:"
             pval_k, pval_n = self.get_pvalue_linear(column="reference_groups", indices=indices)
             ret_val += f"<br>Reference vs. Non-reference: ({pval_k:.3f}, {pval_n:.3f})"
         else:
@@ -1541,36 +1548,47 @@ class MicrobiomeTrajectory:
 
         fig = go.FigureWidget()
 
+        ret_val += "<br><br><b>Number of samples per reference group</b>"
         # plot reference trajectory
         indices = self.reference_groups == True
-        
-        fig = self.add_trajectory(
-            fig=fig,
-            indices=indices,
-            name="Reference",
-            color=self.color_reference,
-            degree=degree,
-        )
-        fig = self.add_samples(
-            fig=fig,
-            indices=indices,
-            color=self.color_reference,
-        )
+        try:
+            fig = self.add_trajectory(
+                fig=fig,
+                indices=indices,
+                name="Reference",
+                color=self.color_reference,
+                degree=degree,
+            )
+            fig = self.add_samples(
+                fig=fig,
+                indices=indices,
+                color=self.color_reference,
+            )
+            ret_val += f"<br>reference: {sum(indices.astype(int))} sample(s)"
+        except ValueError as e:
+            print(e)
+            ret_val += f"<br>reference: {sum(indices.astype(int))} sample(s) - not enough to build a trajectory"
 
         # plot non-reference trajectory
         indices = self.reference_groups != True
-        fig = self.add_trajectory(
-            fig=fig,
-            indices=indices,
-            name="Non-reference",
-            color=self.color_non_reference,
-            degree=degree,
-        )
-        fig = self.add_samples(
-            fig=fig,
-            indices=indices,
-            color=self.color_non_reference,
-        )
+        try:
+            fig = self.add_trajectory(
+                fig=fig,
+                indices=indices,
+                name="Non-reference",
+                color=self.color_non_reference,
+                degree=degree,
+            )
+            fig = self.add_samples(
+                fig=fig,
+                indices=indices,
+                color=self.color_non_reference,
+            )
+            ret_val += f"<br>non-reference: {sum(indices.astype(int))} sample(s)"
+        except ValueError as e:
+            print(e)
+            ret_val += f"<br>non-reference: {sum(indices.astype(int))} sample(s) - not enough to build a trajectory"
+
         # plot longitudinal
         fig = self.add_longitudinal(fig, indices=indices)
 
@@ -1640,27 +1658,34 @@ class MicrobiomeTrajectory:
         ret_val = "<b>Performance Information</b><br>"
         for group in group_vals:
             indices = self.groups == group
-            ret_val += f"MAE {group}: {mean_absolute_error(self.y[indices], self.y_pred[indices]):.3f}<br>"
-            ret_val += f"R^2 {group}: {r2_score(self.y[indices], self.y_pred[indices]):.3f}<br>"
+            _mae = mean_absolute_error(self.y[indices], self.y_pred[indices])
+            _r2 = r2_score(self.y[indices], self.y_pred[indices])
+            if _mae != 0 and not math.isnan(_r2):
+                ret_val += f"MAE {group}: {_mae:.3f}<br>"
+                ret_val += f"R^2 {group}: {_r2:.3f}<br>"
         
         comb = combinations(group_vals, 2)
         for c in list(comb):
             indices = (self.groups == c[0]) | (self.groups == c[1])
             if degree == 1:
-                ret_val += "<b>Linear p-value (k, n)</b>:"
+                
                 pval_k, pval_n = self.get_pvalue_linear(
                     column="groups",
                     indices=indices,
                 )
-                ret_val += f"<br>{c[0]} vs. {c[1]}: ({pval_k:.3f}, {pval_n:.3f})"
+                if not math.isnan(pval_k) and not math.isnan(pval_n):
+                    ret_val += "<br><b>Linear p-value (k, n)</b>:"
+                    ret_val += f"<br>{c[0]} vs. {c[1]}: ({pval_k:.3f}, {pval_n:.3f})"
             else:
-                ret_val += "<b>Spline p-value</b>:"
+                
                 pval = self.get_pvalue_spline(
                     column="groups",
                     indices=indices,
                     degree=degree,
                 )
-                ret_val += f"<br>{c[0]} vs. {c[1]}: {pval:.3f}"
+                if not math.isnan(pval):
+                    ret_val += "<br><b>Spline p-value</b>:"
+                    ret_val += f"<br>{c[0]} vs. {c[1]}: {pval:.3f}"
 
         if layout_settings is None:
             layout_settings = {}
@@ -1673,21 +1698,29 @@ class MicrobiomeTrajectory:
         yaxis_settings_final = {**self.axis_settings_default, **yaxis_settings}
 
         fig = go.FigureWidget()
-        for i, group in enumerate(natsorted(np.unique(self.groups))):
+        i = 0
+        ret_val += "<br><br><b>Number of samples per group</b>"
+        for group in natsorted(np.unique(self.groups)):
             indices = self.groups == group
 
-            fig = self.add_trajectory(
-                fig=fig,
-                indices=indices,
-                name=group,
-                color=self.colors_rgb[i],
-                degree=degree,
-            )
-            fig = self.add_samples(
-                fig=fig,
-                indices=indices,
-                color=self.colors_rgb[i],
-            )
+            try:
+                fig = self.add_trajectory(
+                    fig=fig,
+                    indices=indices,
+                    name=group,
+                    color=self.colors_rgb[i],
+                    degree=degree,
+                )
+                fig = self.add_samples(
+                    fig=fig,
+                    indices=indices,
+                    color=self.colors_rgb[i],
+                )
+                i += 1
+                ret_val += f"<br>{group}: {sum(indices.astype(int))} sample(s)"
+            except ValueError as e:
+                print(e)
+                ret_val += f"<br>{group}: {sum(indices.astype(int))} sample(s) - not enough to build a trajectory"
 
         indices = range(len(self.dataset.df))
         fig = self.add_longitudinal(
