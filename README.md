@@ -74,3 +74,24 @@ The project is licensed under the [MIT license](./LICENCE).
 
 ## Authors
 [Jelena Banjac](https://jelenabanjac.com/), [Shaillay Kumar Dogra](ShaillayKumar.Dogra@rd.nestle.com), [Norbert Sprenger](norbert.sprenger@rdls.nestle.com)
+
+## Citation
+BibTeX citation style:
+```
+@article{microbiome_toolbox,
+  author = {Banjac, Jelena and Sprenger, Norbert and Dogra, Shaillay Kumar},
+  title = {Microbiome Toolbox: Methodological approaches to derive and visualize microbiome trajectories},
+  elocation-id = {2022.02.14.479826},
+  year = {2022},
+  doi = {10.1101/2022.02.14.479826},
+  publisher = {Cold Spring Harbor Laboratory},
+  URL = {https://www.biorxiv.org/content/early/2022/02/16/2022.02.14.479826},
+  eprint = {https://www.biorxiv.org/content/early/2022/02/16/2022.02.14.479826.full.pdf},
+  journal = {bioRxiv}
+}
+```
+APA citation style:
+```
+Banjac J, Sprenger N, Dogra SK. 2022. Microbiome Toolbox: Methodological approaches to derive and visualize microbiome trajectories. bioRxiv doi: 10.1101/2022.02.14.479826
+https://biorxiv.org/cgi/content/short/2022.02.14.479826v1
+```
