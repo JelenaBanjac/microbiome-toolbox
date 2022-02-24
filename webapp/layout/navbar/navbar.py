@@ -14,6 +14,14 @@ navbar = dbc.NavbarSimple(
                 ),
         ], href="https://github.com/JelenaBanjac/microbiome-toolbox/issues", target="_blank",)),
         dbc.NavItem(dbc.NavLink([
+                "GitHub repository",
+                dhc.I(
+                    title="GitHub repository",
+                    className="fa fa-code",
+                    style={"marginLeft": "10px"},
+                ),
+        ], href="https://github.com/JelenaBanjac/microbiome-toolbox", target="_blank",)),
+        dbc.NavItem(dbc.NavLink([
                 "Cite paper",
                 dhc.I(
                     title="Cite paper",
