@@ -76,6 +76,8 @@ The project is licensed under the [MIT license](./LICENCE).
 [Jelena Banjac](https://jelenabanjac.com/), [Shaillay Kumar Dogra](ShaillayKumar.Dogra@rd.nestle.com), [Norbert Sprenger](norbert.sprenger@rdls.nestle.com)
 
 ## Citation
+The code in this repository is released under the terms of the [MIT license](./LICENCE.md). Please cite our paper if you use it.
+
 BibTeX citation style:
 ```
 @article{microbiome_toolbox,
