@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="microbiome-toolbox", 
-    version="1.0.0",
+    version="1.0.2",
     author="Jelena Banjac, Shaillay Kumar Dogra, Norbert Sprenger",
     author_email="msjelenabanjac@gmail.com, ShaillayKumar.Dogra@rd.nestle.com, norbert.sprenger@rdls.nestle.com",
     maintainer="Jelena Banjac",
