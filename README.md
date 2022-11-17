@@ -9,7 +9,7 @@
   </p>
   
   <p>
-    <a href="https://microbiome-toolbox.herokuapp.com">
+    <a href="https://microbiome-toolbox.azurewebsites.net/">
       Dashboard
     </a>
   </p>
