@@ -15,9 +15,9 @@
   </p>
 </div>
 
-- [Dashboard](https://microbiome-toolbox.herokuapp.com) with interactive visualizations
+- [Dashboard]([https://microbiome-toolbox.herokuapp.com](https://microbiome-toolbox.azurewebsites.net/)) with interactive visualizations
 - [BioRxiv](https://www.biorxiv.org/content/10.1101/2022.02.14.479826v1) paper (preprint)
-- We are on the [curated set](https://dash-demo.plotly.host/Portal/) of STEM focused Plotly Dash apps!
+- We are on the [curated set](https://dash-demo.plotly.host/Portal/) and [Plotly&Dash 500](https://dash-demo.plotly.host/plotly-dash-500/) of STEM focused Plotly Dash apps!
 
 # Microbiome Toolbox
 
