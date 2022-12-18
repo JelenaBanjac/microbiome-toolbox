@@ -21,16 +21,20 @@
 
 # Microbiome Toolbox
 
-Microbiome toolbox is a collection of tools and methods for microbiome data and it includes data analysis and exploration, data preparation, microbiome trajectory modeling, outlier discovery and intervention. Our toolbox encompasses most of the common machine learning algorithms that exist in different packages.
+Microbiome toolbox is a collection of tools and methods for microbiome data and it includes data analysis and exploration, data preparation, microbiome trajectory modeling, outlier discovery and intervention. Our toolbox also encompasses most of the common machine learning algorithms that exist in different packages.
 
 Features:
-- Data analysis and exploration of microbiota data
-- Data preparation
-- Reference vs. non-reference data analysis
-- Log-ratios data transformation
-- Microbiome trajectory
-- Boxplot with time
-- Intervention simulation
+- **Data analysis and exploration of microbiota data**: analise the bacteria from a given dataset including the longitudinal analysis
+- **Data preparation**: different ways of preparing data for machine learning model training to build microbiome trajectory
+    - **Feature extraction**: decreasing the number of features used for building the trajectory by selecting the top important ones
+    - **Reference vs. non-reference data analysis**: using different techniques to classify samples into these two groups (optional)
+    - **Log-ratios data transformation**: transforming bacteria abundances to log-ratio w.r.t. the chosen bacteria
+- **Microbiome trajectory**: build different microbiome trajectories with machine learning models and compare with statistical tests 
+- **Anomaly detection**: detect samples that are labeled as reference but based on the bacteria analysis are actually outliers
+- **Boxplot with time**: check what are top important bacteria in a reference group of samples w.r.t. time
+- **Intervention simulation**: what are a few bacteria that should be modified to move the non-reference sample into reference group 
+
+![](images/microbiome-toolbox.png)
 
 ## Technical glossary
 
