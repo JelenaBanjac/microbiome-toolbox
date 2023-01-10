@@ -204,21 +204,22 @@ BibTeX citation style:
 ```
 @article{10.1093/bioinformatics/btac781,
     author = {Banjac, Jelena and Sprenger, Norbert and Dogra, Shaillay Kumar},
-    title = "{Microbiome Toolbox: Methodological approaches to derive and visualize microbiome trajectories}",
+    title = "{Microbiome Toolbox: methodological approaches to derive and visualize microbiome trajectories}",
     journal = {Bioinformatics},
+    volume = {39},
+    number = {1},
     year = {2022},
     month = {12},
-    abstract = "{The gut microbiome changes rapidly under the influence of different factors such as age, dietary changes, or medications to name just a few. To analyze and understand such changes we present a microbiome analysis toolbox. We implemented several methods for analysis and exploration to provide interactive visualizations for easy comprehension and reporting of longitudinal microbiome data.Based on the abundance of microbiome features such as taxa as well as functional capacity modules, and with the corresponding metadata per sample, the toolbox includes methods for 1) data analysis and exploration, 2) data preparation including dataset-specific preprocessing and transformation, 3) best feature selection for log-ratio denominators, 4) two-group analysis, 5) microbiome trajectory prediction with feature importance over time, 6) spline and linear regression statistical analysis for testing universality across different groups and differentiation of two trajectories, 7) longitudinal anomaly detection on the microbiome trajectory, and 8) simulated intervention to return anomaly back to a reference trajectory.The software tools are open source and implemented in Python. For developers interested in additional functionality of the toolbox, it is modular allowing for further extension with custom methods and analysis. The code, python package, and the link to the interactive dashboard are available on GitHub https://github.com/JelenaBanjac/microbiome-toolbox.Supplementary data are available at Bioinformatics online.}",
-    issn = {1367-4803},
+    abstract = "{The gut microbiome changes rapidly under the influence of different factors such as age, dietary changes or medications to name just a few. To analyze and understand such changes, we present a Microbiome Toolbox. We implemented several methods for analysis and exploration to provide interactive visualizations for easy comprehension and reporting of longitudinal microbiome data.Based on the abundance of microbiome features such as taxa as well as functional capacity modules, and with the corresponding metadata per sample, the Microbiome Toolbox includes methods for (i) data analysis and exploration, (ii) data preparation including dataset-specific preprocessing and transformation, (iii) best feature selection for log-ratio denominators, (iv) two-group analysis, (v) microbiome trajectory prediction with feature importance over time, (vi) spline and linear regression statistical analysis for testing universality across different groups and differentiation of two trajectories, (vii) longitudinal anomaly detection on the microbiome trajectory and (viii) simulated intervention to return anomaly back to a reference trajectory.The software tools are open source and implemented in Python. For developers interested in additional functionality of the Microbiome Toolbox, it is modular allowing for further extension with custom methods and analysis. The code, python package and the link to the interactive dashboard of Microbiome Toolbox are available on GitHub https://github.com/JelenaBanjac/microbiome-toolboxSupplementary data are available at Bioinformatics online.}",
+    issn = {1367-4811},
     doi = {10.1093/bioinformatics/btac781},
     url = {https://doi.org/10.1093/bioinformatics/btac781},
     note = {btac781},
-    eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btac781/47589252/btac781.pdf},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/39/1/btac781/48520839/btac781.pdf},
 }
 
 ```
 APA citation style:
 ```
-Jelena Banjac, Norbert Sprenger, Shaillay Kumar Dogra, Microbiome Toolbox: Methodological approaches to derive and visualize microbiome trajectories, Bioinformatics, 2022;, btac781, 
-https://doi.org/10.1093/bioinformatics/btac781
+Jelena Banjac, Norbert Sprenger, Shaillay Kumar Dogra, Microbiome Toolbox: methodological approaches to derive and visualize microbiome trajectories, Bioinformatics, Volume 39, Issue 1, January 2023, btac781, https://doi.org/10.1093/bioinformatics/btac781
 ```
