@@ -1,10 +1,10 @@
 <div align="center">
   <p>
-  <img src="https://www.insideprecisionmedicine.com/wp-content/uploads/2019/07/Jul1_2019_GettyImages_927406508_BacterialMicrooginism-1.jpg" alt="Alexander Mikhailov / iStock / Getty Images" width="270" />
+  <img src="images/microorganisms.jpg" alt="Alexander Mikhailov / iStock / Getty Images" width="270" />
   </p>
   <p>
-    <a href="">
-      <img alt="First release" src="https://img.shields.io/badge/release-v1.0-brightgreen.svg" />
+    <a href="http://www.freepik.com">
+      <img alt="Designed by pch.vector / Freepik" src="https://img.shields.io/badge/release-v1.0-brightgreen.svg" />
     </a>
   </p>
   
