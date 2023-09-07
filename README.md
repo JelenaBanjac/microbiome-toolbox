@@ -156,18 +156,6 @@ https://github.com/JelenaBanjac/microbiome-toolbox/blob/main/microbiome/trajecto
 ## Installation
 The microbiome toolbox has a [PyPi package](https://pypi.org/project/microbiome-toolbox/) available.
 
-Conda environment:
-```bash
-# create environment
-conda env create -f environment.yml
-
-# activate environment
-conda activate microbiome
-
-# install microbiome toolbox
-pip install microbiome-toolbox --user
-```
-
 Python virtual environment:
 ```bash
 # locate yourself to project root
