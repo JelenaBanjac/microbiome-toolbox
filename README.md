@@ -156,6 +156,7 @@ https://github.com/JelenaBanjac/microbiome-toolbox/blob/main/microbiome/trajecto
 ## Installation
 The microbiome toolbox has a [PyPi package](https://pypi.org/project/microbiome-toolbox/) available.
 
+Conda environment:
 ```bash
 # create environment
 conda env create -f environment.yml
@@ -167,12 +168,48 @@ conda activate microbiome
 pip install microbiome-toolbox --user
 ```
 
+Python virtual environment:
+```bash
+# locate yourself to project root
+cd $ROOT
+
+# create virtual environment for python
+python3.9 -m venv venv
+
+# activate the environment
+. venv/bin/activate
+
+# make sure pip is the latest version!
+pip install --upgrade pip
+
+# install requirements (generated from requirements.in)
+pip install -r requirements.txt
+
+# install microbiome-toolbox in edit mode for development
+pip install -e .
+```
+
+Note: if you add new libraries to `requirements.in`, you need to re-generate the `requirements.txt` in order to reproduce the working state.
+```bash
+# install pip-compile
+pip install pip-tools
+
+# generate requirements.txt from requiremenrs.in
+pip-compile --allow-unsafe
+```
+
+
 ## Run dashboard locally (on your computer)
 After you successfully installed the microbiome-toolbox and activated the environment, just execute the following commands:
 
 ```bash
 # set up the development environment (on Linux)
-source webapp/environment/.evv.development
+source webapp/environment/.env.development
+
+export ENVIRONMENT_FILE=webapp/environment/.env.development
+
+# if complains on LegacyVersion, install packaging manually
+# pip install packaging==21.3.0
 
 # run the server
 python webapp/index.py
