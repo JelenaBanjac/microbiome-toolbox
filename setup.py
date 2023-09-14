@@ -1,7 +1,50 @@
 import setuptools
+import re
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+
+def parse_requirements(requirement_file, depth=0):
+    """Parse requirements from a pip requirements file.
+
+    We support:
+        somepackage1
+        somepackage2 => 2.3.4  # Some comments
+        somepackage3 [extrastuff,otherextra] => 2.3.4  # Some comments
+        -r ...
+
+    We ignore:
+        -e ...
+
+    We do not support (and will fail if we find):
+        somepackage ; some constraints
+        -other options
+    """
+    if depth > 100:
+        raise ('Detected circular dependency with "-r" in %s' % requirement_file)
+    with open(requirement_file) as f:
+        requirements = []
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or line.startswith("-e "):
+                continue
+            if line.startswith("-r "):
+                # Depth is used to check circular dependencies.
+                requirements += parse_requirements(line.split()[1], depth + 1)
+                continue
+
+            # We take the underlined stuff and remove the spaces.
+            # If a requirement line does not match this, we throw an error.
+            m = re.match(
+                r"^([a-zA-Z]\S*)\s*(\[[^]]+\])?\s*([=<>]+\s*\d\S*)?\s*(?:#.*)?$",
+                line,
+            )
+            if not m:
+                raise Exception("Could not parse line: {line}")
+            else:
+                requirements.append("".join([grp for grp in m.groups() if grp]))
+
+    return requirements
 
 setuptools.setup(
     name="microbiome-toolbox", 
@@ -21,63 +64,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=[
-        "seaborn",
-        "ipyvolume",
-        "xgboost",
-        "certifi",
-        "cycler",
-        "matplotlib",  #==2.2.2
-        "pyparsing",
-        "ipykernel",
-        "ipython",
-        "ipython_genutils",
-        "jedi",
-        "joblib",
-        "jupyter_client",
-        "jupyter_core",
-        "numpy",
-        "pandas",
-        "parso",
-        "pickleshare",
-        "pip",
-        "prompt-toolkit",
-        "pygments",
-        "python-dateutil",
-        "scikit-learn",
-        #"scikit-bio",
-        "scipy",
-        "setuptools",
-        "six",
-        "threadpoolctl",
-        "tornado",
-        "traitlets",
-        "wheel",
-        "dash==2.0.0",
-        "diskcache",
-        "multiprocess",
-        "psutil",
-        "dash-renderer",
-        "dash-table",
-        "dash-uploader",
-        "dash-extensions",
-        "plotly",
-        "flask-caching",
-        # "catboost",
-        "statsmodels",
-        "numpy",
-        "shap",
-        "tk",
-        "gunicorn",
-        "diskcache",
-        "python-dotenv",
-        "psutil",
-        "diskcache",
-        "multiprocess",
-        "natsort",
-        "umap-learn",
-        "black",
-        "isort",
-        #"flake8",
-    ]
+    install_requires=parse_requirements("requirements.txt"),
 )

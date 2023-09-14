@@ -170,9 +170,6 @@ python3.9 -m venv venv
 # make sure pip is the latest version!
 pip install --upgrade pip
 
-# install requirements (generated from requirements.in)
-pip install -r requirements.txt
-
 # install microbiome-toolbox in edit mode for development
 pip install -e .
 ```
@@ -187,7 +184,7 @@ pip-compile --allow-unsafe
 ```
 
 ## Run dashboard locally (on your computer)
-After you successfully installed the microbiome-toolbox and activated the environment, just execute the following commands:
+After you successfully installed the microbiome-toolbox and activated the environment, just execute the following command/s:
 
 ```bash
 # run the server
@@ -196,8 +193,6 @@ python webapp/index.py
 # if complains on LegacyVersion, install packaging manually
 # pip install packaging==21.3.0
 ```
-The only step that differs for Windows is that you should modify the environment variables with values indicated in file `webapp/environment/.evv.development`. 
-After that, you can run the server on Windows.
 
 ## Examples
 

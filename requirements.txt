@@ -32,8 +32,12 @@ backcall==0.2.0
     # via ipython
 beautifulsoup4==4.12.2
     # via nbconvert
+black==22.12.0
+    # via -r requirements.in
 bleach==6.0.0
     # via nbconvert
+bqplot==0.12.40
+    # via ipyvolume
 brotli==1.1.0
     # via flask-compress
 cachelib==0.9.0
@@ -47,7 +51,9 @@ cffi==1.15.1
 charset-normalizer==3.2.0
     # via requests
 click==8.1.7
-    # via flask
+    # via
+    #   black
+    #   flask
 cloudpickle==2.2.1
     # via shap
 comm==0.1.4
@@ -60,6 +66,7 @@ dash==2.0.0
     # via
     #   -r requirements.in
     #   dash-bootstrap-components
+    #   dash-extensions
     #   dash-uploader
 dash-bootstrap-components==1.5.0
     # via -r requirements.in
@@ -67,6 +74,8 @@ dash-core-components==2.0.0
     # via
     #   -r requirements.in
     #   dash
+dash-extensions==0.0.71
+    # via -r requirements.in
 dash-html-components==2.0.0
     # via
     #   -r requirements.in
@@ -85,6 +94,12 @@ decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
+dill==0.3.7
+    # via multiprocess
+diskcache==5.6.3
+    # via -r requirements.in
+editorconfig==0.12.3
+    # via jsbeautifier
 exceptiongroup==1.1.3
     # via
     #   anyio
@@ -99,13 +114,17 @@ flask==2.1.3
     #   flask-caching
     #   flask-compress
 flask-caching==2.0.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   dash-extensions
 flask-compress==1.13
     # via dash
 fqdn==1.5.1
     # via jsonschema
 graphviz==0.20.1
     # via catboost
+gunicorn==21.2.0
+    # via -r requirements.in
 idna==3.4
     # via
     #   anyio
@@ -119,6 +138,8 @@ importlib-metadata==6.8.0
     #   jupyterlab
     #   jupyterlab-server
     #   nbconvert
+ipydatawidgets==4.3.5
+    # via pythreejs
 ipykernel==6.25.2
     # via
     #   jupyter
@@ -132,10 +153,28 @@ ipython==8.15.0
     #   jupyter-console
 ipython-genutils==0.2.0
     # via qtconsole
+ipyvolume==0.6.3
+    # via -r requirements.in
+ipyvue==1.10.1
+    # via
+    #   ipyvolume
+    #   ipyvuetify
+ipyvuetify==1.8.10
+    # via ipyvolume
+ipywebrtc==0.6.0
+    # via ipyvolume
 ipywidgets==8.1.0
-    # via jupyter
+    # via
+    #   bqplot
+    #   ipydatawidgets
+    #   ipyvolume
+    #   ipyvue
+    #   jupyter
+    #   pythreejs
 isoduration==20.11.0
     # via jsonschema
+isort==5.12.0
+    # via -r requirements.in
 itsdangerous==2.1.2
     # via flask
 jedi==0.19.0
@@ -148,7 +187,11 @@ jinja2==3.1.2
     #   jupyterlab-server
     #   nbconvert
 joblib==1.3.2
-    # via scikit-learn
+    # via
+    #   pynndescent
+    #   scikit-learn
+jsbeautifier==1.14.9
+    # via dash-extensions
 json5==0.9.14
     # via jupyterlab-server
 jsonpointer==2.4
@@ -208,7 +251,9 @@ jupyterlab-widgets==3.0.8
 kiwisolver==1.4.5
     # via matplotlib
 llvmlite==0.40.1
-    # via numba
+    # via
+    #   numba
+    #   pynndescent
 markupsafe==2.1.3
     # via
     #   jinja2
@@ -217,6 +262,7 @@ matplotlib==3.4.3
     # via
     #   -r requirements.in
     #   catboost
+    #   ipyvolume
     #   seaborn
 matplotlib-inline==0.1.6
     # via
@@ -224,6 +270,14 @@ matplotlib-inline==0.1.6
     #   ipython
 mistune==3.0.1
     # via nbconvert
+more-itertools==10.1.0
+    # via dash-extensions
+multiprocess==0.70.15
+    # via -r requirements.in
+mypy-extensions==1.0.0
+    # via black
+natsort==8.4.0
+    # via -r requirements.in
 nbclient==0.8.0
     # via nbconvert
 nbconvert==7.8.0
@@ -244,25 +298,35 @@ notebook-shim==0.2.3
     #   jupyterlab
     #   notebook
 numba==0.57.1
-    # via shap
+    # via
+    #   pynndescent
+    #   shap
+    #   umap-learn
 numpy==1.24.4
     # via
     #   -r requirements.in
+    #   bqplot
     #   catboost
+    #   ipydatawidgets
+    #   ipyvolume
     #   matplotlib
     #   numba
     #   pandas
     #   patsy
+    #   pythreejs
     #   scikit-learn
     #   scipy
     #   seaborn
     #   shap
     #   statsmodels
+    #   umap-learn
+    #   xgboost
 overrides==7.4.0
     # via jupyter-server
 packaging==21.3
     # via
     #   -r requirements.in
+    #   gunicorn
     #   ipykernel
     #   jupyter-server
     #   jupyterlab
@@ -276,6 +340,7 @@ packaging==21.3
 pandas==1.5.0
     # via
     #   -r requirements.in
+    #   bqplot
     #   catboost
     #   seaborn
     #   shap
@@ -284,6 +349,8 @@ pandocfilters==1.5.0
     # via nbconvert
 parso==0.8.3
     # via jedi
+pathspec==0.11.2
+    # via black
 patsy==0.5.3
     # via statsmodels
 pexpect==4.8.0
@@ -291,9 +358,13 @@ pexpect==4.8.0
 pickleshare==0.7.5
     # via ipython
 pillow==10.0.0
-    # via matplotlib
+    # via
+    #   ipyvolume
+    #   matplotlib
 platformdirs==3.10.0
-    # via jupyter-core
+    # via
+    #   black
+    #   jupyter-core
 plotly==5.16.1
     # via
     #   -r requirements.in
@@ -321,6 +392,8 @@ pygments==2.16.1
     #   jupyter-console
     #   nbconvert
     #   qtconsole
+pynndescent==0.5.10
+    # via umap-learn
 pyparsing==3.0.9
     # via
     #   matplotlib
@@ -331,8 +404,12 @@ python-dateutil==2.8.2
     #   jupyter-client
     #   matplotlib
     #   pandas
+python-dotenv==1.0.0
+    # via -r requirements.in
 python-json-logger==2.0.7
     # via jupyter-events
+pythreejs==2.4.2
+    # via ipyvolume
 pytz==2023.3.post1
     # via pandas
 pyyaml==6.0.1
@@ -356,7 +433,9 @@ referencing==0.30.2
     #   jsonschema-specifications
     #   jupyter-events
 requests==2.31.0
-    # via jupyterlab-server
+    # via
+    #   ipyvolume
+    #   jupyterlab-server
 rfc3339-validator==0.1.4
     # via
     #   jsonschema
@@ -372,14 +451,19 @@ rpds-py==0.10.2
 scikit-learn==1.3.0
     # via
     #   -r requirements.in
+    #   pynndescent
     #   shap
+    #   umap-learn
 scipy==1.8.1
     # via
     #   -r requirements.in
     #   catboost
+    #   pynndescent
     #   scikit-learn
     #   shap
     #   statsmodels
+    #   umap-learn
+    #   xgboost
 seaborn==0.12.2
     # via -r requirements.in
 send2trash==1.8.2
@@ -391,6 +475,7 @@ six==1.16.0
     #   asttokens
     #   bleach
     #   catboost
+    #   jsbeautifier
     #   patsy
     #   python-dateutil
     #   rfc3339-validator
@@ -414,8 +499,12 @@ threadpoolctl==3.2.0
     # via scikit-learn
 tinycss2==1.2.1
     # via nbconvert
+tk==0.1.0
+    # via -r requirements.in
 tomli==2.0.1
-    # via jupyterlab
+    # via
+    #   black
+    #   jupyterlab
 tornado==6.3.3
     # via
     #   ipykernel
@@ -425,12 +514,16 @@ tornado==6.3.3
     #   notebook
     #   terminado
 tqdm==4.66.1
-    # via shap
+    # via
+    #   shap
+    #   umap-learn
 traitlets==5.9.0
     # via
+    #   bqplot
     #   comm
     #   ipykernel
     #   ipython
+    #   ipyvolume
     #   ipywidgets
     #   jupyter-client
     #   jupyter-console
@@ -442,11 +535,21 @@ traitlets==5.9.0
     #   nbclient
     #   nbconvert
     #   nbformat
+    #   pythreejs
     #   qtconsole
+    #   traittypes
+traittypes==0.2.1
+    # via
+    #   bqplot
+    #   ipydatawidgets
+    #   ipyvolume
 typing-extensions==4.7.1
     # via
     #   async-lru
+    #   black
     #   ipython
+umap-learn==0.5.3
+    # via -r requirements.in
 uri-template==1.3.0
     # via jsonschema
 urllib3==2.0.4
@@ -467,5 +570,7 @@ werkzeug==2.0.0
     #   flask
 widgetsnbextension==4.0.8
     # via ipywidgets
+xgboost==2.0.0
+    # via -r requirements.in
 zipp==3.16.2
     # via importlib-metadata
