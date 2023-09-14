@@ -2,10 +2,12 @@ import os
 import pathlib
 from os.path import dirname, join
 
-import pandas as pd
 from dotenv import load_dotenv
 
-dotenv_path = join(dirname(__file__), os.getenv("ENVIRONMENT_FILE"))
+# set environment file
+ENVIRONMENT_FILE = os.environ.get("ENVIRONMENT_FILE", f"{os.getcwd()}/webapp/environment/.env.development")
+
+dotenv_path = join(dirname(__file__), ENVIRONMENT_FILE)
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
 APP_HOST = os.environ.get("HOST")

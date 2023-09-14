@@ -126,7 +126,7 @@ class MicrobiomeDataset:
             self.df[column] = self.df[column].astype("category")
 
         # dummy encoding of metadata columns (string and object type)
-        self.df = pd.get_dummies(self.df, dummy_na=True)
+        self.df = pd.get_dummies(self.df, dummy_na=True, columns=self.metadata_columns)
         self.df = self.df.fillna(0)
         self.df = self.df.sort_values(by="age_at_collection", ignore_index=True)
 
