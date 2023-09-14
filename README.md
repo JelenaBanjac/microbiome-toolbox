@@ -186,21 +186,15 @@ pip install pip-tools
 pip-compile --allow-unsafe
 ```
 
-
 ## Run dashboard locally (on your computer)
 After you successfully installed the microbiome-toolbox and activated the environment, just execute the following commands:
 
 ```bash
-# set up the development environment (on Linux)
-source webapp/environment/.env.development
-
-export ENVIRONMENT_FILE=webapp/environment/.env.development
+# run the server
+python webapp/index.py
 
 # if complains on LegacyVersion, install packaging manually
 # pip install packaging==21.3.0
-
-# run the server
-python webapp/index.py
 ```
 The only step that differs for Windows is that you should modify the environment variables with values indicated in file `webapp/environment/.evv.development`. 
 After that, you can run the server on Windows.
