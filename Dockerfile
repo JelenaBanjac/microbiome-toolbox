@@ -4,31 +4,19 @@ FROM ubuntu:latest
 RUN apt-get update -y \
  && apt-get install wget -y 
 
-# Install Miniconda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
- && bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda \
- && rm Miniconda3-latest-Linux-x86_64.sh
+# Install python
+RUN apt install -y python && \
+    apt install -y python3-pip
 
+# Update pip
+RUN pip install --upgrade pip
 
-ENV PATH=/miniconda/bin/conda:$PATH
-RUN ls
+# download microbiome-toolbox repository
+RUN git clone https://github.com/JelenaBanjac/microbiome-toolbox.git && \
+    cd microbiome-toolbox
 
-# Create a Python 3.7 environment
-RUN conda install -y conda-build \
- && conda create -y --name py37 python=3.7 \
- && conda clean -ya \
- && conda init
-
-ENV CONDA_DEFAULT_ENV=py37
-ENV CONDA_PREFIX=/miniconda/envs/$CONDA_DEFAULT_ENV
-ENV PATH=$CONDA_PREFIX/bin:$PATH
-ENV CONDA_AUTO_UPDATE_CONDA=false
-
-RUN git clone https://github.com/JelenaBanjac/microbiome-toolbox.git
-RUN microbiome-toolbox \
- && conda env create -f environment.yml
-RUN echo "source activate microbiome" > ~/.bashrc
-
+# install microbiome-toolbox
+RUN pip install -e .
 
 WORKDIR /microbiome-toolbox
 
