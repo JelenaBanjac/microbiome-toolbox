@@ -194,6 +194,8 @@ python webapp/index.py
 # pip install packaging==21.3.0
 ```
 
+![](images/dashboard.gif)
+
 ## Examples
 
 For the toolbox usage, checkout the notebooks:
