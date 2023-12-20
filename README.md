@@ -1,7 +1,7 @@
 
 <div align="center">
   <p>
-  <img src="images/intro2.png" alt="GenAi" width="" />
+  <img src="images/microorganisms2.jpg" alt="Freepik" width="270" />
   </p>
   <!-- <p>
     <a href="http://www.freepik.com">
