@@ -1,3 +1,4 @@
+<!--
 <div align="center">
   <p>
   <img src="images/microorganisms.jpg" alt="Alexander Mikhailov / iStock / Getty Images" width="270" />
@@ -9,15 +10,12 @@
   </p>
   
   <p>
-    <a href="https://microbiome-toolbox.azurewebsites.net/">
+     <a href="https://microbiome-toolbox.azurewebsites.net/">
       Dashboard
-    </a>
+    </a> 
   </p>
 </div>
-
-- [Dashboard](https://microbiome-toolbox.azurewebsites.net/) with interactive visualizations
-- [Bioinformatics](https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btac781/6873738) paper
-- We are on the [curated set](https://dash-demo.plotly.host/Portal/) and [Plotly&Dash 500](https://dash-demo.plotly.host/plotly-dash-500/) of STEM focused Plotly Dash apps (as Microbiome-Toolbox)!
+-->
 
 # Microbiome Toolbox
 
@@ -183,7 +181,7 @@ pip install pip-tools
 pip-compile --allow-unsafe
 ```
 
-## Run dashboard locally (on your computer)
+## Run dashboard locally
 After you successfully installed the microbiome-toolbox and activated the environment, just execute the following command/s:
 
 ```bash
@@ -198,14 +196,19 @@ python webapp/index.py
 
 ## Examples
 
-For the toolbox usage, checkout the notebooks:
+For the toolbox usage, check the notebooks:
 - [1. Mouse dataset](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/tree/main/notebooks/Mouse_16S/microbiome_dataset.ipynb)
 - [2. Mouse trajectory](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Mouse_16S/microbiome_trajectory.ipynb)
 - [3. Human infants dataset](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/tree/main/notebooks/Human_Subramanian/microbiome_dataset.ipynb)
 - [4. Human infants trajectory](https://nbviewer.org/github/JelenaBanjac/microbiome-toolbox/blob/main/notebooks/Human_Subramanian/microbiome_trajectory.ipynb)
 
+## Other
+- Paper publication available on [Bioinformatics](https://academic.oup.com/bioinformatics/article/39/1/btac781/6873738).
+- We are on the [curated set](https://dash-demo.plotly.host/Portal/) and [Plotly&Dash 500](https://dash-demo.plotly.host/plotly-dash-500/) of STEM focused Plotly Dash apps (as Microbiome-Toolbox)!
+- The dashboard is also hosted on [Azure](https://microbiome-toolbox.azurewebsites.net/) (temporarily down).
+
 ## Issues
-If you notice any issues, please report them at [Github issues](https://github.com/JelenaBanjac/microbiome-toolbox/issues).
+If you notice any issues, please report them at [Github issues](https://github.com/JelenaBanjac/microbiome-toolbox/issues). Also, feel free to contribute!
 
 ## Licence 
 The project is licensed under the [MIT license](./LICENCE).
@@ -214,7 +217,7 @@ The project is licensed under the [MIT license](./LICENCE).
 [Jelena Banjac](https://jelenabanjac.com/), [Shaillay Kumar Dogra](ShaillayKumar.Dogra@rd.nestle.com), [Norbert Sprenger](norbert.sprenger@rdls.nestle.com)
 
 ## Citation
-The code in this repository is released under the terms of the [MIT license](./LICENCE.md). Please cite our paper if you use it.
+Please cite our paper if you use it.
 
 BibTeX citation style:
 ```
@@ -234,8 +237,3 @@ BibTeX citation style:
     eprint = {https://academic.oup.com/bioinformatics/article-pdf/39/1/btac781/48520839/btac781.pdf},
 }
 
-```
-APA citation style:
-```
-Jelena Banjac, Norbert Sprenger, Shaillay Kumar Dogra, Microbiome Toolbox: methodological approaches to derive and visualize microbiome trajectories, Bioinformatics, Volume 39, Issue 1, January 2023, btac781, https://doi.org/10.1093/bioinformatics/btac781
-```
