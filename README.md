@@ -1,9 +1,9 @@
-<!--
+
 <div align="center">
   <p>
-  <img src="images/microorganisms.jpg" alt="Alexander Mikhailov / iStock / Getty Images" width="270" />
+  <img src="images/intro2.png" alt="GenAi" width="" />
   </p>
-  <p>
+  <!-- <p>
     <a href="http://www.freepik.com">
       <img alt="Designed by pch.vector / Freepik" src="https://img.shields.io/badge/release-v1.0-brightgreen.svg" />
     </a>
@@ -13,9 +13,9 @@
      <a href="https://microbiome-toolbox.azurewebsites.net/">
       Dashboard
     </a> 
-  </p>
+  </p> -->
 </div>
--->
+
 
 # Microbiome Toolbox
 
